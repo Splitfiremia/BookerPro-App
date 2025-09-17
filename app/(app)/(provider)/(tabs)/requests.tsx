@@ -19,6 +19,8 @@ export default function BookingRequestsScreen() {
 
   // Filter requests based on status
   const filteredRequests = useMemo(() => {
+    if (!bookingRequests) return [];
+    
     if (filterStatus === 'all') {
       return bookingRequests;
     }
@@ -186,7 +188,7 @@ export default function BookingRequestsScreen() {
         contentContainerStyle={styles.scrollContent}
 
       >
-        {filteredRequests.length === 0 ? (
+        {(filteredRequests?.length || 0) === 0 ? (
           <View style={styles.emptyContainer}>
             <User size={48} color={COLORS.text} />
             <Text style={styles.emptyText}>No booking requests</Text>
@@ -198,7 +200,7 @@ export default function BookingRequestsScreen() {
             </Text>
           </View>
         ) : (
-          filteredRequests.map(renderRequest)
+          filteredRequests?.map(renderRequest) || []
         )}
       </ScrollView>
     </View>

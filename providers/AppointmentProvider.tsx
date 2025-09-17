@@ -10,6 +10,23 @@ import {
   UserRole 
 } from "@/models/database";
 
+// BookingRequest type for compatibility with existing UI
+export interface BookingRequest {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientImage?: string;
+  providerId: string;
+  serviceName: string;
+  date: string;
+  time: string;
+  duration: number;
+  price: number;
+  notes?: string;
+  status: 'requested' | 'confirmed' | 'declined';
+  createdAt: string;
+}
+
 // Color coding for appointment statuses - Visual Distinctions
 export const APPOINTMENT_COLORS = {
   requested: '#FFC107', // Yellow
@@ -39,20 +56,50 @@ const mockAppointmentsData: Appointment[] = [
   {
     id: "2",
     clientId: "client-2",
-    providerId: "provider-2",
+    providerId: "provider-1",
     serviceId: "service-2",
     shopId: "shop-1",
-    date: "2024-09-17",
+    date: "2024-09-18",
     startTime: "14:00",
     endTime: "16:00",
     status: "requested",
-    notes: "Color and highlights",
+    notes: "Color and highlights - please use organic products",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     statusHistory: []
   },
   {
     id: "3",
+    clientId: "client-3",
+    providerId: "provider-1",
+    serviceId: "service-3",
+    shopId: "shop-1",
+    date: "2024-09-19",
+    startTime: "10:00",
+    endTime: "11:00",
+    status: "requested",
+    notes: "First time client - consultation needed",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    statusHistory: []
+  },
+  {
+    id: "4",
+    clientId: "client-4",
+    providerId: "provider-1",
+    serviceId: "service-4",
+    shopId: "shop-1",
+    date: "2024-09-20",
+    startTime: "16:00",
+    endTime: "16:30",
+    status: "requested",
+    notes: "Beard trim and styling",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    statusHistory: []
+  },
+  {
+    id: "5",
     clientId: "client-1",
     providerId: "provider-3",
     serviceId: "service-3",
@@ -67,24 +114,24 @@ const mockAppointmentsData: Appointment[] = [
     statusHistory: []
   },
   {
-    id: "4",
-    clientId: "client-3",
+    id: "6",
+    clientId: "client-5",
     providerId: "provider-1",
-    serviceId: "service-4",
+    serviceId: "service-1",
     shopId: "shop-1",
     date: "2024-09-14",
     startTime: "10:00",
     endTime: "10:30",
     status: "cancelled",
-    notes: "Beard trim",
+    notes: "Regular cut",
     cancellationReason: "Client cancelled due to emergency",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     statusHistory: []
   },
   {
-    id: "5",
-    clientId: "client-4",
+    id: "7",
+    clientId: "client-6",
     providerId: "provider-2",
     serviceId: "service-5",
     shopId: "shop-1",
@@ -367,6 +414,39 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     return () => clearInterval(interval);
   }, []);
 
+  // Convert appointments to booking requests format for compatibility
+  const bookingRequests = useMemo((): BookingRequest[] => {
+    if (!user || user.role !== 'provider') return [];
+    
+    return appointments
+      .filter(apt => apt.providerId === user.id && apt.status === 'requested')
+      .map(apt => ({
+        id: apt.id,
+        clientId: apt.clientId,
+        clientName: `Client ${apt.clientId}`, // In real app, this would be fetched from user data
+        clientImage: undefined,
+        providerId: apt.providerId,
+        serviceName: `Service ${apt.serviceId}`, // In real app, this would be fetched from service data
+        date: apt.date,
+        time: apt.startTime,
+        duration: 60, // Default duration, in real app this would come from service data
+        price: 50, // Default price, in real app this would come from service data
+        notes: apt.notes,
+        status: 'requested' as const,
+        createdAt: apt.createdAt,
+      }));
+  }, [appointments, user]);
+
+  // Confirm booking request (converts to confirmed appointment)
+  const confirmBookingRequest = useCallback(async (requestId: string) => {
+    await updateAppointmentStatus(requestId, 'confirmed');
+  }, [updateAppointmentStatus]);
+
+  // Decline booking request (converts to cancelled appointment)
+  const declineBookingRequest = useCallback(async (requestId: string) => {
+    await updateAppointmentStatus(requestId, 'cancelled', 'Declined by provider');
+  }, [updateAppointmentStatus]);
+
   const contextValue = useMemo(() => ({
     appointments,
     notifications,
@@ -379,6 +459,10 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     cancelAppointment,
     completeAppointment,
     markNoShow,
+    // Booking requests (for compatibility)
+    bookingRequests,
+    confirmBookingRequest,
+    declineBookingRequest,
     // Filtering and querying
     getAppointmentsForUser,
     getAppointmentsByStatus,
@@ -398,6 +482,9 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     cancelAppointment,
     completeAppointment,
     markNoShow,
+    bookingRequests,
+    confirmBookingRequest,
+    declineBookingRequest,
     getAppointmentsForUser,
     getAppointmentsByStatus,
     getAppointmentsWithColors,
