@@ -164,7 +164,7 @@ export default function HomeScreen() {
             >
               {IconComponent && (
                 <IconComponent 
-                  size={16} 
+                  size={14} 
                   color={selectedFilter === filter.id ? COLORS.background : COLORS.white} 
                 />
               )}
@@ -266,19 +266,20 @@ const styles = StyleSheet.create({
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    marginRight: SPACING.sm,
-    borderRadius: BORDER_RADIUS.md,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    marginRight: SPACING.xs,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
+    minHeight: 32,
   },
   filterButtonActive: {
     backgroundColor: COLORS.white,
   },
   filterText: {
     color: COLORS.white,
-    fontSize: FONT_SIZES.sm,
+    fontSize: FONT_SIZES.xs,
     fontFamily: FONTS.regular,
     marginLeft: SPACING.xs,
   },
