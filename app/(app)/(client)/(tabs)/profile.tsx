@@ -7,142 +7,187 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  Linking,
 } from "react-native";
 import { Stack, router } from "expo-router";
-import { Bell, LogOut } from "lucide-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { 
+  Settings, 
+  LogOut, 
+  Share2, 
+  UserPlus, 
+  CreditCard, 
+  Gift, 
+  Hash, 
+  HelpCircle, 
+  MoreHorizontal,
+  Edit3
+} from "lucide-react-native";
 import { COLORS } from "@/constants/theme";
 import { useAuth } from "@/providers/AuthProvider";
 
-interface Appointment {
+interface MenuItem {
   id: string;
-  providerName: string;
-  providerImage: string;
-  service: string;
-  date: string;
-  time: string;
-  status: "confirmed" | "pending" | "completed";
+  title: string;
+  icon: React.ComponentType<any>;
+  onPress: () => void;
 }
 
-interface Provider {
+interface SocialLink {
   id: string;
   name: string;
-  image: string;
-  specialty: string;
+  url: string;
+  backgroundColor: string;
+  textColor: string;
 }
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const [profileImage] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
 
-  // Mock data for upcoming appointments
-  const upcomingAppointments: Appointment[] = [
+  const menuItems: MenuItem[] = [
     {
-      id: "1",
-      providerName: "Jose Santiago",
-      providerImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
-      service: "Kids Haircut",
-      date: "Sat, September 13",
-      time: "5:00 PM - 5:30 PM",
-      status: "confirmed",
+      id: "share",
+      title: "Share With Friends",
+      icon: Share2,
+      onPress: () => Alert.alert("Share", "Share the app with friends"),
+    },
+    {
+      id: "invite",
+      title: "Invite My Barber",
+      icon: UserPlus,
+      onPress: () => Alert.alert("Invite", "Invite your barber to join"),
+    },
+    {
+      id: "payment",
+      title: "Payment Method",
+      icon: CreditCard,
+      onPress: () => Alert.alert("Payment", "Manage payment methods"),
+    },
+    {
+      id: "vouchers",
+      title: "Vouchers",
+      icon: Gift,
+      onPress: () => Alert.alert("Vouchers", "View your vouchers"),
+    },
+    {
+      id: "redeem",
+      title: "Redeem Code",
+      icon: Hash,
+      onPress: () => Alert.alert("Redeem", "Enter a redeem code"),
+    },
+    {
+      id: "help",
+      title: "Help & Resources",
+      icon: HelpCircle,
+      onPress: () => Alert.alert("Help", "Get help and support"),
+    },
+    {
+      id: "more",
+      title: "More",
+      icon: MoreHorizontal,
+      onPress: () => Alert.alert("More", "Additional options"),
     },
   ];
 
-  // Mock data for saved barbers
-  const myBarbers: Provider[] = [
+  const socialLinks: SocialLink[] = [
     {
-      id: "1",
-      name: "Jose Santiago",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
-      specialty: "Master Barber",
+      id: "facebook",
+      name: "f",
+      url: "https://facebook.com",
+      backgroundColor: "#1877F2",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "instagram",
+      name: "IG",
+      url: "https://instagram.com",
+      backgroundColor: "#E4405F",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "snapchat",
+      name: "👻",
+      url: "https://snapchat.com",
+      backgroundColor: "#FFFC00",
+      textColor: "#000000",
+    },
+    {
+      id: "tiktok",
+      name: "♪",
+      url: "https://tiktok.com",
+      backgroundColor: "#000000",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "twitter",
+      name: "X",
+      url: "https://twitter.com",
+      backgroundColor: "#000000",
+      textColor: "#FFFFFF",
     },
   ];
 
-  const handleViewDetails = (appointment: Appointment) => {
-    router.push({
-      pathname: "/(app)/(client)/appointment-details",
-      params: { id: appointment.id },
-    });
+  const handleEditProfile = () => {
+    Alert.alert("Edit Profile", "Edit your client profile");
   };
 
-  const handleShareBarber = (barber: Provider) => {
-    Alert.alert("Share", `Share ${barber.name}'s profile`);
+  const handleSocialLink = (url: string) => {
+    Linking.openURL(url);
   };
 
-  const handleBookBarber = (barber: Provider) => {
-    router.push({
-      pathname: "/(app)/(client)/provider/[id]",
-      params: { id: barber.id },
-    });
+  const handleTermsPress = () => {
+    Alert.alert("Terms of Service", "View terms of service");
   };
 
-  const handleViewAllAppointments = () => {
-    router.push("/(app)/(client)/(tabs)/appointments");
+  const handlePrivacyPress = () => {
+    Alert.alert("Privacy Policy", "View privacy policy");
   };
 
-  const handleFindBarbers = () => {
-    router.push("/(app)/(client)/(tabs)/search");
+  const handleLogout = () => {
+    Alert.alert(
+      "Log Out", 
+      "Are you sure you want to log out?", 
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Log Out",
+          onPress: () => {
+            logout();
+            router.replace("/");
+          },
+          style: "destructive"
+        }
+      ]
+    );
   };
 
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "Profile",
-          headerStyle: {
-            backgroundColor: COLORS.background,
-          },
-          headerTintColor: COLORS.white,
-          headerTitleStyle: {
-            fontSize: 18,
-            fontWeight: "600",
-          },
-          headerRight: () => (
-            <View style={styles.headerRightContainer}>
-              <TouchableOpacity style={styles.notificationButton}>
-                <Bell size={24} color={COLORS.white} />
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>1</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.logoutButton} 
-                onPress={() => {
-                  Alert.alert(
-                    "Sign Out", 
-                    "Are you sure you want to sign out?", 
-                    [
-                      {
-                        text: "Cancel",
-                        style: "cancel"
-                      },
-                      {
-                        text: "Sign Out",
-                        onPress: () => {
-                          logout();
-                          router.replace("/");
-                        },
-                        style: "destructive"
-                      }
-                    ]
-                  );
-                }}
-              >
-                <LogOut size={24} color={COLORS.white} />
-              </TouchableOpacity>
-            </View>
-          ),
+          headerShown: false,
         }}
       />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+          <TouchableOpacity style={styles.settingsButton}>
+            <Settings size={24} color={COLORS.white} />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>{user?.name || "Luis Martinez"}</Text>
+            <Text style={styles.headerSubtitle}>Client</Text>
+          </View>
+          <View style={styles.headerRight} />
+        </View>
+
         {/* Profile Section */}
         <View style={styles.profileSection}>
-          <TouchableOpacity
-            style={styles.viewDetailsButton}
-            onPress={() => Alert.alert("View Details", "Profile details would be shown here")}
-          >
-            <Text style={styles.viewDetailsText}>VIEW DETAILS</Text>
-          </TouchableOpacity>
-          
           <View style={styles.profileImageContainer}>
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.profileImage} />
@@ -151,114 +196,77 @@ export default function ProfileScreen() {
                 <Text style={styles.profileInitial}>
                   {user?.name?.charAt(0).toUpperCase() || "L"}
                 </Text>
+                <View style={styles.editIconContainer}>
+                  <Edit3 size={16} color={COLORS.background} />
+                </View>
               </View>
             )}
           </View>
-          <Text style={styles.userName}>{user?.name || "Luis Martinez"}</Text>
           
-          <TouchableOpacity 
-            style={[styles.viewDetailsButton, styles.signOutButton]}
-            onPress={() => {
-              Alert.alert(
-                "Sign Out", 
-                "Are you sure you want to sign out?", 
-                [
-                  {
-                    text: "Cancel",
-                    style: "cancel"
-                  },
-                  {
-                    text: "Sign Out",
-                    onPress: () => {
-                      logout();
-                      router.replace("/");
-                    },
-                    style: "destructive"
-                  }
-                ]
-              );
-            }}
+          <TouchableOpacity
+            style={styles.editProfileButton}
+            onPress={handleEditProfile}
           >
-            <Text style={styles.viewDetailsText}>SIGN OUT</Text>
+            <Text style={styles.editProfileText}>EDIT CLIENT PROFILE</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Upcoming Appointments Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              UPCOMING APPOINTMENTS ({upcomingAppointments.length})
-            </Text>
-            <TouchableOpacity onPress={handleViewAllAppointments}>
-              <Text style={styles.viewAllText}>VIEW ALL</Text>
-            </TouchableOpacity>
-          </View>
-
-          {upcomingAppointments.map((appointment) => (
-            <View key={appointment.id} style={styles.appointmentCard}>
-              <View style={styles.appointmentHeader}>
-                <Image
-                  source={{ uri: appointment.providerImage }}
-                  style={styles.providerImage}
-                />
-                <View style={styles.statusBadge}>
-                  <Text style={styles.statusText}>CONFIRMED</Text>
-                </View>
-              </View>
-              <Text style={styles.providerName}>{appointment.providerName}</Text>
-              <Text style={styles.serviceName}>{appointment.service}</Text>
-              <Text style={styles.appointmentDate}>{appointment.date}</Text>
-              <Text style={styles.appointmentTime}>{appointment.time}</Text>
+        {/* Menu Items */}
+        <View style={styles.menuSection}>
+          {menuItems.map((item) => {
+            const IconComponent = item.icon;
+            return (
               <TouchableOpacity
-                style={styles.viewDetailsButton}
-                onPress={() => handleViewDetails(appointment)}
+                key={item.id}
+                style={styles.menuItem}
+                onPress={item.onPress}
               >
-                <Text style={styles.viewDetailsText}>VIEW DETAILS</Text>
+                <View style={styles.menuItemLeft}>
+                  <IconComponent size={24} color={COLORS.white} />
+                  <Text style={styles.menuItemText}>{item.title}</Text>
+                </View>
               </TouchableOpacity>
-            </View>
+            );
+          })}
+        </View>
+
+        {/* Log Out */}
+        <TouchableOpacity style={styles.logoutItem} onPress={handleLogout}>
+          <View style={styles.menuItemLeft}>
+            <LogOut size={24} color={COLORS.error} />
+            <Text style={[styles.menuItemText, { color: COLORS.error }]}>Log Out</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Social Links */}
+        <View style={styles.socialSection}>
+          {socialLinks.map((social) => (
+            <TouchableOpacity
+              key={social.id}
+              style={[
+                styles.socialButton,
+                { backgroundColor: social.backgroundColor }
+              ]}
+              onPress={() => handleSocialLink(social.url)}
+            >
+              <Text style={[styles.socialText, { color: social.textColor }]}>
+                {social.name}
+              </Text>
+            </TouchableOpacity>
           ))}
         </View>
 
-        {/* My Barbers Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>MY BARBERS</Text>
-            <TouchableOpacity onPress={handleFindBarbers}>
-              <Text style={styles.viewAllText}>FIND BARBERS</Text>
+        {/* Footer Links */}
+        <View style={styles.footerSection}>
+          <View style={styles.footerLinks}>
+            <TouchableOpacity onPress={handleTermsPress}>
+              <Text style={styles.footerLinkText}>TERMS OF SERVICE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handlePrivacyPress}>
+              <Text style={styles.footerLinkText}>PRIVACY POLICY</Text>
             </TouchableOpacity>
           </View>
-
-          {myBarbers.map((barber) => (
-            <View key={barber.id} style={styles.barberCard}>
-              <Image source={{ uri: barber.image }} style={styles.barberImage} />
-              <Text style={styles.barberName}>{barber.name}</Text>
-              <View style={styles.barberActions}>
-                <TouchableOpacity
-                  style={styles.shareButton}
-                  onPress={() => handleShareBarber(barber)}
-                >
-                  <Text style={styles.shareButtonText}>SHARE</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.bookButton}
-                  onPress={() => handleBookBarber(barber)}
-                >
-                  <Text style={styles.bookButtonText}>BOOK</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Inspiration Photos Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>INSPIRATION PHOTOS</Text>
-          <View style={styles.photoGrid}>
-            {/* Placeholder for inspiration photos */}
-            <View style={styles.photoPlaceholder} />
-            <View style={styles.photoPlaceholder} />
-            <View style={styles.photoPlaceholder} />
-          </View>
+          <Text style={styles.versionText}>v1.81.0 (1269)</Text>
         </View>
       </ScrollView>
     </View>
@@ -270,33 +278,38 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  headerRightContainer: {
+  scrollView: {
+    flex: 1,
+  },
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 16,
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
-  notificationButton: {
-    position: "relative",
-    marginRight: 20,
-  },
-  logoutButton: {
-    marginLeft: 4,
-  },
-  notificationBadge: {
-    position: "absolute",
-    top: -5,
-    right: -5,
-    backgroundColor: COLORS.primary,
-    borderRadius: 10,
-    width: 20,
-    height: 20,
+  settingsButton: {
+    width: 40,
+    height: 40,
     justifyContent: "center",
     alignItems: "center",
   },
-  notificationBadgeText: {
+  headerCenter: {
+    alignItems: "center",
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
     color: COLORS.white,
-    fontSize: 12,
-    fontWeight: "bold",
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: COLORS.lightGray,
+    marginTop: 2,
+  },
+  headerRight: {
+    width: 40,
   },
   profileSection: {
     alignItems: "center",
@@ -304,171 +317,114 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   profileImageContainer: {
-    marginBottom: 16,
+    position: "relative",
+    marginBottom: 20,
   },
   profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   profileImagePlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: COLORS.gray,
     justifyContent: "center",
     alignItems: "center",
+    position: "relative",
   },
   profileInitial: {
-    fontSize: 48,
+    fontSize: 40,
     fontWeight: "bold",
     color: COLORS.white,
   },
-  userName: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: COLORS.white,
-  },
-  section: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  editIconContainer: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.accent,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: COLORS.background,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: COLORS.white,
-    letterSpacing: 0.5,
-  },
-  viewAllText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.accent,
-  },
-  appointmentCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  appointmentHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  providerImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 12,
-  },
-  statusBadge: {
-    backgroundColor: "#4A90E2",
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: COLORS.white,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  providerName: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: COLORS.white,
-    marginBottom: 4,
-  },
-  serviceName: {
-    fontSize: 16,
-    color: COLORS.lightGray,
-    marginBottom: 8,
-  },
-  appointmentDate: {
-    fontSize: 14,
-    color: COLORS.lightGray,
-    marginBottom: 2,
-  },
-  appointmentTime: {
-    fontSize: 14,
-    color: COLORS.lightGray,
-    marginBottom: 12,
-  },
-  viewDetailsButton: {
+  editProfileButton: {
     backgroundColor: COLORS.accent,
     paddingVertical: 12,
+    paddingHorizontal: 40,
     borderRadius: 8,
-    alignItems: "center",
-    width: "100%",
-    marginBottom: 16,
   },
-  viewDetailsText: {
+  editProfileText: {
     color: COLORS.background,
     fontSize: 14,
     fontWeight: "700",
+    letterSpacing: 0.5,
   },
-  barberCard: {
-    alignItems: "center",
+  menuSection: {
+    paddingHorizontal: 20,
     marginBottom: 20,
   },
-  barberImage: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    marginBottom: 12,
+  menuItem: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
   },
-  barberName: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: COLORS.white,
-    marginBottom: 12,
-  },
-  barberActions: {
+  menuItemLeft: {
     flexDirection: "row",
+    alignItems: "center",
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: COLORS.white,
+    marginLeft: 16,
+    fontWeight: "500",
+  },
+  logoutItem: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginBottom: 30,
+  },
+  socialSection: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginBottom: 40,
     gap: 12,
   },
-  shareButton: {
-    borderWidth: 2,
-    borderColor: COLORS.accent,
-    paddingHorizontal: 30,
-    paddingVertical: 10,
-    borderRadius: 8,
+  socialButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  shareButtonText: {
-    color: COLORS.accent,
-    fontSize: 14,
-    fontWeight: "700",
+  socialText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
-  bookButton: {
-    backgroundColor: COLORS.accent,
-    paddingHorizontal: 40,
-    paddingVertical: 10,
-    borderRadius: 8,
+  footerSection: {
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 40,
   },
-  bookButtonText: {
-    color: COLORS.background,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  photoGrid: {
+  footerLinks: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginTop: 12,
+    gap: 40,
+    marginBottom: 20,
   },
-  signOutButton: {
-    marginTop: 16,
-    backgroundColor: COLORS.error,
+  footerLinkText: {
+    fontSize: 12,
+    color: COLORS.lightGray,
+    fontWeight: "600",
+    letterSpacing: 0.5,
   },
-  photoPlaceholder: {
-    width: "31%",
-    aspectRatio: 1,
-    backgroundColor: COLORS.card,
-    borderRadius: 8,
+  versionText: {
+    fontSize: 12,
+    color: COLORS.lightGray,
   },
 });
