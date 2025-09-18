@@ -170,7 +170,8 @@ export default function ProfileScreen() {
               console.log('Profile: Logout completed successfully');
               console.log('Profile: Navigating to index page');
               
-              // Navigate to index page immediately after logout
+              // Force navigation to root and reset the navigation stack
+              router.dismissAll();
               router.replace("/");
               console.log('Profile: Navigation to index completed');
               
@@ -252,10 +253,17 @@ export default function ProfileScreen() {
         </View>
 
         {/* Log Out */}
-        <TouchableOpacity style={styles.logoutItem} onPress={handleLogout}>
+        <TouchableOpacity 
+          style={[styles.logoutItem, isLoggingOut && styles.disabledItem]} 
+          onPress={handleLogout}
+          disabled={isLoggingOut}
+          testID="logout-button"
+        >
           <View style={styles.menuItemLeft}>
             <LogOut size={24} color={COLORS.error} />
-            <Text style={[styles.menuItemText, { color: COLORS.error }]}>Log Out</Text>
+            <Text style={[styles.menuItemText, { color: COLORS.error }]}>
+              {isLoggingOut ? 'Logging Out...' : 'Log Out'}
+            </Text>
           </View>
         </TouchableOpacity>
 
@@ -447,5 +455,8 @@ const styles = StyleSheet.create({
   versionText: {
     fontSize: 12,
     color: COLORS.lightGray,
+  },
+  disabledItem: {
+    opacity: 0.5,
   },
 });
