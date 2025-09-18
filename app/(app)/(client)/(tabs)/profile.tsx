@@ -9,7 +9,7 @@ import {
   Alert,
   Linking,
 } from "react-native";
-import { Stack, router } from "expo-router";
+import { Stack } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { 
   Settings, 
@@ -42,7 +42,7 @@ interface SocialLink {
 }
 
 export default function ProfileScreen() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout } = useAuth();
   const [profileImage] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
@@ -163,14 +163,11 @@ export default function ProfileScreen() {
               console.log('Profile: Starting logout process');
               console.log('Profile: Current user before logout:', user?.email);
               
-              // Clear the user state first
+              // Clear the user state - let the app layout handle navigation
               await logout();
               
               console.log('Profile: Logout completed successfully');
-              console.log('Profile: Navigating to login page');
-              
-              // Navigate directly to the main landing page
-              router.replace("/");
+              console.log('Profile: App layout will handle navigation to index');
               
             } catch (error) {
               console.error('Profile: Logout error:', error);
