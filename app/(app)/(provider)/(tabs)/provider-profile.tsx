@@ -38,8 +38,10 @@ export default function ProviderProfileScreen() {
 
   const confirmSignOut = async () => {
     try {
+      console.log('Provider Profile: Starting logout process');
       await logout();
-      router.replace('/(auth)/login');
+      console.log('Provider Profile: Logout completed, navigating to index');
+      router.replace('/');
     } catch (error) {
       console.error('Error signing out:', error);
       setErrorMessage('Failed to sign out. Please try again.');

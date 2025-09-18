@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, FlatList, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronRight, Bell, Lock, CreditCard, HelpCircle, LogOut, Store, Users, Calendar, Plus, Edit, Trash2, DollarSign } from 'lucide-react-native';
 import { useServices } from '@/providers/ServicesProvider';
+import { useAuth } from '@/providers/AuthProvider';
 import ServiceEditModal from '@/components/ServiceEditModal';
 import { Service } from '@/models/database';
 import { COLORS } from '@/constants/theme';
@@ -19,6 +20,7 @@ interface SettingItem {
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { logout } = useAuth();
   const {
     masterServices,
     addMasterService,
@@ -30,9 +32,37 @@ export default function SettingsScreen() {
   const [autoAcceptBookings, setAutoAcceptBookings] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleSignOut = () => {
-    router.replace('/');
+    Alert.alert(
+      "Sign Out", 
+      "Are you sure you want to sign out?", 
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Sign Out",
+          onPress: async () => {
+            setIsLoggingOut(true);
+            try {
+              console.log('Shop Owner Settings: Starting logout process');
+              await logout();
+              console.log('Shop Owner Settings: Logout completed, navigating to index');
+              router.replace('/');
+            } catch (error) {
+              console.error('Shop Owner Settings: Logout error:', error);
+              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            } finally {
+              setIsLoggingOut(false);
+            }
+          },
+          style: "destructive"
+        }
+      ]
+    );
   };
 
   const handleSaveService = async (serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>) => {

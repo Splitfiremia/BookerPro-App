@@ -11,13 +11,21 @@ export default function AppLayout() {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       console.log('AppLayout: User not authenticated, redirecting to index');
+      console.log('AppLayout: Current user state:', user);
       // Use a small delay to ensure state is properly updated
       const timeoutId = setTimeout(() => {
-        router.replace("/");
+        try {
+          router.replace("/");
+          console.log('AppLayout: Successfully redirected to index');
+        } catch (error) {
+          console.error('AppLayout: Error redirecting to index:', error);
+          // Force a hard navigation if replace fails
+          router.push("/");
+        }
       }, 100);
       return () => clearTimeout(timeoutId);
     }
-  }, [isLoading, isAuthenticated]);
+  }, [isLoading, isAuthenticated, user]);
 
   // Show loading while auth is being determined
   if (isLoading) {

@@ -241,17 +241,17 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     console.log('AuthProvider: Starting logout process');
     setIsLoading(true);
     try {
+      // Clear user state first to trigger immediate UI updates
+      setUser(null);
+      console.log('AuthProvider: User state cleared');
+      
       // Clear user from AsyncStorage
       await AsyncStorage.removeItem("user");
       console.log('AuthProvider: User removed from AsyncStorage');
       
-      // Clear user state immediately
-      setUser(null);
-      console.log('AuthProvider: User state cleared');
-      
     } catch (error) {
       console.error("AuthProvider: Logout error:", error);
-      // Even if AsyncStorage fails, clear the user state
+      // Even if AsyncStorage fails, ensure user state is cleared
       setUser(null);
     } finally {
       setIsLoading(false);

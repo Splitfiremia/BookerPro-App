@@ -9,7 +9,7 @@ import {
   Alert,
   Linking,
 } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { 
   Settings, 
@@ -163,11 +163,14 @@ export default function ProfileScreen() {
               console.log('Profile: Starting logout process');
               console.log('Profile: Current user before logout:', user?.email);
               
-              // Clear the user state - let the app layout handle navigation
+              // Clear the user state and navigate to index
               await logout();
               
               console.log('Profile: Logout completed successfully');
-              console.log('Profile: App layout will handle navigation to index');
+              console.log('Profile: Navigating to index page');
+              
+              // Force navigation to index page after logout
+              router.replace('/');
               
             } catch (error) {
               console.error('Profile: Logout error:', error);
