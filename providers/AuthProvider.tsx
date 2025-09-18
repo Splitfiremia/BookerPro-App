@@ -94,7 +94,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   // Login function that handles both developer and live mode
   const login = useCallback(async (email: string, password: string) => {
-    console.log('Login attempt:', email, 'Password:', password);
+    console.log('Login attempt for email:', email);
     setIsLoading(true);
     try {
       // Check if this is a test user email
@@ -115,7 +115,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         );
         
         if (!testUser) {
-          console.error("Invalid credentials. Test user passwords:", testUsers.map(u => ({ email: u.email, password: u.password })));
+          console.error("Invalid credentials for test user");
           throw new Error("Invalid credentials. Test passwords: client123, provider123, owner123");
         }
         
@@ -239,38 +239,25 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   const logout = useCallback(async () => {
     console.log('AuthProvider: Starting logout process');
-    console.log('AuthProvider: Current user before logout:', user?.email);
     setIsLoading(true);
     try {
-      console.log('AuthProvider: Removing user from AsyncStorage');
+      // Clear user from AsyncStorage
       await AsyncStorage.removeItem("user");
-      console.log('AuthProvider: User removed from AsyncStorage successfully');
+      console.log('AuthProvider: User removed from AsyncStorage');
       
-      console.log('AuthProvider: Setting user to null');
+      // Clear user state immediately
       setUser(null);
       console.log('AuthProvider: User state cleared');
-      
-      // Add a longer delay to ensure state propagation across all components
-      await new Promise(resolve => setTimeout(resolve, 200));
-      console.log('AuthProvider: State propagation delay completed');
-      
-      // Force a re-render by updating the loading state
-      setIsLoading(false);
-      await new Promise(resolve => setTimeout(resolve, 50));
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 50));
       
     } catch (error) {
       console.error("AuthProvider: Logout error:", error);
       // Even if AsyncStorage fails, clear the user state
       setUser(null);
-      throw error; // Re-throw to let the caller handle it
     } finally {
-      console.log('AuthProvider: Setting isLoading to false');
       setIsLoading(false);
-      console.log('AuthProvider: Logout process completed');
+      console.log('AuthProvider: Logout completed');
     }
-  }, [user]);
+  }, []);
 
   const contextValue = useMemo(() => ({
     user,
