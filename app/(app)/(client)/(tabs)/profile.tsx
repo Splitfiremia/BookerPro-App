@@ -162,43 +162,15 @@ export default function ProfileScreen() {
             try {
               console.log('Profile: Starting logout process');
               console.log('Profile: Current user before logout:', user?.email);
-              console.log('Profile: Current auth state before logout:', { isAuthenticated: !!user });
               
               // Clear the user state first
               await logout();
               
               console.log('Profile: Logout completed successfully');
-              console.log('Profile: Navigating to index page');
+              console.log('Profile: Navigating to login page');
               
-              // Use a more aggressive navigation approach
-              // First try to dismiss all modals and screens
-              try {
-                router.dismissAll();
-              } catch (dismissError) {
-                console.log('Profile: Dismiss all failed, continuing with navigation');
-              }
-              
-              // Add a small delay to ensure state propagation
-              await new Promise(resolve => setTimeout(resolve, 100));
-              
-              // Try multiple navigation approaches
-              try {
-                // First try push to root
-                router.push("/");
-                console.log('Profile: Navigation with push completed');
-              } catch (pushError) {
-                console.log('Profile: Push navigation failed, trying replace');
-                try {
-                  // Fallback to replace
-                  router.replace("/");
-                  console.log('Profile: Navigation with replace completed');
-                } catch (replaceError) {
-                  console.log('Profile: Replace navigation failed, trying navigate');
-                  // Last resort - use navigate
-                  router.navigate("/" as any);
-                  console.log('Profile: Navigation with navigate completed');
-                }
-              }
+              // Navigate directly to the login page to avoid redirect loops
+              router.replace("/(auth)/login");
               
             } catch (error) {
               console.error('Profile: Logout error:', error);
