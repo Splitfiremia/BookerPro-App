@@ -14,7 +14,7 @@ export interface User {
   updatedAt: string;
 }
 
-// Shop model
+// Shop model - Enhanced for TheCut functionality
 export interface Shop {
   id: string;
   name: string;
@@ -28,57 +28,69 @@ export interface Shop {
   description?: string;
   image?: string;
   ownerId: string;
-  masterServiceList: Service[]; // Shop's master service list
+  providerIds: string[]; // Array of Provider IDs working at this shop
+  serviceIds: string[]; // Array of Service IDs offered at this shop
+  hours: ShopOperatingHours; // Operating hours for the shop
+  masterServiceList: Service[]; // Shop's master service list (deprecated - use serviceIds)
   createdAt: string;
   updatedAt: string;
 }
 
-// Provider model (service provider)
+// Provider model - Enhanced for multi-shop support and social features
 export interface Provider {
   id: string;
   userId: string;
-  shopId?: string; // Optional - null for independent providers
+  shopIds: string[]; // Array of Shop IDs where this provider works
   isIndependent: boolean;
   specialties: string[];
-  bio?: string;
+  bio: string; // Required bio for provider profile
   experience?: string;
-  portfolio?: string[];
+  portfolioImages: string[]; // Array of portfolio image URLs
+  posts: ProviderPost[]; // Array of social media posts
+  followerCount: number; // Number of followers for social features
+  services: ProviderServiceOffering[]; // Services with custom pricing
   boothRentAmount?: number;
   boothRentDueDate?: string;
   boothRentFrequency?: 'weekly' | 'monthly';
   payoutSchedule: 'daily' | 'weekly' | 'monthly' | 'instant';
-  services?: Service[]; // For independent providers
+  rating?: number; // Average rating from reviews
+  totalReviews?: number; // Total number of reviews
   createdAt: string;
   updatedAt: string;
 }
 
-// Service model
+// Service model - Base service definition
 export interface Service {
   id: string;
   name: string;
-  description?: string;
-  duration: number; // in minutes
-  price: number;
+  description: string; // Required description
+  baseDuration: number; // Base duration in minutes
+  basePrice: number; // Base price (can be overridden by providers)
   isActive: boolean;
+  category?: string; // Service category (e.g., 'haircut', 'coloring', 'styling')
   providerId?: string; // For independent providers
   shopId?: string; // For shop master service lists
   createdAt: string;
   updatedAt: string;
 }
 
-// Provider service offering (for shop-based providers)
+// Provider service offering - Enhanced with custom pricing and duration
 export interface ProviderServiceOffering {
   id: string;
   providerId: string;
-  serviceId: string; // References shop's master service
+  serviceId: string; // References base service
+  service: Service; // Full service object for easy access
   isOffered: boolean;
-  customPrice?: number; // Optional custom pricing
+  customPrice?: number; // Provider's custom price (overrides basePrice)
+  customDuration?: number; // Provider's custom duration (overrides baseDuration)
+  shopId?: string; // Which shop this offering is for (if provider works at multiple shops)
   createdAt: string;
   updatedAt: string;
 }
 
 // Unified Appointment model with comprehensive status management
 export type AppointmentStatus = 'requested' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
+export type PaymentStatus = 'pending' | 'paid' | 'refunded' | 'failed';
 
 export interface Appointment {
   id: string;
@@ -86,10 +98,16 @@ export interface Appointment {
   providerId: string;
   serviceId: string;
   shopId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
+  date: string; // Format: "YYYY-MM-DD"
+  time: string; // Format: "HH:MM" - start time
+  startTime: string; // Format: "HH:MM" (deprecated - use time)
+  endTime: string; // Format: "HH:MM"
+  duration: number; // Duration in minutes
   status: AppointmentStatus;
+  paymentStatus: PaymentStatus; // Payment status tracking
+  totalAmount: number; // Total cost including tips
+  serviceAmount: number; // Cost of the service
+  tipAmount?: number; // Tip amount
   notes?: string;
   clientNotes?: string;
   providerNotes?: string;
@@ -240,4 +258,39 @@ export interface AvailableTimeSlot {
   duration: number;  // in minutes
   isAvailable: boolean;
   providerId: string;
+}
+
+// Social media post model for providers
+export interface ProviderPost {
+  id: string;
+  providerId: string;
+  imageUrl: string;
+  caption?: string;
+  tags: string[]; // Hashtags or service tags
+  likes: number;
+  comments: PostComment[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Comment model for provider posts
+export interface PostComment {
+  id: string;
+  postId: string;
+  userId: string;
+  userName: string;
+  comment: string;
+  createdAt: string;
+}
+
+// Client model - Enhanced for better user management
+export interface Client {
+  id: string;
+  userId: string;
+  preferredProviders: string[]; // Array of preferred provider IDs
+  appointmentHistory: string[]; // Array of appointment IDs
+  savedShops: string[]; // Array of saved shop IDs
+  loyaltyPoints?: number;
+  createdAt: string;
+  updatedAt: string;
 }
