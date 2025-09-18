@@ -41,22 +41,32 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         
         // Load stored user data and developer mode in parallel
         const [storedUser, storedDevMode] = await Promise.all([
-          AsyncStorage.getItem("user"),
-          AsyncStorage.getItem("developerMode")
+          AsyncStorage.getItem("user").catch(() => null),
+          AsyncStorage.getItem("developerMode").catch(() => null)
         ]);
         
         if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          console.log('AuthProvider: Loaded stored user:', userData.email);
-          setUser(userData);
+          try {
+            const userData = JSON.parse(storedUser);
+            console.log('AuthProvider: Loaded stored user:', userData.email);
+            setUser(userData);
+          } catch (parseError) {
+            console.error('AuthProvider: Error parsing stored user:', parseError);
+            await AsyncStorage.removeItem("user");
+          }
         } else {
           console.log('AuthProvider: No stored user found');
         }
         
         if (storedDevMode) {
-          const devMode = JSON.parse(storedDevMode);
-          console.log('AuthProvider: Loaded developer mode:', devMode);
-          setIsDeveloperMode(devMode);
+          try {
+            const devMode = JSON.parse(storedDevMode);
+            console.log('AuthProvider: Loaded developer mode:', devMode);
+            setIsDeveloperMode(devMode);
+          } catch (parseError) {
+            console.error('AuthProvider: Error parsing developer mode:', parseError);
+            await AsyncStorage.removeItem("developerMode");
+          }
         }
         
       } catch (error) {
@@ -67,9 +77,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       }
     };
     
-    // Use a timeout to ensure hydration completes first
-    const timeoutId = setTimeout(loadUserAndSettings, 100);
-    return () => clearTimeout(timeoutId);
+    // Load immediately but with error handling
+    loadUserAndSettings();
   }, []);
 
   // Set developer mode with persistence

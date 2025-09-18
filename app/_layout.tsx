@@ -38,20 +38,20 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <OnboardingProvider>
-          <AppointmentProvider>
-            <ServicesProvider>
-              <GestureHandlerRootView style={styles.gestureHandler}>
+    <GestureHandlerRootView style={styles.gestureHandler}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <OnboardingProvider>
+            <AppointmentProvider>
+              <ServicesProvider>
                 <RootLayoutNav />
                 <ModeIndicator />
-              </GestureHandlerRootView>
-            </ServicesProvider>
-          </AppointmentProvider>
-        </OnboardingProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+              </ServicesProvider>
+            </AppointmentProvider>
+          </OnboardingProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }
 

@@ -416,10 +416,12 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
 
   // Convert appointments to booking requests format for compatibility
   const bookingRequests = useMemo((): BookingRequest[] => {
-    if (!user || user.role !== 'provider') return [];
+    if (!user || user.role !== 'provider' || !appointments || !Array.isArray(appointments)) {
+      return [];
+    }
     
     return appointments
-      .filter(apt => apt.providerId === user.id && apt.status === 'requested')
+      .filter(apt => apt && apt.providerId === user.id && apt.status === 'requested')
       .map(apt => ({
         id: apt.id,
         clientId: apt.clientId,
