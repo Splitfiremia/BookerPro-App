@@ -1,0 +1,310 @@
+ARCHITECTURE WIREFRAMES - TheCut Beauty Services App
+===================================================
+
+1. APPLICATION ARCHITECTURE OVERVIEW
+===================================
+
+1.1 HIGH-LEVEL SYSTEM ARCHITECTURE
+----------------------------------
+┌─────────────────────────────────────────────────────────────┐
+│                    TheCut Mobile App                        │
+│                   (React Native + Expo)                    │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │   Client    │  │  Provider   │  │    Shop Owner       │ │
+│  │ Dashboard   │  │ Dashboard   │  │    Dashboard        │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                 Shared Components Layer                     │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ Navigation  │  │ UI Components│  │  Business Logic     │ │
+│  │   System    │  │   Library    │  │    Providers        │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                   Data Management Layer                     │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ React Query │  │ AsyncStorage│  │   Mock Data         │ │
+│  │ (Caching)   │  │(Persistence)│  │   Services          │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                    Platform Layer                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │    iOS      │  │   Android   │  │        Web          │ │
+│  │   Native    │  │   Native    │  │   (React Native     │ │
+│  │             │  │             │  │       Web)          │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+
+1.2 NAVIGATION ARCHITECTURE
+--------------------------
+Root Layout (_layout.tsx)
+├── Authentication Flow
+│   ├── Login Page (index.tsx)
+│   └── Auth Layout ((auth)/_layout.tsx)
+│       ├── Login ((auth)/login.tsx)
+│       └── Signup ((auth)/signup.tsx)
+├── Onboarding Flows
+│   ├── Client Onboarding (client-onboarding/)
+│   ├── Provider Onboarding (provider-onboarding/)
+│   └── Shop Owner Onboarding (shop-owner-onboarding/)
+└── Main Application ((app)/_layout.tsx)
+    ├── Client Dashboard ((client)/)
+    │   └── Tabs Layout ((tabs)/_layout.tsx)
+    │       ├── Home (home.tsx)
+    │       ├── Appointments (appointments.tsx)
+    │       └── Profile (profile.tsx)
+    ├── Provider Dashboard ((provider)/)
+    │   └── Tabs Layout ((tabs)/_layout.tsx)
+    │       ├── Home (home.tsx)
+    │       ├── Requests (requests.tsx)
+    │       ├── Schedule (schedule.tsx)
+    │       ├── Bio (bio.tsx)
+    │       ├── Clients (clients.tsx)
+    │       ├── Earnings (earnings.tsx)
+    │       └── Profile (provider-profile.tsx)
+    └── Shop Owner Dashboard ((shop-owner)/)
+        └── Tabs Layout ((tabs)/_layout.tsx)
+            ├── Dashboard (dashboard.tsx)
+            ├── Team (team.tsx)
+            ├── Calendar (calendar.tsx)
+            ├── Analytics (analytics.tsx)
+            └── Settings (settings.tsx)
+
+2. COMPONENT ARCHITECTURE
+========================
+
+2.1 COMPONENT HIERARCHY
+-----------------------
+┌─────────────────────────────────────────────────────────────┐
+│                      App Root                               │
+│                   (RootLayout)                              │
+├─────────────────────────────────────────────────────────────┤
+│                   Provider Layer                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │    Auth     │  │ Onboarding  │  │   Appointment       │ │
+│  │  Provider   │  │  Provider   │  │    Provider         │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │  Services   │  │   Team      │  │    Location         │ │
+│  │  Provider   │  │ Management  │  │    Provider         │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                   Screen Components                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │   Client    │  │  Provider   │  │   Shop Owner        │ │
+│  │   Screens   │  │   Screens   │  │    Screens          │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                  Shared Components                          │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ Form Input  │  │ Gradient    │  │   Modal             │ │
+│  │ Components  │  │  Button     │  │ Components          │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ Calendar    │  │ Analytics   │  │   Notification      │ │
+│  │ Components  │  │ Components  │  │   Components        │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+
+2.2 STATE MANAGEMENT ARCHITECTURE
+---------------------------------
+┌─────────────────────────────────────────────────────────────┐
+│                   Global State Layer                        │
+├─────────────────────────────────────────────────────────────┤
+│  Authentication State (AuthProvider)                       │
+│  ├── User Information                                       │
+│  ├── Authentication Status                                  │
+│  ├── Developer Mode Toggle                                  │
+│  └── Login/Logout Functions                                 │
+├─────────────────────────────────────────────────────────────┤
+│  Business Logic State                                       │
+│  ├── AppointmentProvider (Booking Management)              │
+│  ├── ServicesProvider (Service Management)                 │
+│  ├── TeamManagementProvider (Team Operations)              │
+│  ├── LocationProvider (Location Services)                  │
+│  └── OnboardingProvider (Onboarding Flow)                  │
+├─────────────────────────────────────────────────────────────┤
+│  Data Caching Layer (React Query)                          │
+│  ├── Server State Management                               │
+│  ├── Background Sync                                       │
+│  ├── Cache Invalidation                                    │
+│  └── Optimistic Updates                                    │
+├─────────────────────────────────────────────────────────────┤
+│  Local Storage Layer (AsyncStorage)                        │
+│  ├── User Preferences                                      │
+│  ├── Authentication Tokens                                 │
+│  ├── Offline Data Cache                                    │
+│  └── App Settings                                          │
+└─────────────────────────────────────────────────────────────┘
+
+3. DATA FLOW ARCHITECTURE
+========================
+
+3.1 USER AUTHENTICATION FLOW
+----------------------------
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│    User     │───▶│    Login    │───▶│   AuthProvider      │
+│   Input     │    │   Screen    │    │   Validation        │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│ AsyncStorage│◀───│   Success   │◀───│   Mock Data         │
+│   Storage   │    │ Response    │    │   Lookup            │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│ Role-Based  │◀───│ Navigation  │◀───│   User Role         │
+│ Dashboard   │    │ Redirect    │    │ Determination       │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+
+3.2 APPOINTMENT BOOKING FLOW
+----------------------------
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│   Client    │───▶│  Provider   │───▶│   Service           │
+│  Browse     │    │ Selection   │    │  Selection          │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│   Time      │◀───│    Date     │◀───│   Availability      │
+│ Selection   │    │ Selection   │    │    Check            │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│ Appointment │◀───│  Payment    │◀───│   Booking           │
+│  Created    │    │ Processing  │    │ Confirmation        │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+
+3.3 PROVIDER WORKFLOW
+---------------------
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│  Booking    │───▶│  Request    │───▶│   Provider          │
+│  Request    │    │Notification │    │  Dashboard          │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│   Client    │◀───│   Accept/   │◀───│   Review &          │
+│Notification │    │  Decline    │    │  Decision           │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│  Schedule   │◀───│ Appointment │◀───│   Confirmation      │
+│  Update     │    │   Added     │    │   Processing        │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+
+4. TECHNICAL ARCHITECTURE
+========================
+
+4.1 TECHNOLOGY STACK
+-------------------
+┌─────────────────────────────────────────────────────────────┐
+│                    Frontend Layer                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ React Native│  │    Expo     │  │    TypeScript       │ │
+│  │   v0.79.1   │  │   v53.0.4   │  │      v5.8.3         │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                   Navigation Layer                          │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ Expo Router │  │ React Nav   │  │   File-based        │ │
+│  │   v5.0.3    │  │   v7.1.6    │  │    Routing          │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                 State Management                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │React Query  │  │AsyncStorage │  │   Context API       │ │
+│  │   v5.83.0   │  │   v2.1.2    │  │  + Custom Hooks     │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                    UI Components                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │   Lucide    │  │ NativeWind  │  │   Custom            │ │
+│  │   Icons     │  │  (Tailwind) │  │  Components         │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                   Platform Support                          │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │     iOS     │  │   Android   │  │        Web          │ │
+│  │   Native    │  │   Native    │  │  (React Native      │ │
+│  │             │  │             │  │       Web)          │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+
+4.2 DEVELOPMENT ARCHITECTURE
+----------------------------
+┌─────────────────────────────────────────────────────────────┐
+│                 Development Environment                     │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │    Bun      │  │   ESLint    │  │    TypeScript       │ │
+│  │ Package Mgr │  │   Linting   │  │   Type Checking     │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                   Build & Deploy                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ Expo CLI    │  │   Metro     │  │    Hot Reload       │ │
+│  │   Build     │  │  Bundler    │  │   Development       │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                    Testing Strategy                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │   Manual    │  │  Component  │  │   Integration       │ │
+│  │   Testing   │  │   Testing   │  │    Testing          │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+
+5. SECURITY ARCHITECTURE
+=======================
+
+5.1 AUTHENTICATION SECURITY
+---------------------------
+┌─────────────────────────────────────────────────────────────┐
+│                 Authentication Layer                        │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │   Login     │  │  Session    │  │    Role-Based       │ │
+│  │Credentials  │  │ Management  │  │   Access Control    │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                   Data Protection                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │AsyncStorage │  │  Encrypted  │  │   Secure            │ │
+│  │ Encryption  │  │ Transmission│  │  API Calls          │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                  Input Validation                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │   Form      │  │   Data      │  │    XSS              │ │
+│  │Validation   │  │Sanitization │  │  Prevention         │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+
+6. PERFORMANCE ARCHITECTURE
+==========================
+
+6.1 OPTIMIZATION STRATEGIES
+---------------------------
+┌─────────────────────────────────────────────────────────────┐
+│                   Rendering Layer                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ React.memo  │  │  useMemo    │  │   useCallback       │ │
+│  │ Components  │  │ Optimization│  │  Optimization       │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                    Data Layer                               │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ React Query │  │   Lazy      │  │   Background        │ │
+│  │   Caching   │  │  Loading    │  │     Sync            │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                   Image Optimization                        │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ Expo Image  │  │Progressive  │  │    CDN              │ │
+│  │ Component   │  │  Loading    │  │  Delivery           │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+
+This architecture wireframe provides a comprehensive technical overview of TheCut app's structure, from high-level system design to detailed component relationships and data flow patterns.
