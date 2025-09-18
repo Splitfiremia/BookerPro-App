@@ -156,9 +156,17 @@ export default function ProfileScreen() {
         },
         {
           text: "Log Out",
-          onPress: () => {
-            logout();
-            router.replace("/");
+          onPress: async () => {
+            try {
+              console.log('Profile: Starting logout process');
+              await logout();
+              console.log('Profile: Logout completed, navigating to index');
+              // Use push instead of replace to ensure proper navigation
+              router.push("/");
+            } catch (error) {
+              console.error('Profile: Logout error:', error);
+              Alert.alert('Error', 'Failed to log out. Please try again.');
+            }
           },
           style: "destructive"
         }
