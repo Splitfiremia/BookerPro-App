@@ -170,10 +170,35 @@ export default function ProfileScreen() {
               console.log('Profile: Logout completed successfully');
               console.log('Profile: Navigating to index page');
               
-              // Force navigation to root and reset the navigation stack
-              router.dismissAll();
-              router.replace("/");
-              console.log('Profile: Navigation to index completed');
+              // Use a more aggressive navigation approach
+              // First try to dismiss all modals and screens
+              try {
+                router.dismissAll();
+              } catch (dismissError) {
+                console.log('Profile: Dismiss all failed, continuing with navigation');
+              }
+              
+              // Add a small delay to ensure state propagation
+              await new Promise(resolve => setTimeout(resolve, 100));
+              
+              // Try multiple navigation approaches
+              try {
+                // First try push to root
+                router.push("/");
+                console.log('Profile: Navigation with push completed');
+              } catch (pushError) {
+                console.log('Profile: Push navigation failed, trying replace');
+                try {
+                  // Fallback to replace
+                  router.replace("/");
+                  console.log('Profile: Navigation with replace completed');
+                } catch (replaceError) {
+                  console.log('Profile: Replace navigation failed, trying navigate');
+                  // Last resort - use navigate
+                  router.navigate("/" as any);
+                  console.log('Profile: Navigation with navigate completed');
+                }
+              }
               
             } catch (error) {
               console.error('Profile: Logout error:', error);

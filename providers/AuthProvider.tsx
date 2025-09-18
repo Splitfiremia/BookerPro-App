@@ -250,9 +250,16 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       setUser(null);
       console.log('AuthProvider: User state cleared');
       
-      // Add a small delay to ensure state propagation
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Add a longer delay to ensure state propagation across all components
+      await new Promise(resolve => setTimeout(resolve, 200));
       console.log('AuthProvider: State propagation delay completed');
+      
+      // Force a re-render by updating the loading state
+      setIsLoading(false);
+      await new Promise(resolve => setTimeout(resolve, 50));
+      setIsLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
     } catch (error) {
       console.error("AuthProvider: Logout error:", error);
       // Even if AsyncStorage fails, clear the user state
