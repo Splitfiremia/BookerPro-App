@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, useWindowD
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Star, MapPin, Clock, Calendar, Heart, UserPlus, MessageCircle, Share2, Grid3X3 } from "lucide-react-native";
 import { mockProviders } from "@/mocks/providers";
+import { useSocial } from "@/providers/SocialProvider";
 import type { ProviderPost } from "@/models/database";
 
 type TabType = 'services' | 'portfolio' | 'posts';
@@ -12,7 +13,7 @@ export default function ProviderDetailsScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState<TabType>('services');
-  const [isFollowing, setIsFollowing] = useState<boolean>(false);
+  const { isFollowing, followProvider, unfollowProvider } = useSocial();
 
   // Find provider from mock data
   const mockProvider = mockProviders.find(p => p.id === id);
@@ -108,8 +109,18 @@ export default function ProviderDetailsScreen() {
     router.push(`/(app)/(client)/booking/select-service?providerId=${id}`);
   };
 
-  const handleFollowToggle = () => {
-    setIsFollowing(!isFollowing);
+  const handleFollowToggle = async () => {
+    if (!id) return;
+    
+    try {
+      if (isFollowing(id)) {
+        await unfollowProvider(id);
+      } else {
+        await followProvider(id);
+      }
+    } catch (error) {
+      console.error('Error toggling follow status:', error);
+    }
   };
 
   const handleServicePress = (serviceId: string) => {
@@ -210,12 +221,12 @@ export default function ProviderDetailsScreen() {
           
           <View style={styles.headerActions}>
             <TouchableOpacity 
-              style={[styles.followButton, isFollowing && styles.followingButton]}
+              style={[styles.followButton, isFollowing(id || '') && styles.followingButton]}
               onPress={handleFollowToggle}
             >
-              <UserPlus size={16} color={isFollowing ? "#666" : "#fff"} />
-              <Text style={[styles.followButtonText, isFollowing && styles.followingButtonText]}>
-                {isFollowing ? 'Following' : 'Follow'}
+              <UserPlus size={16} color={isFollowing(id || '') ? "#666" : "#fff"} />
+              <Text style={[styles.followButtonText, isFollowing(id || '') && styles.followingButtonText]}>
+                {isFollowing(id || '') ? 'Following' : 'Follow'}
               </Text>
             </TouchableOpacity>
             

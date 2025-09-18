@@ -55,6 +55,7 @@ export interface Provider {
   payoutSchedule: 'daily' | 'weekly' | 'monthly' | 'instant';
   rating?: number; // Average rating from reviews
   totalReviews?: number; // Total number of reviews
+  isFollowed?: boolean; // Whether the current user is following this provider
   createdAt: string;
   updatedAt: string;
 }

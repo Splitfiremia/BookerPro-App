@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
-import { Search, MapPin, Filter, Star, CreditCard } from 'lucide-react-native';
+import { Search, MapPin, Filter, Star, CreditCard, Heart } from 'lucide-react-native';
 import { mockProviders } from '@/mocks/providers';
+import { useSocial } from '@/providers/SocialProvider';
 import { router } from 'expo-router';
 
 interface Shop {
@@ -61,6 +62,7 @@ export default function HomeScreen() {
   const [selectedFilter, setSelectedFilter] = useState<string>('nearby');
   const [locationEnabled, setLocationEnabled] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
+  const { getFollowedCount } = useSocial();
 
   // Simulate location permission check
   React.useEffect(() => {
@@ -138,10 +140,24 @@ export default function HomeScreen() {
           />
         </View>
         
-        <TouchableOpacity style={styles.locationContainer}>
-          <MapPin size={16} color={COLORS.lightGray} />
-          <Text style={styles.locationText}>Current Location</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.locationContainer}>
+            <MapPin size={16} color={COLORS.lightGray} />
+            <Text style={styles.locationText}>Current Location</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.followingButton}
+            onPress={() => router.push('/(app)/(client)/following')}
+          >
+            <Heart size={16} color={COLORS.accent} />
+            {getFollowedCount() > 0 && (
+              <View style={styles.followingBadge}>
+                <Text style={styles.followingBadgeText}>{getFollowedCount()}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Filter Options */}
@@ -268,9 +284,42 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md,
     fontFamily: FONTS.regular,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+  },
+  followingButton: {
+    position: 'relative',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: SPACING.md,
+  },
+  followingBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: COLORS.accent,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  followingBadgeText: {
+    color: COLORS.background,
+    fontSize: 10,
+    fontFamily: FONTS.bold,
   },
   locationText: {
     color: COLORS.white,
