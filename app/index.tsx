@@ -53,9 +53,12 @@ export default function LandingScreen() {
         
         return () => clearTimeout(timeoutId);
       } else {
-        // User is not authenticated, show login screen immediately
+        // User is not authenticated, redirect to login immediately
         console.log('Index: User not authenticated, redirecting to login');
-        router.replace("/(auth)/login");
+        const timeoutId = setTimeout(() => {
+          router.replace("/(auth)/login");
+        }, 100);
+        return () => clearTimeout(timeoutId);
       }
     }
     
@@ -113,8 +116,8 @@ export default function LandingScreen() {
   };
 
   const handleBrowseProviders = () => {
-    // Navigate directly to discover without authentication
-    router.push("/(tabs)/explore");
+    // For now, redirect to login since browsing requires authentication
+    router.push("/(auth)/login");
   };
 
   const toggleDeveloperMode = () => {
