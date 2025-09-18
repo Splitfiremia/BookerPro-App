@@ -159,10 +159,21 @@ export default function ProfileScreen() {
           onPress: async () => {
             try {
               console.log('Profile: Starting logout process');
+              console.log('Profile: Current user before logout:', user?.email);
+              console.log('Profile: Current auth state before logout:', { isAuthenticated: !!user });
+              
               await logout();
-              console.log('Profile: Logout completed, navigating to index');
+              
+              console.log('Profile: Logout completed successfully');
+              console.log('Profile: Navigating to index page');
+              
               // Use replace to ensure proper navigation and clear the stack
-              router.replace("/");
+              // Add a small delay to ensure the logout state is processed
+              setTimeout(() => {
+                router.replace("/");
+              }, 100);
+              
+              console.log('Profile: Navigation to index completed');
             } catch (error) {
               console.error('Profile: Logout error:', error);
               Alert.alert('Error', 'Failed to log out. Please try again.');

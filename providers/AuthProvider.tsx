@@ -238,17 +238,24 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, [isDeveloperMode]);
 
   const logout = useCallback(async () => {
-    console.log('Logout');
+    console.log('AuthProvider: Starting logout process');
+    console.log('AuthProvider: Current user before logout:', user?.email);
     setIsLoading(true);
     try {
+      console.log('AuthProvider: Setting user to null');
       setUser(null);
+      console.log('AuthProvider: Removing user from AsyncStorage');
       await AsyncStorage.removeItem("user");
+      console.log('AuthProvider: User removed from AsyncStorage successfully');
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("AuthProvider: Logout error:", error);
+      throw error; // Re-throw to let the caller handle it
     } finally {
+      console.log('AuthProvider: Setting isLoading to false');
       setIsLoading(false);
+      console.log('AuthProvider: Logout process completed');
     }
-  }, []);
+  }, [user]);
 
   const contextValue = useMemo(() => ({
     user,

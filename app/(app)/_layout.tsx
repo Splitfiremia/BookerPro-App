@@ -1,10 +1,19 @@
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
+import { useEffect } from "react";
 import { COLORS } from "@/constants/theme";
 
 export default function AppLayout() {
-  const { isLoading } = useAuth();
+  const { isLoading, isAuthenticated, user } = useAuth();
+
+  // Redirect to index if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      console.log('AppLayout: User not authenticated, redirecting to index');
+      router.replace("/");
+    }
+  }, [isLoading, isAuthenticated]);
 
   // Show loading while auth is being determined
   if (isLoading) {
@@ -14,6 +23,11 @@ export default function AppLayout() {
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!isAuthenticated || !user) {
+    return null;
   }
 
   return (
