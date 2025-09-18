@@ -39,8 +39,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       try {
         console.log('AuthProvider: Loading user and settings...');
         
-        // Load stored user data and developer mode in parallel with timeout
-        const loadWithTimeout = (promise: Promise<any>, timeout: number = 3000) => {
+        // Load stored user data and developer mode with shorter timeout
+        const loadWithTimeout = (promise: Promise<any>, timeout: number = 1000) => {
           return Promise.race([
             promise,
             new Promise((_, reject) => 
@@ -99,11 +99,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     // Load immediately but with error handling and timeout
     loadUserAndSettings();
     
-    // Fallback timeout to ensure loading state doesn't hang
+    // Shorter fallback timeout to ensure loading state doesn't hang
     const fallbackTimeout = setTimeout(() => {
       console.warn('AuthProvider: Fallback timeout triggered, forcing isLoading to false');
       setIsLoading(false);
-    }, 5000);
+    }, 2000);
     
     return () => clearTimeout(fallbackTimeout);
   }, []);

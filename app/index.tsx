@@ -30,9 +30,19 @@ export default function LandingScreen() {
   // Show loading if auth is still being determined
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
+      <ImageBackground
+        source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/wq1viwd4zpq35fb12j801' }}
+        style={styles.container}
+        resizeMode="cover"
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.logo}>BookerPro</Text>
+            <Text style={styles.loadingText}>Loading...</Text>
+            <Text style={styles.loadingSubtext}>Initializing app...</Text>
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
     );
   }
 
@@ -658,6 +668,11 @@ const styles = StyleSheet.create({
   loadingText: {
     color: "#FFFFFF",
     fontSize: 16,
+    marginBottom: 8,
+  },
+  loadingSubtext: {
+    color: "#CCCCCC",
+    fontSize: 14,
   },
   disabledButton: {
     opacity: 0.5,
