@@ -1,51 +1,230 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, useWindowDimensions, FlatList } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { COLORS } from "@/constants/theme";
-import { Star, MapPin, Clock, DollarSign, Calendar, Heart } from "lucide-react-native";
+import { Star, MapPin, Clock, Calendar, Heart, UserPlus, MessageCircle, Share2, Grid3X3 } from "lucide-react-native";
+import { mockProviders } from "@/mocks/providers";
+import type { ProviderPost } from "@/models/database";
+
+type TabType = 'services' | 'portfolio' | 'posts';
 
 export default function ProviderDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const [activeTab, setActiveTab] = useState<TabType>('services');
+  const [isFollowing, setIsFollowing] = useState<boolean>(false);
 
-  // Mock provider data - in real app, fetch based on ID
+  // Find provider from mock data
+  const mockProvider = mockProviders.find(p => p.id === id);
+  
+  if (!mockProvider) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Provider not found</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Enhanced provider data with social features
   const provider = {
-    id,
-    name: "John Smith",
-    title: "Senior Barber",
-    avatar: "https://i.pravatar.cc/300?img=5",
-    rating: 4.9,
-    reviews: 234,
-    location: "123 Main St, New York, NY",
-    distance: "0.8 miles",
-    about: "Professional barber with 10+ years of experience. Specializing in modern cuts, fades, and beard grooming. Committed to providing exceptional service and ensuring every client leaves looking and feeling their best.",
-    services: [
-      { id: '1', name: 'Haircut', price: '$35', duration: '30 min' },
-      { id: '2', name: 'Beard Trim', price: '$25', duration: '20 min' },
-      { id: '3', name: 'Hair & Beard', price: '$55', duration: '45 min' },
-      { id: '4', name: 'Hot Towel Shave', price: '$40', duration: '30 min' },
-    ],
-    availability: "Mon-Sat: 9:00 AM - 7:00 PM",
-    images: [
-      "https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400",
-      "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=400",
-      "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=400",
-    ],
+    ...mockProvider,
+    followerCount: 1247,
+    followingCount: 89,
+    postsCount: 156,
+    isVerified: true,
+    posts: [
+      {
+        id: '1',
+        providerId: id as string,
+        imageUrl: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=400',
+        caption: 'Fresh fade for the weekend! ✂️ #barbershop #fade #freshcut',
+        tags: ['barbershop', 'fade', 'freshcut'],
+        likes: 89,
+        comments: [],
+        createdAt: '2024-01-15T10:30:00Z',
+        updatedAt: '2024-01-15T10:30:00Z'
+      },
+      {
+        id: '2',
+        providerId: id as string,
+        imageUrl: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=400',
+        caption: 'Precision beard work 🔥 Book your appointment today!',
+        tags: ['beard', 'precision', 'grooming'],
+        likes: 124,
+        comments: [],
+        createdAt: '2024-01-14T15:45:00Z',
+        updatedAt: '2024-01-14T15:45:00Z'
+      },
+      {
+        id: '3',
+        providerId: id as string,
+        imageUrl: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400',
+        caption: 'Before and after transformation! Amazing results 💯',
+        tags: ['transformation', 'beforeafter', 'haircut'],
+        likes: 203,
+        comments: [],
+        createdAt: '2024-01-13T09:20:00Z',
+        updatedAt: '2024-01-13T09:20:00Z'
+      },
+      {
+        id: '4',
+        providerId: id as string,
+        imageUrl: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400',
+        caption: 'Custom design work - bringing creativity to life! 🎨',
+        tags: ['design', 'creative', 'art'],
+        likes: 156,
+        comments: [],
+        createdAt: '2024-01-12T14:10:00Z',
+        updatedAt: '2024-01-12T14:10:00Z'
+      },
+      {
+        id: '5',
+        providerId: id as string,
+        imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400',
+        caption: 'Classic cut never goes out of style ✨',
+        tags: ['classic', 'timeless', 'style'],
+        likes: 78,
+        comments: [],
+        createdAt: '2024-01-11T11:30:00Z',
+        updatedAt: '2024-01-11T11:30:00Z'
+      },
+      {
+        id: '6',
+        providerId: id as string,
+        imageUrl: 'https://images.unsplash.com/photo-1566492031773-4f4e44671d66?w=400',
+        caption: 'Another satisfied client! Thank you for trusting me 🙏',
+        tags: ['satisfied', 'client', 'trust'],
+        likes: 92,
+        comments: [],
+        createdAt: '2024-01-10T16:45:00Z',
+        updatedAt: '2024-01-10T16:45:00Z'
+      }
+    ] as ProviderPost[]
   };
 
   const handleBookAppointment = () => {
     router.push(`/(app)/(client)/booking/select-service?providerId=${id}`);
   };
 
+  const handleFollowToggle = () => {
+    setIsFollowing(!isFollowing);
+  };
+
+  const handleServicePress = (serviceId: string) => {
+    router.push(`/(app)/(client)/booking/select-service?providerId=${id}&serviceId=${serviceId}`);
+  };
+
+  const renderServicesTab = () => (
+    <View style={styles.tabContent}>
+      {provider.services?.map((service) => (
+        <TouchableOpacity 
+          key={service.id} 
+          style={styles.serviceItem}
+          onPress={() => handleServicePress(service.id)}
+        >
+          <View style={styles.serviceInfo}>
+            <Text style={styles.serviceName}>{service.name}</Text>
+            <View style={styles.serviceDetails}>
+              <Clock size={14} color="#666" />
+              <Text style={styles.serviceDetailText}>{service.duration}</Text>
+            </View>
+          </View>
+          <Text style={styles.servicePrice}>${service.price}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const renderPortfolioTab = () => (
+    <View style={styles.tabContent}>
+      <FlatList
+        data={provider.portfolio || []}
+        numColumns={2}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={[styles.portfolioItem, { width: (width - 60) / 2 }]}>
+            <Image source={{ uri: item.image }} style={styles.portfolioImage} />
+            <View style={styles.portfolioOverlay}>
+              <Text style={styles.portfolioTitle}>{item.title}</Text>
+              <Text style={styles.portfolioDescription}>{item.description}</Text>
+            </View>
+          </View>
+        )}
+        columnWrapperStyle={styles.portfolioRow}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
+  );
+
+  const renderPostsTab = () => (
+    <View style={styles.tabContent}>
+      <FlatList
+        data={provider.posts}
+        numColumns={3}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={[styles.postItem, { width: (width - 60) / 3 }]}>
+            <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+            <View style={styles.postOverlay}>
+              <Heart size={12} color="#fff" />
+              <Text style={styles.postLikes}>{item.likes}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
+  );
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'services':
+        return renderServicesTab();
+      case 'portfolio':
+        return renderPortfolioTab();
+      case 'posts':
+        return renderPostsTab();
+      default:
+        return renderServicesTab();
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <Image source={{ uri: provider.avatar }} style={styles.heroImage} />
-          <View style={styles.heroOverlay}>
-            <TouchableOpacity style={styles.favoriteButton}>
-              <Heart size={24} color="#fff" />
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header Section */}
+        <View style={styles.headerSection}>
+          <View style={styles.profileImageContainer}>
+            <Image 
+              source={{ uri: provider.profileImage || provider.image }} 
+              style={styles.profileImage} 
+            />
+            {provider.isVerified && (
+              <View style={styles.verifiedBadge}>
+                <Star size={12} color="#fff" fill="#fff" />
+              </View>
+            )}
+          </View>
+          
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              style={[styles.followButton, isFollowing && styles.followingButton]}
+              onPress={handleFollowToggle}
+            >
+              <UserPlus size={16} color={isFollowing ? "#666" : "#fff"} />
+              <Text style={[styles.followButtonText, isFollowing && styles.followingButtonText]}>
+                {isFollowing ? 'Following' : 'Follow'}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionButton}>
+              <MessageCircle size={16} color="#333" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionButton}>
+              <Share2 size={16} color="#333" />
             </TouchableOpacity>
           </View>
         </View>
@@ -53,83 +232,80 @@ export default function ProviderDetailsScreen() {
         {/* Provider Info */}
         <View style={styles.infoSection}>
           <Text style={styles.providerName}>{provider.name}</Text>
-          <Text style={styles.providerTitle}>{provider.title}</Text>
+          <Text style={styles.providerCategory}>{provider.category}</Text>
+          <Text style={styles.shopName}>{provider.shopName}</Text>
           
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Star size={16} color="#FFB800" />
-              <Text style={styles.statText}>{provider.rating}</Text>
-              <Text style={styles.statLabel}>({provider.reviews} reviews)</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <MapPin size={16} color="#666" />
-              <Text style={styles.statText}>{provider.distance}</Text>
-            </View>
+          {provider.about && (
+            <Text style={styles.bioText}>{provider.about}</Text>
+          )}
+          
+          <View style={styles.locationRow}>
+            <MapPin size={14} color="#666" />
+            <Text style={styles.locationText}>{provider.address}</Text>
           </View>
         </View>
 
-        {/* About Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.aboutText}>{provider.about}</Text>
-        </View>
-
-        {/* Services Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Services</Text>
-          {provider.services.map((service) => (
-            <View key={service.id} style={styles.serviceItem}>
-              <View style={styles.serviceInfo}>
-                <Text style={styles.serviceName}>{service.name}</Text>
-                <View style={styles.serviceDetails}>
-                  <Clock size={14} color="#666" />
-                  <Text style={styles.serviceDetailText}>{service.duration}</Text>
-                </View>
-              </View>
-              <Text style={styles.servicePrice}>{service.price}</Text>
+        {/* Stats Bar */}
+        <View style={styles.statsSection}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{provider.followerCount.toLocaleString()}</Text>
+            <Text style={styles.statLabel}>Followers</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{provider.postsCount}</Text>
+            <Text style={styles.statLabel}>Posts</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <View style={styles.ratingContainer}>
+              <Star size={14} color="#FFB800" fill="#FFB800" />
+              <Text style={styles.statNumber}>{provider.rating}</Text>
             </View>
-          ))}
-        </View>
-
-        {/* Gallery Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Gallery</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.galleryContainer}>
-              {provider.images.map((image, index) => (
-                <Image key={index} source={{ uri: image }} style={styles.galleryImage} />
-              ))}
-            </View>
-          </ScrollView>
-        </View>
-
-        {/* Location Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Location</Text>
-          <View style={styles.locationCard}>
-            <MapPin size={20} color="#007AFF" />
-            <View style={styles.locationInfo}>
-              <Text style={styles.locationAddress}>{provider.location}</Text>
-              <Text style={styles.locationDistance}>{provider.distance} away</Text>
-            </View>
+            <Text style={styles.statLabel}>({provider.reviewCount} reviews)</Text>
           </View>
         </View>
 
-        {/* Availability Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Availability</Text>
-          <View style={styles.availabilityCard}>
-            <Calendar size={20} color="#4CAF50" />
-            <Text style={styles.availabilityText}>{provider.availability}</Text>
-          </View>
+        {/* Tab Navigation */}
+        <View style={styles.tabNavigation}>
+          <TouchableOpacity 
+            style={[styles.tabButton, activeTab === 'services' && styles.activeTabButton]}
+            onPress={() => setActiveTab('services')}
+          >
+            <Text style={[styles.tabButtonText, activeTab === 'services' && styles.activeTabButtonText]}>
+              Services
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.tabButton, activeTab === 'portfolio' && styles.activeTabButton]}
+            onPress={() => setActiveTab('portfolio')}
+          >
+            <Text style={[styles.tabButtonText, activeTab === 'portfolio' && styles.activeTabButtonText]}>
+              Portfolio
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.tabButton, activeTab === 'posts' && styles.activeTabButton]}
+            onPress={() => setActiveTab('posts')}
+          >
+            <Grid3X3 size={16} color={activeTab === 'posts' ? "#007AFF" : "#666"} />
+            <Text style={[styles.tabButtonText, activeTab === 'posts' && styles.activeTabButtonText]}>
+              Posts
+            </Text>
+          </TouchableOpacity>
         </View>
+
+        {/* Tab Content */}
+        {renderTabContent()}
       </ScrollView>
 
-      {/* Book Button */}
+      {/* Fixed Book Button */}
       <View style={styles.bookButtonContainer}>
         <TouchableOpacity style={styles.bookButton} onPress={handleBookAppointment}>
-          <Text style={styles.bookButtonText}>Book Appointment</Text>
+          <Calendar size={20} color="#fff" />
+          <Text style={styles.bookButtonText}>Book Now</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -139,93 +315,193 @@ export default function ProviderDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
   },
-  heroSection: {
-    height: 300,
+  headerSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  profileImageContainer: {
     position: 'relative',
   },
-  heroImage: {
-    width: '100%',
-    height: '100%',
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#f0f0f0',
   },
-  heroOverlay: {
+  verifiedBadge: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-    padding: 16,
+    bottom: 2,
+    right: 2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
-  favoriteButton: {
-    width: 40,
-    height: 40,
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  followButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    gap: 6,
+  },
+  followingButton: {
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  followButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  followingButtonText: {
+    color: '#666',
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
   },
   infoSection: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
     backgroundColor: '#fff',
   },
   providerName: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 4,
   },
-  providerTitle: {
+  providerCategory: {
     fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  shopName: {
+    fontSize: 14,
     color: '#666',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  bioText: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+    marginBottom: 12,
   },
-  statItem: {
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  statText: {
+  locationText: {
     fontSize: 14,
-    fontWeight: '600',
+    color: '#666',
+    flex: 1,
+  },
+  statsSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#333',
+    marginBottom: 2,
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
   },
   statDivider: {
     width: 1,
-    height: 16,
+    height: 20,
     backgroundColor: '#e0e0e0',
-    marginHorizontal: 16,
   },
-  section: {
-    padding: 20,
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  tabNavigation: {
+    flexDirection: 'row',
     backgroundColor: '#fff',
-    marginTop: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
+  tabButton: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 16,
+    gap: 6,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
-  aboutText: {
+  activeTabButton: {
+    borderBottomColor: '#007AFF',
+  },
+  tabButtonText: {
     fontSize: 14,
+    fontWeight: '500',
     color: '#666',
-    lineHeight: 22,
+  },
+  activeTabButtonText: {
+    color: '#007AFF',
+  },
+  tabContent: {
+    backgroundColor: '#fff',
+    minHeight: 400,
   },
   serviceItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
@@ -248,63 +524,85 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   servicePrice: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#007AFF',
   },
-  galleryContainer: {
-    flexDirection: 'row',
-    gap: 12,
+  portfolioRow: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 16,
   },
-  galleryImage: {
-    width: 200,
-    height: 150,
-    borderRadius: 8,
+  portfolioItem: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#f0f0f0',
   },
-  locationCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
+  portfolioImage: {
+    width: '100%',
+    height: 120,
+    backgroundColor: '#f0f0f0',
   },
-  locationInfo: {
-    flex: 1,
+  portfolioOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 8,
   },
-  locationAddress: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-  },
-  locationDistance: {
+  portfolioTitle: {
+    color: '#fff',
     fontSize: 12,
-    color: '#666',
-    marginTop: 2,
+    fontWeight: '600',
+    marginBottom: 2,
   },
-  availabilityCard: {
+  portfolioDescription: {
+    color: '#fff',
+    fontSize: 10,
+    opacity: 0.9,
+  },
+  postItem: {
+    aspectRatio: 1,
+    margin: 1,
+    position: 'relative',
+  },
+  postImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f0f0f0',
+  },
+  postOverlay: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    gap: 4,
   },
-  availabilityText: {
-    fontSize: 14,
-    color: '#333',
+  postLikes: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
   },
   bookButtonContainer: {
     padding: 20,
     backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: '#f0f0f0',
   },
   bookButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#007AFF',
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
+    gap: 8,
   },
   bookButtonText: {
     color: '#fff',

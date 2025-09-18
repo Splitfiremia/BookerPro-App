@@ -10,9 +10,11 @@ export default function ClientLayout() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="provider/[id]" options={{ title: "Provider Details" }} />
+      <Stack.Screen name="provider/[id]" options={{ title: "Provider Profile" }} />
       <Stack.Screen name="booking" options={{ title: "Book Appointment" }} />
       <Stack.Screen name="appointment/[id]" options={{ title: "Appointment Details" }} />
+      <Stack.Screen name="shops/explore" options={{ title: "Explore Shops" }} />
+      <Stack.Screen name="shops/[id]" options={{ title: "Shop Details" }} />
     </Stack>
   );
 }
