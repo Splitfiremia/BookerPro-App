@@ -27,8 +27,20 @@ export default function LandingScreen() {
     console.log('Index: Auth state - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode);
   }, [isLoading, isAuthenticated, user, isDeveloperMode]);
 
-  // Show loading if auth is still being determined
-  if (isLoading) {
+  // Emergency fallback - if loading takes too long, show the main interface
+  const [emergencyFallback, setEmergencyFallback] = useState<boolean>(false);
+  
+  useEffect(() => {
+    const emergencyTimeout = setTimeout(() => {
+      console.warn('Emergency fallback triggered - bypassing loading state');
+      setEmergencyFallback(true);
+    }, 2000); // 2 second emergency fallback
+    
+    return () => clearTimeout(emergencyTimeout);
+  }, []);
+  
+  // Show loading if auth is still being determined (but not for too long)
+  if (isLoading && !emergencyFallback) {
     return (
       <ImageBackground
         source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/wq1viwd4zpq35fb12j801' }}

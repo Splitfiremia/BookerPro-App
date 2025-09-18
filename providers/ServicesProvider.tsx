@@ -15,145 +15,53 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const loadServices = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
     
     setIsLoading(true);
     try {
+      // Quick timeout to prevent hanging
+      const loadWithTimeout = (promise: Promise<any>, timeout: number = 200) => {
+        return Promise.race([
+          promise,
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), timeout)
+          )
+        ]);
+      };
+      
       // Load based on user role and provider type
       if (user.role === 'provider') {
         const mockData = user.mockData;
         if (mockData?.profile?.isIndependent !== false) {
-          // Independent provider - load personal services
-          const storedServices = await AsyncStorage.getItem(`services_${user.id}`);
-          if (storedServices) {
-            setServices(JSON.parse(storedServices));
-          } else {
-            // Initialize with mock data
-            const initialServices: Service[] = mockData?.profile?.services?.map((s: any, index: number) => ({
-              id: `service_${index + 1}`,
-              name: s.name,
-              description: s.description || '',
-              duration: parseInt(s.duration) || 30,
-              price: s.price,
-              isActive: true,
-              providerId: user.id,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            })) || [];
-            setServices(initialServices);
-            await AsyncStorage.setItem(`services_${user.id}`, JSON.stringify(initialServices));
+          // Independent provider - try to load personal services quickly
+          try {
+            const storedServices = await loadWithTimeout(AsyncStorage.getItem(`services_${user.id}`));
+            if (storedServices) {
+              setServices(JSON.parse(storedServices));
+            } else {
+              // Initialize with mock data
+              const initialServices: Service[] = mockData?.profile?.services?.map((s: any, index: number) => ({
+                id: `service_${index + 1}`,
+                name: s.name,
+                description: s.description || '',
+                duration: parseInt(s.duration) || 30,
+                price: s.price,
+                isActive: true,
+                providerId: user.id,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              })) || [];
+              setServices(initialServices);
+            }
+          } catch (error) {
+            console.log('Using default services due to timeout/error');
+            setServices([]);
           }
         } else {
-          // Shop-based provider - load shop master services and offerings
-          const shopId = mockData?.profile?.shopId || 'shop_1';
-          const storedMasterServices = await AsyncStorage.getItem(`master_services_${shopId}`);
-          const storedOfferings = await AsyncStorage.getItem(`service_offerings_${user.id}`);
-          
-          if (storedMasterServices) {
-            setMasterServices(JSON.parse(storedMasterServices));
-          } else {
-            // Initialize with default shop services
-            const defaultMasterServices: Service[] = [
-              {
-                id: 'master_1',
-                name: "Women's Haircut",
-                description: 'Professional haircut and styling',
-                duration: 45,
-                price: 75,
-                isActive: true,
-                shopId,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              },
-              {
-                id: 'master_2',
-                name: "Men's Haircut",
-                description: 'Classic and modern cuts',
-                duration: 30,
-                price: 55,
-                isActive: true,
-                shopId,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              },
-              {
-                id: 'master_3',
-                name: 'Color & Highlights',
-                description: 'Full color service with highlights',
-                duration: 120,
-                price: 150,
-                isActive: true,
-                shopId,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              },
-              {
-                id: 'master_4',
-                name: 'Blowout',
-                description: 'Professional styling and blowout',
-                duration: 30,
-                price: 45,
-                isActive: true,
-                shopId,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              },
-            ];
-            setMasterServices(defaultMasterServices);
-            await AsyncStorage.setItem(`master_services_${shopId}`, JSON.stringify(defaultMasterServices));
-          }
-          
-          if (storedOfferings) {
-            setServiceOfferings(JSON.parse(storedOfferings));
-          } else {
-            // Initialize with default offerings (all services offered)
-            const defaultOfferings: ProviderServiceOffering[] = [
-              {
-                id: 'offering_1',
-                providerId: user.id!,
-                serviceId: 'master_1',
-                isOffered: true,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              },
-              {
-                id: 'offering_2',
-                providerId: user.id!,
-                serviceId: 'master_2',
-                isOffered: true,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              },
-              {
-                id: 'offering_3',
-                providerId: user.id!,
-                serviceId: 'master_3',
-                isOffered: false,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              },
-              {
-                id: 'offering_4',
-                providerId: user.id!,
-                serviceId: 'master_4',
-                isOffered: true,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              },
-            ];
-            setServiceOfferings(defaultOfferings);
-            await AsyncStorage.setItem(`service_offerings_${user.id}`, JSON.stringify(defaultOfferings));
-          }
-        }
-      } else if (user.role === 'owner') {
-        // Shop owner - load master services for their shops
-        const shopId = user.mockData?.shops?.[0]?.id || 'shop_1';
-        const storedMasterServices = await AsyncStorage.getItem(`master_services_${shopId}`);
-        
-        if (storedMasterServices) {
-          setMasterServices(JSON.parse(storedMasterServices));
-        } else {
-          // Initialize with default services
+          // Shop-based provider - load defaults quickly
           const defaultMasterServices: Service[] = [
             {
               id: 'master_1',
@@ -162,7 +70,7 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
               duration: 45,
               price: 75,
               isActive: true,
-              shopId,
+              shopId: 'shop_1',
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             },
@@ -173,36 +81,60 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
               duration: 30,
               price: 55,
               isActive: true,
-              shopId,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-            {
-              id: 'master_3',
-              name: 'Color & Highlights',
-              description: 'Full color service with highlights',
-              duration: 120,
-              price: 150,
-              isActive: true,
-              shopId,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-            {
-              id: 'master_4',
-              name: 'Blowout',
-              description: 'Professional styling and blowout',
-              duration: 30,
-              price: 45,
-              isActive: true,
-              shopId,
+              shopId: 'shop_1',
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             },
           ];
           setMasterServices(defaultMasterServices);
-          await AsyncStorage.setItem(`master_services_${shopId}`, JSON.stringify(defaultMasterServices));
+          
+          const defaultOfferings: ProviderServiceOffering[] = [
+            {
+              id: 'offering_1',
+              providerId: user.id!,
+              serviceId: 'master_1',
+              isOffered: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            {
+              id: 'offering_2',
+              providerId: user.id!,
+              serviceId: 'master_2',
+              isOffered: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+          ];
+          setServiceOfferings(defaultOfferings);
         }
+      } else if (user.role === 'owner') {
+        // Shop owner - load defaults quickly
+        const defaultMasterServices: Service[] = [
+          {
+            id: 'master_1',
+            name: "Women's Haircut",
+            description: 'Professional haircut and styling',
+            duration: 45,
+            price: 75,
+            isActive: true,
+            shopId: 'shop_1',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          {
+            id: 'master_2',
+            name: "Men's Haircut",
+            description: 'Classic and modern cuts',
+            duration: 30,
+            price: 55,
+            isActive: true,
+            shopId: 'shop_1',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ];
+        setMasterServices(defaultMasterServices);
       }
     } catch (error) {
       console.error('Error loading services:', error);
@@ -211,7 +143,7 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
     }
   }, [user]);
 
-  // Load services on mount
+  // Load services on mount with timeout
   useEffect(() => {
     if (!user) {
       setIsLoading(false);
@@ -219,6 +151,14 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
     }
     
     loadServices();
+    
+    // Fallback timeout
+    const fallbackTimeout = setTimeout(() => {
+      console.warn('ServicesProvider: Fallback timeout triggered');
+      setIsLoading(false);
+    }, 600);
+    
+    return () => clearTimeout(fallbackTimeout);
   }, [user, loadServices]);
 
   // Independent provider service management

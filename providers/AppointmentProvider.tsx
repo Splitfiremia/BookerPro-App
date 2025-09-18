@@ -153,29 +153,47 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Load appointments and notifications on mount
+  // Load appointments and notifications on mount with timeout
   useEffect(() => {
     const loadData = async () => {
       try {
         console.log('Loading appointments and notifications...');
         
-        // Load appointments
-        const storedAppointments = await AsyncStorage.getItem("appointments");
-        if (storedAppointments) {
-          const parsedAppointments = JSON.parse(storedAppointments);
-          console.log('Loaded stored appointments:', parsedAppointments.length);
-          setAppointments(parsedAppointments);
-        } else {
-          console.log('Using mock appointments:', mockAppointmentsData.length);
+        // Quick timeout to prevent hanging
+        const loadWithTimeout = (promise: Promise<any>, timeout: number = 300) => {
+          return Promise.race([
+            promise,
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout')), timeout)
+            )
+          ]);
+        };
+        
+        // Try to load appointments quickly
+        try {
+          const storedAppointments = await loadWithTimeout(AsyncStorage.getItem("appointments"));
+          if (storedAppointments) {
+            const parsedAppointments = JSON.parse(storedAppointments);
+            console.log('Loaded stored appointments:', parsedAppointments.length);
+            setAppointments(parsedAppointments);
+          } else {
+            console.log('Using mock appointments:', mockAppointmentsData.length);
+            setAppointments(mockAppointmentsData);
+          }
+        } catch (error) {
+          console.log('Using mock appointments due to timeout/error');
           setAppointments(mockAppointmentsData);
-          await AsyncStorage.setItem("appointments", JSON.stringify(mockAppointmentsData));
         }
 
-        // Load notifications
-        const storedNotifications = await AsyncStorage.getItem("notifications");
-        if (storedNotifications) {
-          const parsedNotifications = JSON.parse(storedNotifications);
-          setNotifications(parsedNotifications);
+        // Try to load notifications quickly
+        try {
+          const storedNotifications = await loadWithTimeout(AsyncStorage.getItem("notifications"));
+          if (storedNotifications) {
+            const parsedNotifications = JSON.parse(storedNotifications);
+            setNotifications(parsedNotifications);
+          }
+        } catch (error) {
+          console.log('No stored notifications or timeout');
         }
       } catch (error) {
         console.error("Error loading data:", error);
@@ -184,7 +202,17 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
         setIsLoading(false);
       }
     };
+    
     loadData();
+    
+    // Fallback timeout
+    const fallbackTimeout = setTimeout(() => {
+      console.warn('AppointmentProvider: Fallback timeout triggered');
+      setAppointments(mockAppointmentsData);
+      setIsLoading(false);
+    }, 800);
+    
+    return () => clearTimeout(fallbackTimeout);
   }, []);
 
   // Save data to storage

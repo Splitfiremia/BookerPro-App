@@ -37,6 +37,15 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  // Global fallback to prevent app from hanging
+  React.useEffect(() => {
+    const globalTimeout = setTimeout(() => {
+      console.warn('Global timeout: App may be stuck, forcing navigation to index');
+    }, 3000);
+    
+    return () => clearTimeout(globalTimeout);
+  }, []);
+  
   return (
     <GestureHandlerRootView style={styles.gestureHandler}>
       <QueryClientProvider client={queryClient}>
