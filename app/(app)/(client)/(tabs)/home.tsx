@@ -165,7 +165,7 @@ export default function HomeScreen() {
               {IconComponent && (
                 <IconComponent 
                   size={14} 
-                  color={selectedFilter === filter.id ? COLORS.background : COLORS.white} 
+                  color="#333333" 
                 />
               )}
               <Text style={[
@@ -262,29 +262,34 @@ const styles = StyleSheet.create({
   },
   filtersContent: {
     paddingHorizontal: SPACING.md,
+    gap: 8,
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    marginRight: SPACING.xs,
-    borderRadius: 20,
+    flexShrink: 0,
+    whiteSpace: 'nowrap' as any,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 0,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    minHeight: 32,
+    borderColor: '#E5E5E5',
+    backgroundColor: '#FFFFFF',
+    minHeight: 28,
   },
   filterButtonActive: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E5E5E5',
   },
   filterText: {
-    color: COLORS.white,
-    fontSize: FONT_SIZES.xs,
+    color: '#333333',
+    fontSize: 14,
     fontFamily: FONTS.regular,
     marginLeft: SPACING.xs,
   },
   filterTextActive: {
-    color: COLORS.background,
+    color: '#333333',
   },
   content: {
     flex: 1,
