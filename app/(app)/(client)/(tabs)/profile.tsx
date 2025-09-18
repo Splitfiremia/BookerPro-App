@@ -161,8 +161,8 @@ export default function ProfileScreen() {
               console.log('Profile: Starting logout process');
               await logout();
               console.log('Profile: Logout completed, navigating to index');
-              // Use push instead of replace to ensure proper navigation
-              router.push("/");
+              // Use replace to ensure proper navigation and clear the stack
+              router.replace("/");
             } catch (error) {
               console.error('Profile: Logout error:', error);
               Alert.alert('Error', 'Failed to log out. Please try again.');
