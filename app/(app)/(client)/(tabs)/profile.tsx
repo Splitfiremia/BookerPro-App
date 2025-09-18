@@ -9,7 +9,7 @@ import {
   Alert,
   Linking,
 } from "react-native";
-import { Stack, router } from "expo-router";
+import { Stack } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { 
   Settings, 
@@ -146,7 +146,7 @@ export default function ProfileScreen() {
     Alert.alert("Privacy Policy", "View privacy policy");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       "Log Out", 
       "Are you sure you want to log out?", 
@@ -163,21 +163,21 @@ export default function ProfileScreen() {
               console.log('Profile: Starting logout process');
               console.log('Profile: Current user before logout:', user?.email);
               
-              // Clear the user state and navigate to index
+              // Clear the user state - this will trigger the AppLayout redirect
               await logout();
               
               console.log('Profile: Logout completed successfully');
-              console.log('Profile: Navigating to index page');
+              console.log('Profile: AppLayout should handle redirect to index');
               
-              // Force navigation to index page after logout
-              router.replace('/');
+              // The AppLayout will automatically redirect to index when user becomes null
+              // No need for manual navigation as it's handled by the layout
               
             } catch (error) {
               console.error('Profile: Logout error:', error);
               Alert.alert('Error', 'Failed to log out. Please try again.');
-            } finally {
               setIsLoggingOut(false);
             }
+            // Don't set isLoggingOut to false here - let the redirect happen
           },
           style: "destructive"
         }
