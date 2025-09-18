@@ -7,12 +7,17 @@ export default function ClientTabsLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.text,
+        tabBarInactiveTintColor: COLORS.secondary,
         tabBarStyle: {
           backgroundColor: COLORS.background,
           borderTopColor: COLORS.border,
+          borderTopWidth: 1,
         },
-        headerShown: false, // Hide the header to prevent flashing
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+        headerShown: false,
         headerStyle: {
           backgroundColor: COLORS.background,
         },
