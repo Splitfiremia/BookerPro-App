@@ -170,10 +170,10 @@ export default function ProfileScreen() {
               console.log('Profile: Logout completed successfully');
               console.log('Profile: Navigating to index page');
               
-              // Navigate immediately - the logout should have cleared the state
+              // Navigate to index page immediately after logout
               router.replace("/");
-              
               console.log('Profile: Navigation to index completed');
+              
             } catch (error) {
               console.error('Profile: Logout error:', error);
               Alert.alert('Error', 'Failed to log out. Please try again.');
