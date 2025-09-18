@@ -179,6 +179,27 @@ export default function HomeScreen() {
         })}
       </ScrollView>
 
+      {/* Main Actions */}
+      <View style={styles.mainActionsContainer}>
+        <TouchableOpacity 
+          style={styles.mainActionButton}
+          onPress={() => router.push('/(app)/(client)/shops/explore')}
+          testID="find-shop-button"
+        >
+          <Text style={styles.mainActionTitle}>Find a Shop</Text>
+          <Text style={styles.mainActionSubtitle}>Browse local shops and their teams</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.mainActionButton}
+          onPress={() => {/* Navigate to provider browse */}}
+          testID="find-provider-button"
+        >
+          <Text style={styles.mainActionTitle}>Find a Provider</Text>
+          <Text style={styles.mainActionSubtitle}>Browse individual providers</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Content */}
       {!locationEnabled ? (
         // Location Unavailable State
@@ -451,5 +472,28 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  mainActionsContainer: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.lg,
+    gap: SPACING.md,
+  },
+  mainActionButton: {
+    backgroundColor: COLORS.card,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.accent,
+  },
+  mainActionTitle: {
+    color: COLORS.white,
+    fontSize: FONT_SIZES.lg,
+    fontFamily: FONTS.bold,
+    marginBottom: SPACING.xs,
+  },
+  mainActionSubtitle: {
+    color: COLORS.lightGray,
+    fontSize: FONT_SIZES.sm,
+    fontFamily: FONTS.regular,
   },
 });
