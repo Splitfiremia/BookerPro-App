@@ -22,46 +22,8 @@ export default function LandingScreen() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
 
-  // Handle user redirection based on authentication state
+  // Log auth state for debugging
   useEffect(() => {
-    if (!isLoading) {
-      if (isAuthenticated && user) {
-        console.log('Index: User authenticated, redirecting to app');
-        // Navigate to role-specific home directly to avoid redirect loops
-        const timeoutId = setTimeout(() => {
-          try {
-            switch (user.role) {
-              case "client":
-                router.replace("/(app)/(client)/(tabs)/home");
-                break;
-              case "provider":
-                router.replace("/(app)/(provider)/(tabs)/schedule");
-                break;
-              case "owner":
-                router.replace("/(app)/(shop-owner)/(tabs)/dashboard");
-                break;
-              default:
-                router.replace("/(app)/(client)/(tabs)/home");
-                break;
-            }
-          } catch (error) {
-            console.error('Navigation error:', error);
-            // Fallback to auth screen if navigation fails
-            router.replace("/(auth)/login");
-          }
-        }, 50);
-        
-        return () => clearTimeout(timeoutId);
-      } else {
-        // User is not authenticated, redirect to login immediately
-        console.log('Index: User not authenticated, redirecting to login');
-        const timeoutId = setTimeout(() => {
-          router.replace("/(auth)/login");
-        }, 100);
-        return () => clearTimeout(timeoutId);
-      }
-    }
-    
     console.log('Index: Auth state - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode);
   }, [isLoading, isAuthenticated, user, isDeveloperMode]);
 
@@ -72,16 +34,6 @@ export default function LandingScreen() {
         <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
-  }
-
-  // If not loading and user is authenticated, return null while redirecting
-  if (!isLoading && isAuthenticated && user) {
-    return null;
-  }
-
-  // If not loading and user is not authenticated, return null while redirecting to login
-  if (!isLoading && !isAuthenticated) {
-    return null;
   }
 
   const validateEmail = (email: string): boolean => {
