@@ -39,33 +39,52 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       try {
         console.log('AuthProvider: Loading user and settings...');
         
-        // Load stored user data and developer mode in parallel
-        const [storedUser, storedDevMode] = await Promise.all([
-          AsyncStorage.getItem("user").catch(() => null),
-          AsyncStorage.getItem("developerMode").catch(() => null)
+        // Load stored user data and developer mode in parallel with timeout
+        const loadWithTimeout = (promise: Promise<any>, timeout: number = 3000) => {
+          return Promise.race([
+            promise,
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout')), timeout)
+            )
+          ]);
+        };
+        
+        const [storedUser, storedDevMode] = await Promise.allSettled([
+          loadWithTimeout(AsyncStorage.getItem("user").catch(() => null)),
+          loadWithTimeout(AsyncStorage.getItem("developerMode").catch(() => null))
         ]);
         
-        if (storedUser) {
+        // Handle stored user
+        if (storedUser.status === 'fulfilled' && storedUser.value) {
           try {
-            const userData = JSON.parse(storedUser);
+            const userData = JSON.parse(storedUser.value);
             console.log('AuthProvider: Loaded stored user:', userData.email);
             setUser(userData);
           } catch (parseError) {
             console.error('AuthProvider: Error parsing stored user:', parseError);
-            await AsyncStorage.removeItem("user");
+            try {
+              await AsyncStorage.removeItem("user");
+            } catch (removeError) {
+              console.error('AuthProvider: Error removing invalid user data:', removeError);
+            }
           }
         } else {
-          console.log('AuthProvider: No stored user found');
+          console.log('AuthProvider: No stored user found or failed to load');
         }
         
-        if (storedDevMode) {
+        // Handle developer mode
+        if (storedDevMode.status === 'fulfilled' && storedDevMode.value) {
           try {
-            const devMode = JSON.parse(storedDevMode);
+            const devMode = JSON.parse(storedDevMode.value);
             console.log('AuthProvider: Loaded developer mode:', devMode);
             setIsDeveloperMode(devMode);
           } catch (parseError) {
             console.error('AuthProvider: Error parsing developer mode:', parseError);
-            await AsyncStorage.removeItem("developerMode");
+            try {
+              await AsyncStorage.removeItem("developerMode");
+            } catch (removeError) {
+              console.error('AuthProvider: Error removing invalid dev mode data:', removeError);
+            }
           }
         }
         
@@ -77,8 +96,16 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       }
     };
     
-    // Load immediately but with error handling
+    // Load immediately but with error handling and timeout
     loadUserAndSettings();
+    
+    // Fallback timeout to ensure loading state doesn't hang
+    const fallbackTimeout = setTimeout(() => {
+      console.warn('AuthProvider: Fallback timeout triggered, forcing isLoading to false');
+      setIsLoading(false);
+    }, 5000);
+    
+    return () => clearTimeout(fallbackTimeout);
   }, []);
 
   // Set developer mode with persistence

@@ -49,17 +49,13 @@ export default function LandingScreen() {
             // Fallback to auth screen if navigation fails
             router.replace("/(auth)/login");
           }
-        }, 100);
+        }, 50);
         
         return () => clearTimeout(timeoutId);
       } else {
-        // User is not authenticated, redirect to login
+        // User is not authenticated, show login screen immediately
         console.log('Index: User not authenticated, redirecting to login');
-        const timeoutId = setTimeout(() => {
-          router.replace("/(auth)/login");
-        }, 100);
-        
-        return () => clearTimeout(timeoutId);
+        router.replace("/(auth)/login");
       }
     }
     
@@ -76,7 +72,7 @@ export default function LandingScreen() {
   }
 
   // Return null while redirecting to prevent flash
-  if (!isLoading && (isAuthenticated || !isAuthenticated)) {
+  if (!isLoading) {
     return null;
   }
 
