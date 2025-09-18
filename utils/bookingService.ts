@@ -2,17 +2,47 @@ import {
   ProviderAvailability, 
   AvailableTimeSlot, 
   Appointment,
-  DayOfWeek 
+  DayOfWeek
 } from '@/models/database';
 import { 
   generateAvailableSlots, 
   generateAvailableSlotsForDateRange,
-  isProviderAvailable,
-  getDayOfWeek 
+  isProviderAvailable
 } from '@/utils/availability';
 
+// Reservation system types
+export interface SlotReservation {
+  id: string;
+  providerId: string;
+  shopId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  clientId: string;
+  serviceId: string;
+  expiresAt: string; // ISO timestamp
+  createdAt: string;
+}
+
+export interface ReservationResult {
+  success: boolean;
+  reservationId?: string;
+  expiresAt?: string;
+  error?: string;
+}
+
+export interface ConfirmationResult {
+  success: boolean;
+  appointmentId?: string;
+  error?: string;
+}
+
+// In-memory storage for active reservations (in production, use Redis or similar)
+let activeReservations: SlotReservation[] = [];
+
 // Mock appointments for testing
-const mockAppointments: Appointment[] = [
+let mockAppointments: Appointment[] = [
   {
     id: '1',
     clientId: 'client-1',
@@ -20,9 +50,14 @@ const mockAppointments: Appointment[] = [
     serviceId: 'service-1',
     shopId: 'shop-1',
     date: '2024-01-15',
+    time: '10:00',
     startTime: '10:00',
     endTime: '11:00',
+    duration: 60,
     status: 'confirmed',
+    paymentStatus: 'paid',
+    totalAmount: 50,
+    serviceAmount: 50,
     createdAt: '2024-01-10T00:00:00Z',
     updatedAt: '2024-01-10T00:00:00Z',
     statusHistory: []
@@ -34,9 +69,14 @@ const mockAppointments: Appointment[] = [
     serviceId: 'service-2',
     shopId: 'shop-1',
     date: '2024-01-15',
+    time: '14:00',
     startTime: '14:00',
     endTime: '15:30',
+    duration: 90,
     status: 'confirmed',
+    paymentStatus: 'paid',
+    totalAmount: 75,
+    serviceAmount: 75,
     createdAt: '2024-01-10T00:00:00Z',
     updatedAt: '2024-01-10T00:00:00Z',
     statusHistory: []
@@ -265,3 +305,399 @@ export const calculateWeeklyWorkingHours = (
   
   return totalMinutes / 60; // Convert to hours
 };
+
+// ============================================================================
+// REACT QUERY MUTATIONS FOR RESERVATION SYSTEM
+// ============================================================================
+
+/**
+ * React Query mutation options for slot reservation
+ */
+export const useReserveSlotMutation = () => {
+  // This would typically use React Query's useMutation
+  // For now, we'll return the function directly
+  return {
+    mutate: checkAndReserveSlot,
+    mutateAsync: async (params: Parameters<typeof checkAndReserveSlot>[0] extends string ? Parameters<typeof checkAndReserveSlot> : never) => {
+      return checkAndReserveSlot(...params);
+    }
+  };
+};
+
+/**
+ * React Query mutation options for confirming reservation
+ */
+export const useConfirmReservationMutation = () => {
+  return {
+    mutate: confirmReservation,
+    mutateAsync: async (reservationId: string, paymentData: Parameters<typeof confirmReservation>[1]) => {
+      return confirmReservation(reservationId, paymentData);
+    }
+  };
+};
+
+// ============================================================================
+// SLOT RESERVATION SYSTEM - Prevents Double Booking
+// ============================================================================
+
+/**
+ * Clean up expired reservations
+ */
+const cleanupExpiredReservations = (): void => {
+  const now = new Date().toISOString();
+  const initialCount = activeReservations.length;
+  
+  activeReservations = activeReservations.filter(reservation => {
+    const isExpired = reservation.expiresAt < now;
+    if (isExpired) {
+      console.log('BookingService: Cleaning up expired reservation:', reservation.id);
+    }
+    return !isExpired;
+  });
+  
+  const cleanedCount = initialCount - activeReservations.length;
+  if (cleanedCount > 0) {
+    console.log(`BookingService: Cleaned up ${cleanedCount} expired reservations`);
+  }
+};
+
+/**
+ * Check if a time slot conflicts with existing appointments or reservations
+ */
+const hasTimeConflict = (
+  providerId: string,
+  date: string,
+  startTime: string,
+  endTime: string,
+  existingAppointments: Appointment[] = mockAppointments
+): boolean => {
+  // Clean up expired reservations first
+  cleanupExpiredReservations();
+  
+  // Check against confirmed appointments
+  const appointmentConflict = existingAppointments.some(apt => {
+    if (apt.providerId !== providerId || apt.date !== date) return false;
+    if (apt.status === 'cancelled') return false;
+    
+    // Check for time overlap
+    const aptStart = apt.startTime || apt.time;
+    const aptEnd = apt.endTime;
+    
+    return (
+      (startTime >= aptStart && startTime < aptEnd) ||
+      (endTime > aptStart && endTime <= aptEnd) ||
+      (startTime <= aptStart && endTime >= aptEnd)
+    );
+  });
+  
+  // Check against active reservations
+  const reservationConflict = activeReservations.some(reservation => {
+    if (reservation.providerId !== providerId || reservation.date !== date) return false;
+    
+    // Check for time overlap
+    return (
+      (startTime >= reservation.startTime && startTime < reservation.endTime) ||
+      (endTime > reservation.startTime && endTime <= reservation.endTime) ||
+      (startTime <= reservation.startTime && endTime >= reservation.endTime)
+    );
+  });
+  
+  return appointmentConflict || reservationConflict;
+};
+
+/**
+ * Check and reserve a time slot for booking
+ * This prevents double-booking by temporarily holding the slot
+ */
+export const checkAndReserveSlot = (
+  providerId: string,
+  shopId: string,
+  date: string, // Format: "YYYY-MM-DD"
+  startTime: string, // Format: "HH:MM"
+  duration: number, // Duration in minutes
+  clientId: string,
+  serviceId: string,
+  providerAvailability: ProviderAvailability,
+  existingAppointments: Appointment[] = mockAppointments
+): ReservationResult => {
+  console.log('BookingService: Attempting to reserve slot for provider', providerId, 'on', date, 'at', startTime);
+  
+  // Calculate end time
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const endDate = new Date();
+  endDate.setHours(hours, minutes + duration, 0, 0);
+  const endTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+  
+  // Check if provider is available at this time (basic availability check)
+  const dateObj = new Date(date);
+  const isAvailable = canProviderTakeAppointment(
+    providerId,
+    dateObj,
+    startTime,
+    endTime,
+    providerAvailability,
+    existingAppointments
+  );
+  
+  if (!isAvailable) {
+    console.log('BookingService: Provider not available at requested time');
+    return {
+      success: false,
+      error: 'Provider is not available at the requested time'
+    };
+  }
+  
+  // Check for conflicts with existing appointments and reservations
+  if (hasTimeConflict(providerId, date, startTime, endTime, existingAppointments)) {
+    console.log('BookingService: Time slot conflicts with existing appointment or reservation');
+    return {
+      success: false,
+      error: 'This time slot is no longer available'
+    };
+  }
+  
+  // Create reservation
+  const reservationId = `reservation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes from now
+  
+  const reservation: SlotReservation = {
+    id: reservationId,
+    providerId,
+    shopId,
+    date,
+    startTime,
+    endTime,
+    duration,
+    clientId,
+    serviceId,
+    expiresAt: expiresAt.toISOString(),
+    createdAt: now.toISOString()
+  };
+  
+  activeReservations.push(reservation);
+  
+  console.log('BookingService: Slot reserved successfully:', reservationId, 'expires at', expiresAt.toISOString());
+  
+  return {
+    success: true,
+    reservationId,
+    expiresAt: expiresAt.toISOString()
+  };
+};
+
+/**
+ * Confirm a reservation and create the actual appointment
+ */
+export const confirmReservation = (
+  reservationId: string,
+  paymentData: {
+    totalAmount: number;
+    serviceAmount: number;
+    tipAmount?: number;
+    paymentMethod: string;
+  }
+): ConfirmationResult => {
+  console.log('BookingService: Attempting to confirm reservation:', reservationId);
+  
+  // Clean up expired reservations first
+  cleanupExpiredReservations();
+  
+  // Find the reservation
+  const reservationIndex = activeReservations.findIndex(r => r.id === reservationId);
+  
+  if (reservationIndex === -1) {
+    console.log('BookingService: Reservation not found or expired:', reservationId);
+    return {
+      success: false,
+      error: 'Reservation not found or has expired. Please try booking again.'
+    };
+  }
+  
+  const reservation = activeReservations[reservationIndex];
+  
+  // Check if reservation has expired
+  const now = new Date().toISOString();
+  if (reservation.expiresAt < now) {
+    console.log('BookingService: Reservation has expired:', reservationId);
+    // Remove expired reservation
+    activeReservations.splice(reservationIndex, 1);
+    return {
+      success: false,
+      error: 'Reservation has expired. Please try booking again.'
+    };
+  }
+  
+  // Create the actual appointment
+  const appointmentId = `appointment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const appointment: Appointment = {
+    id: appointmentId,
+    clientId: reservation.clientId,
+    providerId: reservation.providerId,
+    serviceId: reservation.serviceId,
+    shopId: reservation.shopId,
+    date: reservation.date,
+    time: reservation.startTime,
+    startTime: reservation.startTime,
+    endTime: reservation.endTime,
+    duration: reservation.duration,
+    status: 'confirmed',
+    paymentStatus: 'paid',
+    totalAmount: paymentData.totalAmount,
+    serviceAmount: paymentData.serviceAmount,
+    tipAmount: paymentData.tipAmount || 0,
+    createdAt: now,
+    updatedAt: now,
+    statusHistory: [{
+      id: `status-${Date.now()}`,
+      appointmentId,
+      fromStatus: null,
+      toStatus: 'confirmed',
+      changedBy: reservation.clientId,
+      changedByRole: 'client',
+      reason: 'Payment completed',
+      timestamp: now
+    }]
+  };
+  
+  // Add appointment to mock data
+  mockAppointments.push(appointment);
+  
+  // Remove the reservation
+  activeReservations.splice(reservationIndex, 1);
+  
+  console.log('BookingService: Appointment confirmed successfully:', appointmentId);
+  
+  return {
+    success: true,
+    appointmentId
+  };
+};
+
+/**
+ * Release a reservation manually (e.g., when user cancels)
+ */
+export const releaseReservation = (reservationId: string): boolean => {
+  console.log('BookingService: Releasing reservation:', reservationId);
+  
+  const reservationIndex = activeReservations.findIndex(r => r.id === reservationId);
+  
+  if (reservationIndex === -1) {
+    console.log('BookingService: Reservation not found:', reservationId);
+    return false;
+  }
+  
+  activeReservations.splice(reservationIndex, 1);
+  console.log('BookingService: Reservation released successfully');
+  return true;
+};
+
+/**
+ * Get reservation details by ID
+ */
+export const getReservation = (reservationId: string): SlotReservation | null => {
+  cleanupExpiredReservations();
+  return activeReservations.find(r => r.id === reservationId) || null;
+};
+
+/**
+ * Get all active reservations (for debugging)
+ */
+export const getActiveReservations = (): SlotReservation[] => {
+  cleanupExpiredReservations();
+  return [...activeReservations];
+};
+
+/**
+ * Calculate remaining time for a reservation in seconds
+ */
+export const getReservationTimeRemaining = (reservationId: string): number => {
+  const reservation = getReservation(reservationId);
+  if (!reservation) return 0;
+  
+  const now = new Date().getTime();
+  const expiresAt = new Date(reservation.expiresAt).getTime();
+  const remainingMs = expiresAt - now;
+  
+  return Math.max(0, Math.floor(remainingMs / 1000));
+};
+
+/**
+ * Enhanced availability check that includes active reservations
+ */
+export const getProviderAvailableSlotsWithReservations = (
+  providerId: string,
+  date: Date,
+  serviceDuration: number,
+  providerAvailability: ProviderAvailability,
+  existingAppointments: Appointment[] = mockAppointments
+): AvailableTimeSlot[] => {
+  console.log('BookingService: Getting available slots with reservation check for provider', providerId);
+  
+  // Clean up expired reservations
+  cleanupExpiredReservations();
+  
+  // Get base available slots
+  const baseSlots = getProviderAvailableSlots(
+    providerId,
+    date,
+    serviceDuration,
+    providerAvailability,
+    existingAppointments
+  );
+  
+  const dateStr = date.toISOString().split('T')[0];
+  
+  // Filter out slots that conflict with active reservations
+  return baseSlots.map(slot => {
+    if (!slot.isAvailable) return slot;
+    
+    const hasReservationConflict = activeReservations.some(reservation => {
+      if (reservation.providerId !== providerId || reservation.date !== dateStr) return false;
+      
+      // Check for time overlap
+      return (
+        (slot.startTime >= reservation.startTime && slot.startTime < reservation.endTime) ||
+        (slot.endTime > reservation.startTime && slot.endTime <= reservation.endTime) ||
+        (slot.startTime <= reservation.startTime && slot.endTime >= reservation.endTime)
+      );
+    });
+    
+    return {
+      ...slot,
+      isAvailable: !hasReservationConflict
+    };
+  });
+};
+
+// ============================================================================
+// USAGE EXAMPLES AND INTEGRATION NOTES
+// ============================================================================
+
+/**
+ * Example usage of the reservation system:
+ * 
+ * 1. When user selects a time slot:
+ *    const result = checkAndReserveSlot(
+ *      providerId, shopId, date, startTime, duration, 
+ *      clientId, serviceId, providerAvailability
+ *    );
+ *    if (result.success) {
+ *      // Navigate to payment screen with reservationId
+ *      // Start countdown timer
+ *    }
+ * 
+ * 2. On payment screen:
+ *    const timer = useReservationTimer(reservationId);
+ *    // Show countdown: timer.formatTime()
+ *    // If timer.isExpired, redirect back to booking
+ * 
+ * 3. After successful payment:
+ *    const confirmation = confirmReservation(reservationId, paymentData);
+ *    if (confirmation.success) {
+ *      // Navigate to confirmation screen
+ *    }
+ * 
+ * 4. If user cancels or navigates away:
+ *    releaseReservation(reservationId);
+ */
