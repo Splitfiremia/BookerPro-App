@@ -71,8 +71,13 @@ export default function LandingScreen() {
     );
   }
 
-  // Return null while redirecting to prevent flash
-  if (!isLoading) {
+  // If not loading and user is authenticated, return null while redirecting
+  if (!isLoading && isAuthenticated && user) {
+    return null;
+  }
+
+  // If not loading and user is not authenticated, return null while redirecting to login
+  if (!isLoading && !isAuthenticated) {
     return null;
   }
 
