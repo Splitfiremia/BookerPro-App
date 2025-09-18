@@ -169,8 +169,8 @@ export default function ProfileScreen() {
               console.log('Profile: Logout completed successfully');
               console.log('Profile: Navigating to login page');
               
-              // Navigate directly to the login page to avoid redirect loops
-              router.replace("/(auth)/login");
+              // Navigate directly to the main landing page
+              router.replace("/");
               
             } catch (error) {
               console.error('Profile: Logout error:', error);
