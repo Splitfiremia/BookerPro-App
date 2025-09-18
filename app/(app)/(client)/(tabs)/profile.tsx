@@ -42,8 +42,9 @@ interface SocialLink {
 }
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const [profileImage] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
 
   const menuItems: MenuItem[] = [
@@ -157,26 +158,27 @@ export default function ProfileScreen() {
         {
           text: "Log Out",
           onPress: async () => {
+            setIsLoggingOut(true);
             try {
               console.log('Profile: Starting logout process');
               console.log('Profile: Current user before logout:', user?.email);
               console.log('Profile: Current auth state before logout:', { isAuthenticated: !!user });
               
+              // Clear the user state first
               await logout();
               
               console.log('Profile: Logout completed successfully');
               console.log('Profile: Navigating to index page');
               
-              // Use replace to ensure proper navigation and clear the stack
-              // Add a small delay to ensure the logout state is processed
-              setTimeout(() => {
-                router.replace("/");
-              }, 100);
+              // Navigate immediately - the logout should have cleared the state
+              router.replace("/");
               
               console.log('Profile: Navigation to index completed');
             } catch (error) {
               console.error('Profile: Logout error:', error);
               Alert.alert('Error', 'Failed to log out. Please try again.');
+            } finally {
+              setIsLoggingOut(false);
             }
           },
           style: "destructive"
