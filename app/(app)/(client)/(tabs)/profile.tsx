@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from 'react';
 import {
   View,
   Text,
@@ -6,294 +6,203 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  StatusBar,
   Alert,
-  Linking,
-} from "react-native";
-import { Stack } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { 
-  Settings, 
-  LogOut, 
-  Share2, 
-  UserPlus, 
-  CreditCard, 
-  Gift, 
-  Hash, 
-  HelpCircle, 
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
+import {
+  Share2,
+  UserPlus,
+  CreditCard,
+  Gift,
+  Hash,
+  HelpCircle,
   MoreHorizontal,
-  Edit3
-} from "lucide-react-native";
-import { COLORS } from "@/constants/theme";
-import { useAuth } from "@/providers/AuthProvider";
+  LogOut,
+  Edit,
+} from 'lucide-react-native';
+import { useAuth } from '@/providers/AuthProvider';
+import { router } from 'expo-router';
 
 interface MenuItem {
   id: string;
   title: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ size: number; color: string }>;
   onPress: () => void;
-}
-
-interface SocialLink {
-  id: string;
-  name: string;
-  url: string;
-  backgroundColor: string;
-  textColor: string;
 }
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
-  const [profileImage] = useState<string | null>(null);
-  const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
 
-  const menuItems: MenuItem[] = [
-    {
-      id: "share",
-      title: "Share With Friends",
-      icon: Share2,
-      onPress: () => Alert.alert("Share", "Share the app with friends"),
-    },
-    {
-      id: "invite",
-      title: "Invite My Barber",
-      icon: UserPlus,
-      onPress: () => Alert.alert("Invite", "Invite your barber to join"),
-    },
-    {
-      id: "payment",
-      title: "Payment Method",
-      icon: CreditCard,
-      onPress: () => Alert.alert("Payment", "Manage payment methods"),
-    },
-    {
-      id: "vouchers",
-      title: "Vouchers",
-      icon: Gift,
-      onPress: () => Alert.alert("Vouchers", "View your vouchers"),
-    },
-    {
-      id: "redeem",
-      title: "Redeem Code",
-      icon: Hash,
-      onPress: () => Alert.alert("Redeem", "Enter a redeem code"),
-    },
-    {
-      id: "help",
-      title: "Help & Resources",
-      icon: HelpCircle,
-      onPress: () => Alert.alert("Help", "Get help and support"),
-    },
-    {
-      id: "more",
-      title: "More",
-      icon: MoreHorizontal,
-      onPress: () => Alert.alert("More", "Additional options"),
-    },
-  ];
-
-  const socialLinks: SocialLink[] = [
-    {
-      id: "facebook",
-      name: "f",
-      url: "https://facebook.com",
-      backgroundColor: "#1877F2",
-      textColor: "#FFFFFF",
-    },
-    {
-      id: "instagram",
-      name: "IG",
-      url: "https://instagram.com",
-      backgroundColor: "#E4405F",
-      textColor: "#FFFFFF",
-    },
-    {
-      id: "snapchat",
-      name: "👻",
-      url: "https://snapchat.com",
-      backgroundColor: "#FFFC00",
-      textColor: "#000000",
-    },
-    {
-      id: "tiktok",
-      name: "♪",
-      url: "https://tiktok.com",
-      backgroundColor: "#000000",
-      textColor: "#FFFFFF",
-    },
-    {
-      id: "twitter",
-      name: "X",
-      url: "https://twitter.com",
-      backgroundColor: "#000000",
-      textColor: "#FFFFFF",
-    },
-  ];
-
-  const handleEditProfile = () => {
-    Alert.alert("Edit Profile", "Edit your client profile");
-  };
-
-  const handleSocialLink = (url: string) => {
-    Linking.openURL(url);
-  };
-
-  const handleTermsPress = () => {
-    Alert.alert("Terms of Service", "View terms of service");
-  };
-
-  const handlePrivacyPress = () => {
-    Alert.alert("Privacy Policy", "View privacy policy");
-  };
-
-  const handleLogout = async () => {
+  const handleLogout = () => {
     Alert.alert(
-      "Log Out", 
-      "Are you sure you want to log out?", 
+      'Log Out',
+      'Are you sure you want to log out?',
       [
         {
-          text: "Cancel",
-          style: "cancel"
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: "Log Out",
+          text: 'Log Out',
+          style: 'destructive',
           onPress: async () => {
-            setIsLoggingOut(true);
             try {
-              console.log('Profile: Starting logout process');
-              console.log('Profile: Current user before logout:', user?.email);
-              
-              // Clear the user state - this will trigger the AppLayout redirect
               await logout();
-              
-              console.log('Profile: Logout completed successfully');
-              console.log('Profile: AppLayout should handle redirect to index');
-              
-              // The AppLayout will automatically redirect to index when user becomes null
-              // No need for manual navigation as it's handled by the layout
-              
+              console.log('Profile: Logout successful, navigating to home');
+              router.replace('/');
             } catch (error) {
               console.error('Profile: Logout error:', error);
               Alert.alert('Error', 'Failed to log out. Please try again.');
-              setIsLoggingOut(false);
             }
-            // Don't set isLoggingOut to false here - let the redirect happen
           },
-          style: "destructive"
-        }
-      ]
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const menuItems: MenuItem[] = [
+    {
+      id: 'share',
+      title: 'Share With Friends',
+      icon: Share2,
+      onPress: () => {
+        console.log('Share with friends pressed');
+        // TODO: Implement share functionality
+      },
+    },
+    {
+      id: 'invite',
+      title: 'Invite My Barber',
+      icon: UserPlus,
+      onPress: () => {
+        console.log('Invite my barber pressed');
+        // TODO: Implement invite barber functionality
+      },
+    },
+    {
+      id: 'payment',
+      title: 'Payment Method',
+      icon: CreditCard,
+      onPress: () => {
+        console.log('Payment method pressed');
+        // TODO: Navigate to payment methods
+      },
+    },
+    {
+      id: 'vouchers',
+      title: 'Vouchers',
+      icon: Gift,
+      onPress: () => {
+        console.log('Vouchers pressed');
+        // TODO: Navigate to vouchers
+      },
+    },
+    {
+      id: 'redeem',
+      title: 'Redeem Code',
+      icon: Hash,
+      onPress: () => {
+        console.log('Redeem code pressed');
+        // TODO: Navigate to redeem code
+      },
+    },
+    {
+      id: 'help',
+      title: 'Help & Resources',
+      icon: HelpCircle,
+      onPress: () => {
+        console.log('Help & resources pressed');
+        // TODO: Navigate to help
+      },
+    },
+    {
+      id: 'more',
+      title: 'More',
+      icon: MoreHorizontal,
+      onPress: () => {
+        console.log('More pressed');
+        // TODO: Navigate to more options
+      },
+    },
+  ];
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase())
+      .join('')
+      .substring(0, 2);
+  };
+
+  const renderMenuItem = (item: MenuItem) => {
+    const IconComponent = item.icon;
+    return (
+      <TouchableOpacity
+        key={item.id}
+        style={styles.menuItem}
+        onPress={item.onPress}
+        testID={`menu-item-${item.id}`}
+      >
+        <View style={styles.menuItemLeft}>
+          <IconComponent size={20} color={COLORS.white} />
+          <Text style={styles.menuItemText}>{item.title}</Text>
+        </View>
+      </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-          <TouchableOpacity style={styles.settingsButton}>
-            <Settings size={24} color={COLORS.white} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>{user?.name || "Luis Martinez"}</Text>
-            <Text style={styles.headerSubtitle}>Client</Text>
-          </View>
-          <View style={styles.headerRight} />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
+      
+      {/* Header with Developer Mode indicator */}
+      <View style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
+        <View style={styles.developerModeIndicator}>
+          <Text style={styles.developerModeText}>DEVELOPER MODE</Text>
         </View>
+      </View>
 
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile Section */}
         <View style={styles.profileSection}>
-          <View style={styles.profileImageContainer}>
-            {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+          <View style={styles.avatarContainer}>
+            {user?.profileImage ? (
+              <Image source={{ uri: user.profileImage }} style={styles.avatar} />
             ) : (
-              <View style={styles.profileImagePlaceholder}>
-                <Text style={styles.profileInitial}>
-                  {user?.name?.charAt(0).toUpperCase() || "L"}
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarText}>
+                  {user?.name ? getInitials(user.name) : 'T'}
                 </Text>
-                <View style={styles.editIconContainer}>
-                  <Edit3 size={16} color={COLORS.background} />
-                </View>
               </View>
             )}
+            <View style={styles.editIconContainer}>
+              <Edit size={16} color={COLORS.background} />
+            </View>
           </View>
           
-          <TouchableOpacity
-            style={styles.editProfileButton}
-            onPress={handleEditProfile}
-          >
-            <Text style={styles.editProfileText}>EDIT CLIENT PROFILE</Text>
+          <TouchableOpacity style={styles.editProfileButton}>
+            <Text style={styles.editProfileButtonText}>EDIT CLIENT PROFILE</Text>
           </TouchableOpacity>
         </View>
 
         {/* Menu Items */}
         <View style={styles.menuSection}>
-          {menuItems.map((item) => {
-            const IconComponent = item.icon;
-            return (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.menuItem}
-                onPress={item.onPress}
-              >
-                <View style={styles.menuItemLeft}>
-                  <IconComponent size={24} color={COLORS.white} />
-                  <Text style={styles.menuItemText}>{item.title}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+          {menuItems.map(renderMenuItem)}
         </View>
 
-        {/* Log Out */}
-        <TouchableOpacity 
-          style={[styles.logoutItem, isLoggingOut && styles.disabledItem]} 
+        {/* Logout Button */}
+        <TouchableOpacity
+          style={styles.logoutButton}
           onPress={handleLogout}
-          disabled={isLoggingOut}
           testID="logout-button"
         >
-          <View style={styles.menuItemLeft}>
-            <LogOut size={24} color={COLORS.error} />
-            <Text style={[styles.menuItemText, { color: COLORS.error }]}>
-              {isLoggingOut ? 'Logging Out...' : 'Log Out'}
-            </Text>
-          </View>
+          <LogOut size={20} color={COLORS.error} />
+          <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
-
-        {/* Social Links */}
-        <View style={styles.socialSection}>
-          {socialLinks.map((social) => (
-            <TouchableOpacity
-              key={social.id}
-              style={[
-                styles.socialButton,
-                { backgroundColor: social.backgroundColor }
-              ]}
-              onPress={() => handleSocialLink(social.url)}
-            >
-              <Text style={[styles.socialText, { color: social.textColor }]}>
-                {social.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Footer Links */}
-        <View style={styles.footerSection}>
-          <View style={styles.footerLinks}>
-            <TouchableOpacity onPress={handleTermsPress}>
-              <Text style={styles.footerLinkText}>TERMS OF SERVICE</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handlePrivacyPress}>
-              <Text style={styles.footerLinkText}>PRIVACY POLICY</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.versionText}>v1.81.0 (1269)</Text>
-        </View>
       </ScrollView>
     </View>
   );
@@ -304,156 +213,107 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  scrollView: {
-    flex: 1,
-  },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: SPACING.md,
+    paddingBottom: SPACING.md,
+    alignItems: 'flex-end',
   },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
+  developerModeIndicator: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.sm,
   },
-  headerCenter: {
-    alignItems: "center",
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+  developerModeText: {
     color: COLORS.white,
+    fontSize: FONT_SIZES.xs,
+    fontFamily: FONTS.bold,
+    letterSpacing: 0.5,
   },
-  headerSubtitle: {
-    fontSize: 14,
-    color: COLORS.lightGray,
-    marginTop: 2,
-  },
-  headerRight: {
-    width: 40,
+  content: {
+    flex: 1,
+    paddingHorizontal: SPACING.md,
   },
   profileSection: {
-    alignItems: "center",
-    paddingVertical: 30,
-    paddingHorizontal: 20,
+    alignItems: 'center',
+    paddingVertical: SPACING.xl,
   },
-  profileImageContainer: {
-    position: "relative",
-    marginBottom: 20,
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: SPACING.lg,
   },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
-  profileImagePlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  avatarPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: COLORS.gray,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  profileInitial: {
-    fontSize: 40,
-    fontWeight: "bold",
+  avatarText: {
     color: COLORS.white,
+    fontSize: FONT_SIZES.xl,
+    fontFamily: FONTS.bold,
   },
   editIconContainer: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: COLORS.accent,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 3,
-    borderColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   editProfileButton: {
     backgroundColor: COLORS.accent,
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    borderRadius: 8,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
   },
-  editProfileText: {
+  editProfileButtonText: {
     color: COLORS.background,
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: FONT_SIZES.sm,
+    fontFamily: FONTS.bold,
     letterSpacing: 0.5,
   },
   menuSection: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: SPACING.xl,
   },
   menuItem: {
-    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: SPACING.lg,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+    borderBottomColor: COLORS.border,
   },
   menuItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   menuItemText: {
-    fontSize: 16,
     color: COLORS.white,
-    marginLeft: 16,
-    fontWeight: "500",
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.regular,
+    marginLeft: SPACING.md,
   },
-  logoutItem: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginBottom: 30,
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.lg,
+    marginBottom: SPACING.xl,
   },
-  socialSection: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 40,
-    gap: 12,
-  },
-  socialButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  socialText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  footerSection: {
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  footerLinks: {
-    flexDirection: "row",
-    gap: 40,
-    marginBottom: 20,
-  },
-  footerLinkText: {
-    fontSize: 12,
-    color: COLORS.lightGray,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-  },
-  versionText: {
-    fontSize: 12,
-    color: COLORS.lightGray,
-  },
-  disabledItem: {
-    opacity: 0.5,
+  logoutText: {
+    color: COLORS.error,
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.regular,
+    marginLeft: SPACING.md,
   },
 });
