@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.md,
   },
   filtersContent: {
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: 16,
     gap: 8,
   },
   filterButton: {
@@ -271,12 +271,10 @@ const styles = StyleSheet.create({
     whiteSpace: 'nowrap' as any,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    marginRight: 0,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E5E5E5',
     backgroundColor: '#FFFFFF',
-    minHeight: 28,
   },
   filterButtonActive: {
     backgroundColor: '#FFFFFF',
@@ -286,7 +284,7 @@ const styles = StyleSheet.create({
     color: '#333333',
     fontSize: 14,
     fontFamily: FONTS.regular,
-    marginLeft: SPACING.xs,
+    marginLeft: 4,
   },
   filterTextActive: {
     color: '#333333',
