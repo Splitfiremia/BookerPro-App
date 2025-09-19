@@ -12,6 +12,7 @@ import { PaymentProvider } from "@/providers/PaymentProvider";
 import { WaitlistProvider } from "@/providers/WaitlistProvider";
 
 import { ModeIndicator } from "@/components/ModeIndicator";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { COLORS } from "@/constants/theme";
 
 const queryClient = new QueryClient({
@@ -51,24 +52,26 @@ export default function RootLayout() {
   
   return (
     <GestureHandlerRootView style={styles.gestureHandler}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <AppointmentProvider>
-            <PaymentProvider>
-              <SocialProvider>
-                <WaitlistProvider>
-                  <OnboardingProvider>
-                    <ServicesProvider>
-                      <RootLayoutNav />
-                      <ModeIndicator />
-                    </ServicesProvider>
-                  </OnboardingProvider>
-                </WaitlistProvider>
-              </SocialProvider>
-            </PaymentProvider>
-          </AppointmentProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <AppointmentProvider>
+              <PaymentProvider>
+                <SocialProvider>
+                  <WaitlistProvider>
+                    <OnboardingProvider>
+                      <ServicesProvider>
+                        <RootLayoutNav />
+                        <ModeIndicator />
+                      </ServicesProvider>
+                    </OnboardingProvider>
+                  </WaitlistProvider>
+                </SocialProvider>
+              </PaymentProvider>
+            </AppointmentProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ErrorBoundary>
     </GestureHandlerRootView>
   );
 }

@@ -367,33 +367,44 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     await updateAppointmentStatus(requestId, 'cancelled', 'Declined by provider');
   }, [updateAppointmentStatus]);
 
-  const contextValue = useMemo(() => ({
-    appointments,
-    notifications,
-    unreadNotifications,
-    isLoading,
-    isInitialized,
-    // Core appointment management
-    requestAppointment,
-    updateAppointment,
-    updateAppointmentStatus,
-    confirmAppointment,
-    cancelAppointment,
-    completeAppointment,
-    markNoShow,
-    // Booking requests (for compatibility)
-    bookingRequests,
-    confirmBookingRequest,
-    declineBookingRequest,
-    // Filtering and querying
-    getAppointmentsForUser,
-    getAppointmentsByStatus,
-    getAppointmentsWithColors,
-    // Notifications
-    markNotificationRead,
-    // Constants
-    APPOINTMENT_COLORS,
-  }), [
+  const contextValue = useMemo(() => {
+    // Ensure all required properties are defined
+    const safeValue = {
+      appointments: appointments || [],
+      notifications: notifications || [],
+      unreadNotifications: unreadNotifications || [],
+      isLoading: Boolean(isLoading),
+      isInitialized: Boolean(isInitialized),
+      // Core appointment management
+      requestAppointment: requestAppointment || (() => Promise.resolve({} as Appointment)),
+      updateAppointment: updateAppointment || (() => Promise.resolve()),
+      updateAppointmentStatus: updateAppointmentStatus || (() => Promise.resolve()),
+      confirmAppointment: confirmAppointment || (() => Promise.resolve()),
+      cancelAppointment: cancelAppointment || (() => Promise.resolve()),
+      completeAppointment: completeAppointment || (() => Promise.resolve()),
+      markNoShow: markNoShow || (() => Promise.resolve()),
+      // Booking requests (for compatibility)
+      bookingRequests: bookingRequests || [],
+      confirmBookingRequest: confirmBookingRequest || (() => Promise.resolve()),
+      declineBookingRequest: declineBookingRequest || (() => Promise.resolve()),
+      // Filtering and querying
+      getAppointmentsForUser: getAppointmentsForUser || (() => []),
+      getAppointmentsByStatus: getAppointmentsByStatus || (() => []),
+      getAppointmentsWithColors: getAppointmentsWithColors || (() => []),
+      // Notifications
+      markNotificationRead: markNotificationRead || (() => Promise.resolve()),
+      // Constants
+      APPOINTMENT_COLORS: APPOINTMENT_COLORS || {},
+    };
+    
+    console.log('AppointmentProvider: Context value created with', {
+      appointmentsCount: safeValue.appointments.length,
+      isLoading: safeValue.isLoading,
+      isInitialized: safeValue.isInitialized
+    });
+    
+    return safeValue;
+  }, [
     appointments,
     notifications,
     unreadNotifications,
@@ -430,7 +441,7 @@ export function useFilteredAppointments(status?: AppointmentStatus) {
   const { user } = useAuth();
 
   return useMemo(() => {
-    if (!context.isInitialized || !user) return [];
+    if (!context || !context.isInitialized || !user) return [];
     
     if (status) {
       return context.getAppointmentsByStatus(status);
@@ -461,33 +472,33 @@ export function useProviderAppointments() {
   const { user } = useAuth();
   
   const providerAppointments = useMemo(() => {
-    if (!context.isInitialized || user?.role !== 'provider' || !user.id) return [];
+    if (!context || !context.isInitialized || user?.role !== 'provider' || !user.id) return [];
     return context.getAppointmentsForUser('provider', user.id);
   }, [context, user]);
 
   const pendingRequests = useMemo(() => {
-    if (!context.isInitialized) return [];
+    if (!context || !context.isInitialized) return [];
     return context.getAppointmentsByStatus('requested');
   }, [context]);
 
   const confirmedAppointments = useMemo(() => {
-    if (!context.isInitialized) return [];
+    if (!context || !context.isInitialized) return [];
     return context.getAppointmentsByStatus('confirmed');
   }, [context]);
 
   const todaysAppointments = useMemo(() => {
-    if (!context.isInitialized) return [];
+    if (!context || !context.isInitialized) return [];
     const today = new Date().toISOString().split('T')[0];
     return confirmedAppointments.filter((apt: Appointment) => apt.date === today);
-  }, [confirmedAppointments, context.isInitialized]);
+  }, [confirmedAppointments, context]);
 
   const appointmentNotifications = useMemo(() => {
-    if (!context.isInitialized) return [];
+    if (!context || !context.isInitialized) return [];
     return context.unreadNotifications.filter((notif: Notification) => 
       notif.type === 'appointment_requested' || 
       notif.type === 'appointment_cancelled'
     );
-  }, [context.unreadNotifications, context.isInitialized]);
+  }, [context]);
 
   return {
     providerAppointments,
@@ -508,17 +519,17 @@ export function useShopOwnerAppointments() {
   const { user } = useAuth();
   
   const allShopAppointments = useMemo(() => {
-    if (!context.isInitialized || user?.role !== 'owner' || !user.id) return [];
+    if (!context || !context.isInitialized || user?.role !== 'owner' || !user.id) return [];
     return context.getAppointmentsForUser('owner', user.id);
   }, [context, user]);
 
   const appointmentsWithColors = useMemo(() => {
-    if (!context.isInitialized) return [];
+    if (!context || !context.isInitialized) return [];
     return context.getAppointmentsWithColors();
   }, [context]);
 
   const appointmentsByStatus = useMemo(() => {
-    if (!context.isInitialized) {
+    if (!context || !context.isInitialized) {
       return {
         requested: [],
         confirmed: [],
@@ -537,19 +548,19 @@ export function useShopOwnerAppointments() {
   }, [context]);
 
   const todaysAppointments = useMemo(() => {
-    if (!context.isInitialized) return [];
+    if (!context || !context.isInitialized) return [];
     const today = new Date().toISOString().split('T')[0];
     return allShopAppointments.filter((apt: Appointment) => apt.date === today);
-  }, [allShopAppointments, context.isInitialized]);
+  }, [allShopAppointments, context]);
 
   const revenueData = useMemo(() => {
-    if (!context.isInitialized) return { totalAppointments: 0, estimatedRevenue: 0 };
+    if (!context || !context.isInitialized) return { totalAppointments: 0, estimatedRevenue: 0 };
     const completedAppointments = appointmentsByStatus.completed;
     return {
       totalAppointments: completedAppointments.length,
       estimatedRevenue: completedAppointments.length * 50,
     };
-  }, [appointmentsByStatus.completed, context.isInitialized]);
+  }, [appointmentsByStatus.completed, context]);
 
   return {
     allShopAppointments,
@@ -567,37 +578,37 @@ export function useClientAppointments() {
   const { user } = useAuth();
   
   const clientAppointments = useMemo(() => {
-    if (!context.isInitialized || user?.role !== 'client' || !user.id) return [];
+    if (!context || !context.isInitialized || user?.role !== 'client' || !user.id) return [];
     return context.getAppointmentsForUser('client', user.id);
   }, [context, user]);
 
   const upcomingAppointments = useMemo(() => {
-    if (!context.isInitialized) return [];
+    if (!context || !context.isInitialized) return [];
     return clientAppointments.filter((apt: Appointment) => 
       apt.status === 'confirmed' || apt.status === 'requested'
     );
-  }, [clientAppointments, context.isInitialized]);
+  }, [clientAppointments, context]);
 
   const pastAppointments = useMemo(() => {
-    if (!context.isInitialized) return [];
+    if (!context || !context.isInitialized) return [];
     return clientAppointments.filter((apt: Appointment) => 
       apt.status === 'completed' || apt.status === 'cancelled' || apt.status === 'no-show'
     );
-  }, [clientAppointments, context.isInitialized]);
+  }, [clientAppointments, context]);
 
   const pendingRequests = useMemo(() => {
-    if (!context.isInitialized) return [];
+    if (!context || !context.isInitialized) return [];
     return clientAppointments.filter((apt: Appointment) => apt.status === 'requested');
-  }, [clientAppointments, context.isInitialized]);
+  }, [clientAppointments, context]);
 
   const appointmentNotifications = useMemo(() => {
-    if (!context.isInitialized) return [];
+    if (!context || !context.isInitialized) return [];
     return context.unreadNotifications.filter((notif: Notification) => 
       notif.type === 'appointment_confirmed' || 
       notif.type === 'appointment_cancelled' ||
       notif.type === 'appointment_reminder'
     );
-  }, [context.unreadNotifications, context.isInitialized]);
+  }, [context]);
 
   return {
     clientAppointments,
