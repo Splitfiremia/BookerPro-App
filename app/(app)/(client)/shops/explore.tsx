@@ -60,11 +60,11 @@ export default function ShopsExploreScreen() {
         
         <View style={styles.shopContent}>
           <View style={styles.shopHeader}>
-            <Text style={styles.shopName} numberOfLines={2}>{item.name}</Text>
+            <Text style={styles.shopName} numberOfLines={1}>{item.name}</Text>
             <View style={styles.ratingContainer}>
-              <Star size={14} color={COLORS.accent} fill={COLORS.accent} />
+              <Star size={12} color={COLORS.accent} fill={COLORS.accent} />
               <Text style={styles.rating}>
-                {shopRating.rating > 0 ? shopRating.rating : 'New'}
+                {shopRating.rating > 0 ? shopRating.rating.toFixed(1) : 'New'}
               </Text>
               {shopRating.reviewCount > 0 && (
                 <Text style={styles.reviewCount}>({shopRating.reviewCount})</Text>
@@ -102,7 +102,7 @@ export default function ShopsExploreScreen() {
           {/* Provider Preview */}
           {providers.length > 0 && (
             <View style={styles.providerPreview}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.providerPreviewContainer}>
                 {providers.slice(0, 3).map((provider) => (
                   <View key={provider.id} style={styles.providerPreviewItem}>
                     <Image 
@@ -115,11 +115,13 @@ export default function ShopsExploreScreen() {
                   </View>
                 ))}
                 {providers.length > 3 && (
-                  <View style={styles.moreProvidersIndicator}>
-                    <Text style={styles.moreProvidersText}>+{providers.length - 3}</Text>
+                  <View style={[styles.providerPreviewItem, { alignItems: 'center' }]}>
+                    <View style={styles.moreProvidersIndicator}>
+                      <Text style={styles.moreProvidersText}>+{providers.length - 3}</Text>
+                    </View>
                   </View>
                 )}
-              </ScrollView>
+              </View>
             </View>
           )}
         </View>
@@ -290,13 +292,16 @@ const styles = StyleSheet.create({
   shopName: {
     flex: 1,
     color: COLORS.white,
-    fontSize: FONT_SIZES.lg,
+    fontSize: FONT_SIZES.md,
     fontFamily: FONTS.bold,
-    marginRight: SPACING.sm,
+    marginRight: SPACING.md,
+    lineHeight: 20,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 0,
+    minWidth: 80,
   },
   rating: {
     color: COLORS.white,
@@ -364,35 +369,41 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.gray,
     paddingTop: SPACING.sm,
   },
+  providerPreviewContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
   providerPreviewItem: {
     alignItems: 'center',
-    marginRight: SPACING.md,
-    width: 50,
+    marginRight: SPACING.sm,
+    width: 44,
   },
   providerPreviewAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginBottom: SPACING.xs,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    marginBottom: 4,
   },
   providerPreviewName: {
     color: COLORS.lightGray,
-    fontSize: FONT_SIZES.xs,
+    fontSize: 10,
     fontFamily: FONTS.regular,
     textAlign: 'center',
+    lineHeight: 12,
   },
   moreProvidersIndicator: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: COLORS.gray,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SPACING.xs,
+    marginBottom: 4,
+    marginRight: SPACING.sm,
   },
   moreProvidersText: {
     color: COLORS.lightGray,
-    fontSize: FONT_SIZES.xs,
+    fontSize: 9,
     fontFamily: FONTS.bold,
   },
 });
