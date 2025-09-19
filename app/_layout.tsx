@@ -52,18 +52,18 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.gestureHandler}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <PaymentProvider>
-            <SocialProvider>
-              <OnboardingProvider>
-                <AppointmentProvider>
+          <AppointmentProvider>
+            <PaymentProvider>
+              <SocialProvider>
+                <OnboardingProvider>
                   <ServicesProvider>
                     <RootLayoutNav />
                     <ModeIndicator />
                   </ServicesProvider>
-                </AppointmentProvider>
-              </OnboardingProvider>
-            </SocialProvider>
-          </PaymentProvider>
+                </OnboardingProvider>
+              </SocialProvider>
+            </PaymentProvider>
+          </AppointmentProvider>
         </AuthProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

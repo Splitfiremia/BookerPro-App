@@ -94,7 +94,9 @@ export interface TipSettings {
 
 export const [PaymentProvider, usePayments] = createContextHook(() => {
   const { user, isDeveloperMode } = useAuth();
-  const { appointments, updateAppointmentStatus } = useAppointments();
+  const appointmentContext = useAppointments();
+  const appointments = useMemo(() => appointmentContext?.appointments || [], [appointmentContext?.appointments]);
+  const updateAppointmentStatus = appointmentContext?.updateAppointmentStatus || (() => Promise.resolve());
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [payoutSettings, setPayoutSettings] = useState<PayoutSettings | null>(null);
