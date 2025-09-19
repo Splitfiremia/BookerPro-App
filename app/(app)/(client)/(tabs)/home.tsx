@@ -8,13 +8,12 @@ import {
   Image,
   FlatList,
   StatusBar,
-  Alert,
-  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
-import { Search, MapPin, Filter, Star, CreditCard, Heart } from 'lucide-react-native';
+import { MapPin, Filter, Star, CreditCard, Heart } from 'lucide-react-native';
 import { mockProviders } from '@/mocks/providers';
 import { useSocial } from '@/providers/SocialProvider';
 import { router } from 'expo-router';
@@ -65,11 +64,11 @@ interface LocationCoordinates {
 }
 
 export default function HomeScreen() {
-  const [searchText, setSearchText] = useState<string>('');
   const [selectedFilter, setSelectedFilter] = useState<string>('nearby');
   const [locationEnabled, setLocationEnabled] = useState<boolean>(false);
   const [nearbyProviders, setNearbyProviders] = useState<typeof mockProviders>([]);
   const [isLoadingProviders, setIsLoadingProviders] = useState<boolean>(false);
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
   const insets = useSafeAreaInsets();
   const { getFollowedCount } = useSocial();
 
@@ -80,13 +79,18 @@ export default function HomeScreen() {
     setLocationEnabled(false);
   }, []);
 
-  const fetchProvidersNearby = useCallback(async (location: LocationCoordinates) => {
-    console.log('Fetching providers near:', location);
+  const fetchProvidersNearby = useCallback(async (location: LocationCoordinates, placeName?: string) => {
+    if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') {
+      console.error('Invalid location coordinates provided');
+      return;
+    }
+    
+    const sanitizedPlaceName = placeName?.trim().slice(0, 200) || '';
+    console.log('Fetching providers near:', location, 'Place:', sanitizedPlaceName);
     setIsLoadingProviders(true);
     
     try {
-      // Simulate API call to backend
-      // In a real app, this would be:
+      // TODO: Replace with real backend API call when ready
       // const response = await fetch(`/api/providers/nearby?lat=${location.lat}&lng=${location.lng}`);
       // const providers = await response.json();
       
@@ -99,15 +103,37 @@ export default function HomeScreen() {
       
       setNearbyProviders(simulatedProviders);
       setLocationEnabled(true);
+      if (sanitizedPlaceName) {
+        setSelectedLocation(sanitizedPlaceName);
+      }
       
-      console.log(`Found ${simulatedProviders.length} providers nearby`);
+      console.log(`Found ${simulatedProviders.length} providers near ${sanitizedPlaceName || 'selected location'}`);
     } catch (error) {
       console.error('Error fetching nearby providers:', error);
-      Alert.alert('Error', 'Failed to fetch nearby providers. Please try again.');
     } finally {
       setIsLoadingProviders(false);
     }
   }, []);
+
+  const handlePlaceSelect = useCallback((data: any, details: any) => {
+    if (!data?.description) {
+      console.warn('Invalid place data received');
+      return;
+    }
+    
+    console.log('Place selected:', data.description);
+    console.log('Place details:', details);
+    
+    if (details?.geometry?.location?.lat && details?.geometry?.location?.lng) {
+      const location: LocationCoordinates = {
+        lat: details.geometry.location.lat,
+        lng: details.geometry.location.lng
+      };
+      fetchProvidersNearby(location, data.description);
+    } else {
+      console.warn('No location details available for selected place');
+    }
+  }, [fetchProvidersNearby]);
 
 
 
@@ -170,28 +196,91 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
         <View style={styles.searchContainer}>
-          <Search size={20} color={COLORS.lightGray} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
+          <GooglePlacesAutocomplete
             placeholder="Search for locations, stylists, or services"
-            placeholderTextColor={COLORS.lightGray}
-            value={searchText}
-            onChangeText={setSearchText}
-            returnKeyType="search"
-            onSubmitEditing={() => {
-              // Simulate location search for testing
-              if (searchText.trim()) {
-                const mockLocation = { lat: 40.7128, lng: -74.0060 }; // NYC coordinates
-                fetchProvidersNearby(mockLocation);
-              }
+            onPress={handlePlaceSelect}
+            query={{
+              key: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY,
+              language: 'en',
+              types: 'establishment',
+            }}
+            fetchDetails={true}
+            enablePoweredByContainer={false}
+            styles={{
+              container: {
+                flex: 1,
+              },
+              textInputContainer: {
+                backgroundColor: 'transparent',
+                borderTopWidth: 0,
+                borderBottomWidth: 0,
+                paddingHorizontal: 0,
+                marginHorizontal: 0,
+              },
+              textInput: {
+                backgroundColor: 'transparent',
+                color: COLORS.white,
+                fontSize: FONT_SIZES.md,
+                fontFamily: FONTS.regular,
+                paddingLeft: 0,
+                paddingRight: 0,
+                marginLeft: 0,
+                marginRight: 0,
+                height: 48,
+                borderWidth: 0,
+              },
+              listView: {
+                backgroundColor: COLORS.card,
+                borderRadius: BORDER_RADIUS.md,
+                marginTop: 4,
+                elevation: 5,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 4,
+              },
+              row: {
+                backgroundColor: COLORS.card,
+                paddingHorizontal: SPACING.md,
+                paddingVertical: SPACING.sm,
+                borderBottomWidth: 1,
+                borderBottomColor: COLORS.gray,
+              },
+              description: {
+                color: COLORS.white,
+                fontSize: FONT_SIZES.sm,
+                fontFamily: FONTS.regular,
+              },
+              predefinedPlacesDescription: {
+                color: COLORS.lightGray,
+              },
+            }}
+            textInputProps={{
+              placeholderTextColor: COLORS.lightGray,
+              returnKeyType: 'search',
+            }}
+            debounce={300}
+            minLength={2}
+            onFail={(error) => {
+              console.error('Google Places API Error:', error);
+            }}
+            onNotFound={() => {
+              console.log('No results found');
+            }}
+            nearbyPlacesAPI="GooglePlacesSearch"
+            GooglePlacesSearchQuery={{
+              rankby: 'distance',
             }}
           />
+
         </View>
         
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.locationContainer}>
             <MapPin size={16} color={COLORS.lightGray} />
-            <Text style={styles.locationText}>Current Location</Text>
+            <Text style={styles.locationText}>
+              {selectedLocation || 'Current Location'}
+            </Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -330,16 +419,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     marginBottom: SPACING.md,
     height: 48,
+    position: 'relative',
+    zIndex: 1,
   },
-  searchIcon: {
-    marginRight: SPACING.sm,
-  },
-  searchInput: {
-    flex: 1,
-    color: COLORS.white,
-    fontSize: FONT_SIZES.md,
-    fontFamily: FONTS.regular,
-  },
+
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -382,6 +465,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md,
     fontFamily: FONTS.regular,
     marginLeft: SPACING.xs,
+    maxWidth: 200,
   },
   filtersContainer: {
     paddingBottom: SPACING.md,
