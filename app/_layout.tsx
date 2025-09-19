@@ -8,6 +8,7 @@ import { AppointmentProvider } from "@/providers/AppointmentProvider";
 import { OnboardingProvider } from "@/providers/OnboardingProvider";
 import { ServicesProvider } from "@/providers/ServicesProvider";
 import { SocialProvider } from "@/providers/SocialProvider";
+import { PaymentProvider } from "@/providers/PaymentProvider";
 
 import { ModeIndicator } from "@/components/ModeIndicator";
 import { COLORS } from "@/constants/theme";
@@ -51,16 +52,18 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.gestureHandler}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <SocialProvider>
-            <OnboardingProvider>
-              <AppointmentProvider>
-                <ServicesProvider>
-                  <RootLayoutNav />
-                  <ModeIndicator />
-                </ServicesProvider>
-              </AppointmentProvider>
-            </OnboardingProvider>
-          </SocialProvider>
+          <PaymentProvider>
+            <SocialProvider>
+              <OnboardingProvider>
+                <AppointmentProvider>
+                  <ServicesProvider>
+                    <RootLayoutNav />
+                    <ModeIndicator />
+                  </ServicesProvider>
+                </AppointmentProvider>
+              </OnboardingProvider>
+            </SocialProvider>
+          </PaymentProvider>
         </AuthProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

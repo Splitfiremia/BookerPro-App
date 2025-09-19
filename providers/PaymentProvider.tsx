@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import createContextHook from "@nkzw/create-context-hook";
 import { useAuth } from "./AuthProvider";
 import { useAppointments } from "./AppointmentProvider";
+import { confirmReservation, releaseReservation } from "@/utils/bookingService";
 
 export interface PaymentMethod {
   id: string;
@@ -416,7 +417,8 @@ export const [PaymentProvider, usePayments] = createContextHook(() => {
       amount: number,
       tipAmount: number,
       paymentMethodId: string,
-      tipType: "percentage" | "custom" | "none" = "none"
+      tipType: "percentage" | "custom" | "none" = "none",
+      reservationId?: string
     ) => {
       setIsLoading(true);
       try {
@@ -476,11 +478,34 @@ export const [PaymentProvider, usePayments] = createContextHook(() => {
           : pendingUpdated.map((p) => (p.id === completedPayment.id ? completedPayment : p));
         await persistPayments(finalUpdated);
 
-        await updateAppointment(appointmentId, { status: "paid" });
+        // If this is a reservation-based booking, confirm the reservation
+        if (reservationId) {
+          const confirmationResult = confirmReservation(reservationId, {
+            totalAmount: amount,
+            serviceAmount: amount - tipAmount,
+            tipAmount,
+            paymentMethod: foundMethod?.id ?? paymentMethodId,
+          });
+          
+          if (!confirmationResult.success) {
+            throw new Error(confirmationResult.error || "Failed to confirm reservation");
+          }
+          
+          console.log("[PaymentProvider] Reservation confirmed:", confirmationResult.appointmentId);
+        } else {
+          await updateAppointment(appointmentId, { status: "paid" });
+        }
 
         return completedPayment;
       } catch (error) {
         console.error("[PaymentProvider] Error processing payment:", error);
+        
+        // If payment failed and we have a reservation, release it
+        if (reservationId) {
+          console.log("[PaymentProvider] Releasing reservation due to payment failure:", reservationId);
+          releaseReservation(reservationId);
+        }
+        
         throw error;
       } finally {
         setIsLoading(false);
@@ -722,6 +747,43 @@ export const [PaymentProvider, usePayments] = createContextHook(() => {
     []
   );
 
+  const processStripePayment = useCallback(
+    async (
+      amount: number,
+      paymentMethodId: string,
+      reservationId?: string
+    ) => {
+      console.log("[PaymentProvider] Processing Stripe payment...");
+      
+      // Mock Stripe payment processing
+      // In a real app, this would use Stripe's API
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Simulate payment success/failure
+      const success = Math.random() > 0.1; // 90% success rate
+      
+      if (!success) {
+        throw new Error("Payment failed. Please try again.");
+      }
+      
+      return {
+        paymentIntentId: `pi_${Date.now()}`,
+        status: "succeeded",
+        amount,
+        paymentMethodId,
+      };
+    },
+    []
+  );
+
+  const releaseSlotReservation = useCallback(
+    (reservationId: string) => {
+      console.log("[PaymentProvider] Releasing slot reservation:", reservationId);
+      return releaseReservation(reservationId);
+    },
+    []
+  );
+
   const splitTip = useCallback(
     async (paymentId: string, splits: { providerId: string; amount: number }[]) => {
       setIsLoading(true);
@@ -816,6 +878,8 @@ export const [PaymentProvider, usePayments] = createContextHook(() => {
       requestInstantPayout,
       getPayoutHistory,
       validatePaymentSecurity,
+      processStripePayment,
+      releaseSlotReservation,
     }),
     [
       paymentMethods,
@@ -838,6 +902,8 @@ export const [PaymentProvider, usePayments] = createContextHook(() => {
       requestInstantPayout,
       getPayoutHistory,
       validatePaymentSecurity,
+      processStripePayment,
+      releaseSlotReservation,
     ]
   );
 });
