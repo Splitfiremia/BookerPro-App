@@ -3,69 +3,119 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import createContextHook from "@nkzw/create-context-hook";
 import { useAuth } from "@/providers/AuthProvider";
 
+export interface Post {
+  id: string;
+  providerId: string;
+  imageUri: string;
+  caption: string;
+  createdAt: string;
+  likes: number;
+}
+
+export interface PortfolioItem {
+  id: string;
+  providerId: string;
+  imageUri: string;
+  createdAt: string;
+}
+
 interface SocialState {
   followedProviderIds: string[];
+  posts: Post[];
+  portfolio: PortfolioItem[];
   isLoading: boolean;
 }
 
 interface SocialContextValue {
   followedProviderIds: string[];
+  posts: Post[];
+  portfolio: PortfolioItem[];
   isLoading: boolean;
   followProvider: (providerId: string) => Promise<void>;
   unfollowProvider: (providerId: string) => Promise<void>;
   isFollowing: (providerId: string) => boolean;
   getFollowedCount: () => number;
+  createPost: (imageUri: string, caption: string) => Promise<void>;
+  addToPortfolio: (imageUri: string) => Promise<void>;
+  removeFromPortfolio: (itemId: string) => Promise<void>;
+  getProviderPosts: (providerId: string) => Post[];
+  getProviderPortfolio: (providerId: string) => PortfolioItem[];
 }
 
 const STORAGE_KEY = "social_followed_providers";
+const POSTS_STORAGE_KEY = "social_posts";
+const PORTFOLIO_STORAGE_KEY = "social_portfolio";
 
 export const [SocialProvider, useSocial] = createContextHook(() => {
   const { user } = useAuth();
   const [socialState, setSocialState] = useState<SocialState>({
     followedProviderIds: [],
+    posts: [],
+    portfolio: [],
     isLoading: true,
   });
 
-  // Load followed providers from AsyncStorage on mount
+  // Load social data from AsyncStorage on mount
   useEffect(() => {
-    const loadFollowedProviders = async () => {
+    const loadSocialData = async () => {
       if (!user?.id) {
-        setSocialState({ followedProviderIds: [], isLoading: false });
+        setSocialState({ followedProviderIds: [], posts: [], portfolio: [], isLoading: false });
         return;
       }
 
       try {
-        console.log('SocialProvider: Loading followed providers for user:', user.id);
+        console.log('SocialProvider: Loading social data for user:', user.id);
         const userStorageKey = `${STORAGE_KEY}_${user.id}`;
-        const storedData = await AsyncStorage.getItem(userStorageKey);
+        const postsStorageKey = `${POSTS_STORAGE_KEY}_${user.id}`;
+        const portfolioStorageKey = `${PORTFOLIO_STORAGE_KEY}_${user.id}`;
         
-        if (storedData) {
-          const followedIds = JSON.parse(storedData) as string[];
-          console.log('SocialProvider: Loaded followed providers:', followedIds.length);
-          setSocialState({ followedProviderIds: followedIds, isLoading: false });
-        } else {
-          console.log('SocialProvider: No followed providers found');
-          setSocialState({ followedProviderIds: [], isLoading: false });
-        }
+        const [followedData, postsData, portfolioData] = await Promise.all([
+          AsyncStorage.getItem(userStorageKey),
+          AsyncStorage.getItem(postsStorageKey),
+          AsyncStorage.getItem(portfolioStorageKey)
+        ]);
+        
+        const followedIds = followedData ? JSON.parse(followedData) as string[] : [];
+        const posts = postsData ? JSON.parse(postsData) as Post[] : [];
+        const portfolio = portfolioData ? JSON.parse(portfolioData) as PortfolioItem[] : [];
+        
+        console.log('SocialProvider: Loaded social data - followed:', followedIds.length, 'posts:', posts.length, 'portfolio:', portfolio.length);
+        setSocialState({ followedProviderIds: followedIds, posts, portfolio, isLoading: false });
       } catch (error) {
-        console.error('SocialProvider: Error loading followed providers:', error);
-        setSocialState({ followedProviderIds: [], isLoading: false });
+        console.error('SocialProvider: Error loading social data:', error);
+        setSocialState({ followedProviderIds: [], posts: [], portfolio: [], isLoading: false });
       }
     };
 
-    loadFollowedProviders();
+    loadSocialData();
   }, [user?.id]);
 
-  // Save followed providers to AsyncStorage
-  const saveFollowedProviders = useCallback(async (followedIds: string[]) => {
+  // Save social data to AsyncStorage
+  const saveSocialData = useCallback(async (data: Partial<SocialState>) => {
     if (!user?.id) return;
 
     try {
-      const userStorageKey = `${STORAGE_KEY}_${user.id}`;
-      await AsyncStorage.setItem(userStorageKey, JSON.stringify(followedIds));
-      console.log('SocialProvider: Saved followed providers:', followedIds.length);
+      const promises = [];
+      
+      if (data.followedProviderIds !== undefined) {
+        const userStorageKey = `${STORAGE_KEY}_${user.id}`;
+        promises.push(AsyncStorage.setItem(userStorageKey, JSON.stringify(data.followedProviderIds)));
+      }
+      
+      if (data.posts !== undefined) {
+        const postsStorageKey = `${POSTS_STORAGE_KEY}_${user.id}`;
+        promises.push(AsyncStorage.setItem(postsStorageKey, JSON.stringify(data.posts)));
+      }
+      
+      if (data.portfolio !== undefined) {
+        const portfolioStorageKey = `${PORTFOLIO_STORAGE_KEY}_${user.id}`;
+        promises.push(AsyncStorage.setItem(portfolioStorageKey, JSON.stringify(data.portfolio)));
+      }
+      
+      await Promise.all(promises);
+      console.log('SocialProvider: Saved social data');
     } catch (error) {
-      console.error('SocialProvider: Error saving followed providers:', error);
+      console.error('SocialProvider: Error saving social data:', error);
     }
   }, [user?.id]);
 
@@ -90,7 +140,7 @@ export const [SocialProvider, useSocial] = createContextHook(() => {
         followedProviderIds: updatedFollowedIds,
       }));
       
-      await saveFollowedProviders(updatedFollowedIds);
+      await saveSocialData({ followedProviderIds: updatedFollowedIds });
       console.log('SocialProvider: Successfully followed provider:', providerId);
     } catch (error) {
       console.error('SocialProvider: Error following provider:', error);
@@ -100,7 +150,7 @@ export const [SocialProvider, useSocial] = createContextHook(() => {
         followedProviderIds: prev.followedProviderIds.filter(id => id !== providerId),
       }));
     }
-  }, [user?.id, socialState.followedProviderIds, saveFollowedProviders]);
+  }, [user?.id, socialState.followedProviderIds, saveSocialData]);
 
   // Unfollow a provider
   const unfollowProvider = useCallback(async (providerId: string) => {
@@ -123,7 +173,7 @@ export const [SocialProvider, useSocial] = createContextHook(() => {
         followedProviderIds: updatedFollowedIds,
       }));
       
-      await saveFollowedProviders(updatedFollowedIds);
+      await saveSocialData({ followedProviderIds: updatedFollowedIds });
       console.log('SocialProvider: Successfully unfollowed provider:', providerId);
     } catch (error) {
       console.error('SocialProvider: Error unfollowing provider:', error);
@@ -133,7 +183,7 @@ export const [SocialProvider, useSocial] = createContextHook(() => {
         followedProviderIds: [...prev.followedProviderIds, providerId],
       }));
     }
-  }, [user?.id, socialState.followedProviderIds, saveFollowedProviders]);
+  }, [user?.id, socialState.followedProviderIds, saveSocialData]);
 
   // Check if following a provider
   const isFollowing = useCallback((providerId: string) => {
@@ -145,14 +195,116 @@ export const [SocialProvider, useSocial] = createContextHook(() => {
     return socialState.followedProviderIds.length;
   }, [socialState.followedProviderIds]);
 
+  // Create a new post
+  const createPost = useCallback(async (imageUri: string, caption: string) => {
+    if (!user?.id) {
+      console.warn('SocialProvider: Cannot create post - user not authenticated');
+      return;
+    }
+
+    try {
+      console.log('SocialProvider: Creating post for provider:', user.id);
+      const newPost: Post = {
+        id: Date.now().toString(),
+        providerId: user.id,
+        imageUri,
+        caption,
+        createdAt: new Date().toISOString(),
+        likes: 0,
+      };
+      
+      const updatedPosts = [newPost, ...socialState.posts];
+      
+      setSocialState(prev => ({
+        ...prev,
+        posts: updatedPosts,
+      }));
+      
+      await saveSocialData({ posts: updatedPosts });
+      console.log('SocialProvider: Successfully created post');
+    } catch (error) {
+      console.error('SocialProvider: Error creating post:', error);
+    }
+  }, [user?.id, socialState.posts, saveSocialData]);
+
+  // Add item to portfolio
+  const addToPortfolio = useCallback(async (imageUri: string) => {
+    if (!user?.id) {
+      console.warn('SocialProvider: Cannot add to portfolio - user not authenticated');
+      return;
+    }
+
+    try {
+      console.log('SocialProvider: Adding to portfolio for provider:', user.id);
+      const newItem: PortfolioItem = {
+        id: Date.now().toString(),
+        providerId: user.id,
+        imageUri,
+        createdAt: new Date().toISOString(),
+      };
+      
+      const updatedPortfolio = [newItem, ...socialState.portfolio];
+      
+      setSocialState(prev => ({
+        ...prev,
+        portfolio: updatedPortfolio,
+      }));
+      
+      await saveSocialData({ portfolio: updatedPortfolio });
+      console.log('SocialProvider: Successfully added to portfolio');
+    } catch (error) {
+      console.error('SocialProvider: Error adding to portfolio:', error);
+    }
+  }, [user?.id, socialState.portfolio, saveSocialData]);
+
+  // Remove item from portfolio
+  const removeFromPortfolio = useCallback(async (itemId: string) => {
+    if (!user?.id) {
+      console.warn('SocialProvider: Cannot remove from portfolio - user not authenticated');
+      return;
+    }
+
+    try {
+      console.log('SocialProvider: Removing from portfolio:', itemId);
+      const updatedPortfolio = socialState.portfolio.filter(item => item.id !== itemId);
+      
+      setSocialState(prev => ({
+        ...prev,
+        portfolio: updatedPortfolio,
+      }));
+      
+      await saveSocialData({ portfolio: updatedPortfolio });
+      console.log('SocialProvider: Successfully removed from portfolio');
+    } catch (error) {
+      console.error('SocialProvider: Error removing from portfolio:', error);
+    }
+  }, [user?.id, socialState.portfolio, saveSocialData]);
+
+  // Get posts for a specific provider
+  const getProviderPosts = useCallback((providerId: string) => {
+    return socialState.posts.filter(post => post.providerId === providerId);
+  }, [socialState.posts]);
+
+  // Get portfolio for a specific provider
+  const getProviderPortfolio = useCallback((providerId: string) => {
+    return socialState.portfolio.filter(item => item.providerId === providerId);
+  }, [socialState.portfolio]);
+
   const contextValue = useMemo((): SocialContextValue => ({
     followedProviderIds: socialState.followedProviderIds,
+    posts: socialState.posts,
+    portfolio: socialState.portfolio,
     isLoading: socialState.isLoading,
     followProvider,
     unfollowProvider,
     isFollowing,
     getFollowedCount,
-  }), [socialState, followProvider, unfollowProvider, isFollowing, getFollowedCount]);
+    createPost,
+    addToPortfolio,
+    removeFromPortfolio,
+    getProviderPosts,
+    getProviderPortfolio,
+  }), [socialState, followProvider, unfollowProvider, isFollowing, getFollowedCount, createPost, addToPortfolio, removeFromPortfolio, getProviderPosts, getProviderPortfolio]);
 
   return contextValue;
 });

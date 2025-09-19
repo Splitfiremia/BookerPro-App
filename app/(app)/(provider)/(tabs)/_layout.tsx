@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Calendar, DollarSign, User, Home, ClipboardList, FileText, UserCircle, Bell } from "lucide-react-native";
+import { Calendar, DollarSign, User, Home, ClipboardList, FileText, UserCircle, Bell, Image } from "lucide-react-native";
 import { COLORS } from "@/constants/theme";
 
 export default function ProviderTabsLayout() {
@@ -60,6 +60,13 @@ export default function ProviderTabsLayout() {
         options={{
           title: "Earnings",
           tabBarIcon: ({ color }) => <DollarSign size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="content"
+        options={{
+          title: "Content",
+          tabBarIcon: ({ color }) => <Image size={24} color={color} />,
         }}
       />
       <Tabs.Screen
