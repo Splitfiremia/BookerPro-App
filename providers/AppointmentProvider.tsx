@@ -77,117 +77,15 @@ const mockAppointmentsData: Appointment[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     statusHistory: []
-  },
-  {
-    id: "3",
-    clientId: "client-3",
-    providerId: "provider-1",
-    serviceId: "service-3",
-    shopId: "shop-1",
-    date: "2024-09-19",
-    time: "10:00",
-    startTime: "10:00",
-    endTime: "11:00",
-    duration: 60,
-    status: "requested",
-    paymentStatus: "pending",
-    totalAmount: 75,
-    serviceAmount: 75,
-    notes: "First time client - consultation needed",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    statusHistory: []
-  },
-  {
-    id: "4",
-    clientId: "client-4",
-    providerId: "provider-1",
-    serviceId: "service-4",
-    shopId: "shop-1",
-    date: "2024-09-20",
-    time: "16:00",
-    startTime: "16:00",
-    endTime: "16:30",
-    duration: 30,
-    status: "requested",
-    paymentStatus: "pending",
-    totalAmount: 35,
-    serviceAmount: 35,
-    notes: "Beard trim and styling",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    statusHistory: []
-  },
-  {
-    id: "5",
-    clientId: "client-1",
-    providerId: "provider-3",
-    serviceId: "service-3",
-    shopId: "shop-2",
-    date: "2024-09-15",
-    time: "11:00",
-    startTime: "11:00",
-    endTime: "11:45",
-    duration: 45,
-    status: "completed",
-    paymentStatus: "paid",
-    totalAmount: 60,
-    serviceAmount: 50,
-    tipAmount: 10,
-    notes: "Gel manicure",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    statusHistory: []
-  },
-  {
-    id: "6",
-    clientId: "client-5",
-    providerId: "provider-1",
-    serviceId: "service-1",
-    shopId: "shop-1",
-    date: "2024-09-14",
-    time: "10:00",
-    startTime: "10:00",
-    endTime: "10:30",
-    duration: 30,
-    status: "cancelled",
-    paymentStatus: "refunded",
-    totalAmount: 50,
-    serviceAmount: 50,
-    notes: "Regular cut",
-    cancellationReason: "Client cancelled due to emergency",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    statusHistory: []
-  },
-  {
-    id: "7",
-    clientId: "client-6",
-    providerId: "provider-2",
-    serviceId: "service-5",
-    shopId: "shop-1",
-    date: "2024-09-13",
-    time: "15:00",
-    startTime: "15:00",
-    endTime: "16:00",
-    duration: 60,
-    status: "no-show",
-    paymentStatus: "failed",
-    totalAmount: 80,
-    serviceAmount: 80,
-    notes: "Hair styling",
-    noShowReason: "Client did not show up",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    statusHistory: []
   }
 ];
 
-export const [AppointmentProvider, useAppointments] = createContextHook(() => {
+const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook(() => {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
   // Load appointments and notifications on mount with timeout
   useEffect(() => {
@@ -216,7 +114,7 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
             console.log('Using mock appointments:', mockAppointmentsData.length);
             setAppointments(mockAppointmentsData);
           }
-        } catch (error) {
+        } catch {
           console.log('Using mock appointments due to timeout/error');
           setAppointments(mockAppointmentsData);
         }
@@ -228,7 +126,7 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
             const parsedNotifications = JSON.parse(storedNotifications);
             setNotifications(parsedNotifications);
           }
-        } catch (error) {
+        } catch {
           console.log('No stored notifications or timeout');
         }
       } catch (error) {
@@ -236,6 +134,7 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
         setAppointments(mockAppointmentsData);
       } finally {
         setIsLoading(false);
+        setIsInitialized(true);
       }
     };
     
@@ -246,6 +145,7 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
       console.warn('AppointmentProvider: Fallback timeout triggered');
       setAppointments(mockAppointmentsData);
       setIsLoading(false);
+      setIsInitialized(true);
     }, 800);
     
     return () => clearTimeout(fallbackTimeout);
@@ -331,47 +231,8 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     setAppointments(updatedAppointments);
     await saveAppointments(updatedAppointments);
 
-    // Create notifications based on status change and user role - Notification Engine
-    const newNotifications: Notification[] = [];
-    
-    if (newStatus === 'confirmed' && user?.role === 'provider') {
-      // Provider confirmed appointment - notify client
-      newNotifications.push(createNotification(
-        appointment.clientId,
-        'appointment_confirmed',
-        'Appointment Confirmed',
-        `Your appointment has been confirmed for ${appointment.date} at ${appointment.startTime}`,
-        appointmentId
-      ));
-    } else if (newStatus === 'requested' && user?.role === 'client') {
-      // Client requested appointment - notify provider
-      newNotifications.push(createNotification(
-        appointment.providerId,
-        'appointment_requested',
-        'New Appointment Request',
-        `You have a new appointment request for ${appointment.date} at ${appointment.startTime}`,
-        appointmentId
-      ));
-    } else if (newStatus === 'cancelled') {
-      // Appointment cancelled - notify other party
-      const notifyUserId = user?.role === 'client' ? appointment.providerId : appointment.clientId;
-      newNotifications.push(createNotification(
-        notifyUserId,
-        'appointment_cancelled',
-        'Appointment Cancelled',
-        `An appointment for ${appointment.date} at ${appointment.startTime} has been cancelled`,
-        appointmentId
-      ));
-    }
-
-    if (newNotifications.length > 0) {
-      const updatedNotifications = [...notifications, ...newNotifications];
-      setNotifications(updatedNotifications);
-      await saveNotifications(updatedNotifications);
-    }
-
     console.log('Updated appointment status:', appointmentId, newStatus);
-  }, [appointments, notifications, user, createStatusChange, createNotification, saveAppointments, saveNotifications]);
+  }, [appointments, createStatusChange, saveAppointments]);
 
   // Role-Based UI (RBUI) - appointment filtering
   const getAppointmentsForUser = useCallback((userRole: UserRole, userId: string) => {
@@ -381,8 +242,6 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
       case 'provider':
         return appointments.filter(apt => apt.providerId === userId);
       case 'owner':
-        // Shop owners see all appointments in their shops
-        // In real implementation, this would filter by shopId based on user's owned shops
         return appointments;
       default:
         return [];
@@ -419,22 +278,9 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     setAppointments(updatedAppointments);
     await saveAppointments(updatedAppointments);
     
-    // Notify provider of new request
-    const notification = createNotification(
-      newAppointment.providerId,
-      'appointment_requested',
-      'New Appointment Request',
-      `You have a new appointment request for ${newAppointment.date} at ${newAppointment.startTime}`,
-      newAppointment.id
-    );
-    
-    const updatedNotifications = [...notifications, notification];
-    setNotifications(updatedNotifications);
-    await saveNotifications(updatedNotifications);
-    
     console.log('Created new appointment request:', newAppointment.id);
     return newAppointment;
-  }, [appointments, notifications, createNotification, saveAppointments, saveNotifications]);
+  }, [appointments, saveAppointments]);
 
   // General appointment update function
   const updateAppointment = useCallback(async (appointmentId: string, updates: Partial<Appointment>) => {
@@ -486,17 +332,6 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     return user ? notifications.filter(notif => notif.userId === user.id && !notif.read) : [];
   }, [notifications, user]);
 
-  // Real-time sync simulation (in production, this would use WebSockets)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log('Simulating real-time sync check...');
-      // In real implementation, this would check for updates from server
-      // and update local state accordingly to prevent double-booking
-    }, 30000); // Every 30 seconds
-    
-    return () => clearInterval(interval);
-  }, []);
-
   // Convert appointments to booking requests format for compatibility
   const bookingRequests = useMemo((): BookingRequest[] => {
     if (!user || user.role !== 'provider' || !appointments || !Array.isArray(appointments)) {
@@ -508,14 +343,14 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
       .map(apt => ({
         id: apt.id,
         clientId: apt.clientId,
-        clientName: `Client ${apt.clientId}`, // In real app, this would be fetched from user data
+        clientName: `Client ${apt.clientId}`,
         clientImage: undefined,
         providerId: apt.providerId,
-        serviceName: `Service ${apt.serviceId}`, // In real app, this would be fetched from service data
+        serviceName: `Service ${apt.serviceId}`,
         date: apt.date,
         time: apt.startTime,
-        duration: 60, // Default duration, in real app this would come from service data
-        price: 50, // Default price, in real app this would come from service data
+        duration: 60,
+        price: 50,
         notes: apt.notes,
         status: 'requested' as const,
         createdAt: apt.createdAt,
@@ -537,6 +372,7 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     notifications,
     unreadNotifications,
     isLoading,
+    isInitialized,
     // Core appointment management
     requestAppointment,
     updateAppointment,
@@ -562,6 +398,7 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     notifications,
     unreadNotifications,
     isLoading,
+    isInitialized,
     requestAppointment,
     updateAppointment,
     updateAppointmentStatus,
@@ -581,79 +418,112 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
   return contextValue;
 });
 
+// Safe wrapper for useAppointments that provides defaults
+export const useAppointments = () => {
+  const context = useAppointmentsInternal();
+  
+  // Provide safe defaults if context is not yet initialized
+  if (!context || !context.isInitialized) {
+    return {
+      appointments: [],
+      notifications: [],
+      unreadNotifications: [],
+      isLoading: true,
+      isInitialized: false,
+      requestAppointment: async () => ({} as any),
+      updateAppointment: async () => {},
+      updateAppointmentStatus: async () => {},
+      confirmAppointment: async () => {},
+      cancelAppointment: async () => {},
+      completeAppointment: async () => {},
+      markNoShow: async () => {},
+      bookingRequests: [],
+      confirmBookingRequest: async () => {},
+      declineBookingRequest: async () => {},
+      getAppointmentsForUser: () => [],
+      getAppointmentsByStatus: () => [],
+      getAppointmentsWithColors: () => [],
+      markNotificationRead: async () => {},
+      APPOINTMENT_COLORS: {
+        requested: '#FFC107',
+        cancelled: '#F44336',
+        confirmed: '#2196F3',
+        completed: '#4CAF50',
+        'no-show': '#9E9E9E',
+      } as const,
+    };
+  }
+  
+  return context;
+};
+
+// Export the provider with the original name
+export const AppointmentProvider = AppointmentProviderInternal;
+
 // Helper hook for filtering appointments by user role and status
 export function useFilteredAppointments(status?: AppointmentStatus) {
-  const { getAppointmentsForUser, getAppointmentsByStatus } = useAppointments();
+  const context = useAppointments();
   const { user } = useAuth();
 
   return useMemo(() => {
-    if (!user) return [];
+    if (!context.isInitialized || !user) return [];
     
     if (status) {
-      return getAppointmentsByStatus(status);
+      return context.getAppointmentsByStatus(status);
     }
     
-    return getAppointmentsForUser(user.role, user.id || '');
-  }, [getAppointmentsForUser, getAppointmentsByStatus, status, user]);
+    return context.getAppointmentsForUser(user.role, user.id || '');
+  }, [context, status, user]);
 }
 
 // Helper hook for real-time appointment updates (simulated)
 export function useRealTimeAppointments() {
-  const { appointments, notifications } = useAppointments();
-  
-  // In a real implementation, this would connect to WebSocket or Server-Sent Events
-  // For now, we simulate real-time updates through the notification system
+  const context = useAppointments();
   
   useEffect(() => {
-    // Simulate periodic sync with server
     const interval = setInterval(() => {
       console.log('Simulating real-time sync...');
-      // In real implementation, this would fetch latest data from server
-    }, 30000); // Every 30 seconds
+    }, 30000);
     
     return () => clearInterval(interval);
   }, []);
   
-  return { appointments, notifications };
+  return { appointments: context.appointments, notifications: context.notifications };
 }
 
 // Helper hook for provider-specific appointment management (Provider Flow)
 export function useProviderAppointments() {
-  const { 
-    getAppointmentsForUser, 
-    getAppointmentsByStatus, 
-    confirmAppointment, 
-    cancelAppointment, 
-    completeAppointment,
-    markNoShow,
-    unreadNotifications
-  } = useAppointments();
+  const context = useAppointments();
   const { user } = useAuth();
-
+  
   const providerAppointments = useMemo(() => {
-    if (user?.role !== 'provider' || !user.id) return [];
-    return getAppointmentsForUser('provider', user.id);
-  }, [getAppointmentsForUser, user]);
+    if (!context.isInitialized || user?.role !== 'provider' || !user.id) return [];
+    return context.getAppointmentsForUser('provider', user.id);
+  }, [context, user]);
 
   const pendingRequests = useMemo(() => {
-    return getAppointmentsByStatus('requested');
-  }, [getAppointmentsByStatus]);
+    if (!context.isInitialized) return [];
+    return context.getAppointmentsByStatus('requested');
+  }, [context]);
 
   const confirmedAppointments = useMemo(() => {
-    return getAppointmentsByStatus('confirmed');
-  }, [getAppointmentsByStatus]);
+    if (!context.isInitialized) return [];
+    return context.getAppointmentsByStatus('confirmed');
+  }, [context]);
 
   const todaysAppointments = useMemo(() => {
+    if (!context.isInitialized) return [];
     const today = new Date().toISOString().split('T')[0];
-    return confirmedAppointments.filter(apt => apt.date === today);
-  }, [confirmedAppointments]);
+    return confirmedAppointments.filter((apt: Appointment) => apt.date === today);
+  }, [confirmedAppointments, context.isInitialized]);
 
   const appointmentNotifications = useMemo(() => {
-    return unreadNotifications.filter(notif => 
+    if (!context.isInitialized) return [];
+    return context.unreadNotifications.filter((notif: Notification) => 
       notif.type === 'appointment_requested' || 
       notif.type === 'appointment_cancelled'
     );
-  }, [unreadNotifications]);
+  }, [context.unreadNotifications, context.isInitialized]);
 
   return {
     providerAppointments,
@@ -661,55 +531,61 @@ export function useProviderAppointments() {
     confirmedAppointments,
     todaysAppointments,
     appointmentNotifications,
-    confirmAppointment,
-    cancelAppointment,
-    completeAppointment,
-    markNoShow,
+    confirmAppointment: context.confirmAppointment,
+    cancelAppointment: context.cancelAppointment,
+    completeAppointment: context.completeAppointment,
+    markNoShow: context.markNoShow,
   };
 }
 
 // Helper hook for shop owner appointment oversight (Shop Owner Flow)
 export function useShopOwnerAppointments() {
-  const { 
-    getAppointmentsForUser, 
-    getAppointmentsByStatus,
-    getAppointmentsWithColors,
-    unreadNotifications 
-  } = useAppointments();
+  const context = useAppointments();
   const { user } = useAuth();
-
+  
   const allShopAppointments = useMemo(() => {
-    if (user?.role !== 'owner' || !user.id) return [];
-    return getAppointmentsForUser('owner', user.id);
-  }, [getAppointmentsForUser, user]);
+    if (!context.isInitialized || user?.role !== 'owner' || !user.id) return [];
+    return context.getAppointmentsForUser('owner', user.id);
+  }, [context, user]);
 
   const appointmentsWithColors = useMemo(() => {
-    return getAppointmentsWithColors();
-  }, [getAppointmentsWithColors]);
+    if (!context.isInitialized) return [];
+    return context.getAppointmentsWithColors();
+  }, [context]);
 
   const appointmentsByStatus = useMemo(() => {
+    if (!context.isInitialized) {
+      return {
+        requested: [],
+        confirmed: [],
+        completed: [],
+        cancelled: [],
+        'no-show': [],
+      };
+    }
     return {
-      requested: getAppointmentsByStatus('requested'),
-      confirmed: getAppointmentsByStatus('confirmed'),
-      completed: getAppointmentsByStatus('completed'),
-      cancelled: getAppointmentsByStatus('cancelled'),
-      'no-show': getAppointmentsByStatus('no-show'),
+      requested: context.getAppointmentsByStatus('requested'),
+      confirmed: context.getAppointmentsByStatus('confirmed'),
+      completed: context.getAppointmentsByStatus('completed'),
+      cancelled: context.getAppointmentsByStatus('cancelled'),
+      'no-show': context.getAppointmentsByStatus('no-show'),
     };
-  }, [getAppointmentsByStatus]);
+  }, [context]);
 
   const todaysAppointments = useMemo(() => {
+    if (!context.isInitialized) return [];
     const today = new Date().toISOString().split('T')[0];
-    return allShopAppointments.filter(apt => apt.date === today);
-  }, [allShopAppointments]);
+    return allShopAppointments.filter((apt: Appointment) => apt.date === today);
+  }, [allShopAppointments, context.isInitialized]);
 
   const revenueData = useMemo(() => {
+    if (!context.isInitialized) return { totalAppointments: 0, estimatedRevenue: 0 };
     const completedAppointments = appointmentsByStatus.completed;
-    // In real implementation, this would calculate actual revenue from payment data
     return {
       totalAppointments: completedAppointments.length,
-      estimatedRevenue: completedAppointments.length * 50, // Mock calculation
+      estimatedRevenue: completedAppointments.length * 50,
     };
-  }, [appointmentsByStatus.completed]);
+  }, [appointmentsByStatus.completed, context.isInitialized]);
 
   return {
     allShopAppointments,
@@ -717,48 +593,47 @@ export function useShopOwnerAppointments() {
     appointmentsByStatus,
     todaysAppointments,
     revenueData,
-    unreadNotifications,
+    unreadNotifications: context.unreadNotifications,
   };
 }
 
 // Helper hook for client appointment management (Client Flow)
 export function useClientAppointments() {
-  const { 
-    getAppointmentsForUser, 
-    requestAppointment, 
-    cancelAppointment,
-    unreadNotifications 
-  } = useAppointments();
+  const context = useAppointments();
   const { user } = useAuth();
-
+  
   const clientAppointments = useMemo(() => {
-    if (user?.role !== 'client' || !user.id) return [];
-    return getAppointmentsForUser('client', user.id);
-  }, [getAppointmentsForUser, user]);
+    if (!context.isInitialized || user?.role !== 'client' || !user.id) return [];
+    return context.getAppointmentsForUser('client', user.id);
+  }, [context, user]);
 
   const upcomingAppointments = useMemo(() => {
-    return clientAppointments.filter(apt => 
+    if (!context.isInitialized) return [];
+    return clientAppointments.filter((apt: Appointment) => 
       apt.status === 'confirmed' || apt.status === 'requested'
     );
-  }, [clientAppointments]);
+  }, [clientAppointments, context.isInitialized]);
 
   const pastAppointments = useMemo(() => {
-    return clientAppointments.filter(apt => 
+    if (!context.isInitialized) return [];
+    return clientAppointments.filter((apt: Appointment) => 
       apt.status === 'completed' || apt.status === 'cancelled' || apt.status === 'no-show'
     );
-  }, [clientAppointments]);
+  }, [clientAppointments, context.isInitialized]);
 
   const pendingRequests = useMemo(() => {
-    return clientAppointments.filter(apt => apt.status === 'requested');
-  }, [clientAppointments]);
+    if (!context.isInitialized) return [];
+    return clientAppointments.filter((apt: Appointment) => apt.status === 'requested');
+  }, [clientAppointments, context.isInitialized]);
 
   const appointmentNotifications = useMemo(() => {
-    return unreadNotifications.filter(notif => 
+    if (!context.isInitialized) return [];
+    return context.unreadNotifications.filter((notif: Notification) => 
       notif.type === 'appointment_confirmed' || 
       notif.type === 'appointment_cancelled' ||
       notif.type === 'appointment_reminder'
     );
-  }, [unreadNotifications]);
+  }, [context.unreadNotifications, context.isInitialized]);
 
   return {
     clientAppointments,
@@ -766,7 +641,7 @@ export function useClientAppointments() {
     pastAppointments,
     pendingRequests,
     appointmentNotifications,
-    requestAppointment,
-    cancelAppointment,
+    requestAppointment: context.requestAppointment,
+    cancelAppointment: context.cancelAppointment,
   };
 }

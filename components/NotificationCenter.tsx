@@ -454,28 +454,29 @@ export default NotificationCenter;
 
 // Hook for notification badge count
 export const useNotificationBadge = () => {
-  const { unreadNotifications } = useAppointments();
-  return unreadNotifications.length;
+  const context = useAppointments();
+  if (!context.isInitialized) return 0;
+  return context.unreadNotifications.length;
 };
 
 // Hook for real-time notification updates
 export const useRealTimeNotifications = () => {
-  const { notifications, unreadNotifications } = useAppointments();
+  const context = useAppointments();
   const [hasNewNotifications, setHasNewNotifications] = useState<boolean>(false);
   
   useEffect(() => {
-    if (unreadNotifications.length > 0) {
+    if (context.isInitialized && context.unreadNotifications.length > 0) {
       setHasNewNotifications(true);
       // Auto-reset after 3 seconds
       const timer = setTimeout(() => setHasNewNotifications(false), 3000);
       return () => clearTimeout(timer);
     }
-  }, [unreadNotifications.length]);
+  }, [context.unreadNotifications.length, context.isInitialized]);
   
   return {
-    notifications,
-    unreadNotifications,
+    notifications: context.notifications,
+    unreadNotifications: context.unreadNotifications,
     hasNewNotifications,
-    unreadCount: unreadNotifications.length
+    unreadCount: context.unreadNotifications.length
   };
 };
