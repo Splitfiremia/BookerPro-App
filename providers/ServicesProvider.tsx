@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import createContextHook from '@/utils/contextHook';
+import createContextHook from '@nkzw/create-context-hook';
 import { Service, ProviderServiceOffering } from '@/models/database';
 import { useAuth } from './AuthProvider';
 
@@ -47,8 +47,8 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
                 id: `service_${index + 1}`,
                 name: s.name,
                 description: s.description || '',
-                duration: parseInt(s.duration) || 30,
-                price: s.price,
+                baseDuration: parseInt(s.duration) || 30,
+                basePrice: s.price,
                 isActive: true,
                 providerId: user.id,
                 createdAt: new Date().toISOString(),
@@ -67,8 +67,8 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
               id: 'master_1',
               name: "Women's Haircut",
               description: 'Professional haircut and styling',
-              duration: 45,
-              price: 75,
+              baseDuration: 45,
+              basePrice: 75,
               isActive: true,
               shopId: 'shop_1',
               createdAt: new Date().toISOString(),
@@ -78,8 +78,8 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
               id: 'master_2',
               name: "Men's Haircut",
               description: 'Classic and modern cuts',
-              duration: 30,
-              price: 55,
+              baseDuration: 30,
+              basePrice: 55,
               isActive: true,
               shopId: 'shop_1',
               createdAt: new Date().toISOString(),
@@ -93,6 +93,7 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
               id: 'offering_1',
               providerId: user.id!,
               serviceId: 'master_1',
+              service: defaultMasterServices[0],
               isOffered: true,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
@@ -101,6 +102,7 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
               id: 'offering_2',
               providerId: user.id!,
               serviceId: 'master_2',
+              service: defaultMasterServices[1],
               isOffered: true,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
@@ -115,8 +117,8 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
             id: 'master_1',
             name: "Women's Haircut",
             description: 'Professional haircut and styling',
-            duration: 45,
-            price: 75,
+            baseDuration: 45,
+            basePrice: 75,
             isActive: true,
             shopId: 'shop_1',
             createdAt: new Date().toISOString(),
@@ -126,8 +128,8 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
             id: 'master_2',
             name: "Men's Haircut",
             description: 'Classic and modern cuts',
-            duration: 30,
-            price: 55,
+            baseDuration: 30,
+            basePrice: 55,
             isActive: true,
             shopId: 'shop_1',
             createdAt: new Date().toISOString(),
@@ -254,10 +256,14 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
           : offering
       );
     } else {
+      const service = masterServices.find(s => s.id === serviceId);
+      if (!service) return;
+      
       const newOffering: ProviderServiceOffering = {
         id: `offering_${Date.now()}`,
         providerId: user.id,
         serviceId,
+        service,
         isOffered,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -267,7 +273,7 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
     
     setServiceOfferings(updatedOfferings);
     await AsyncStorage.setItem(`service_offerings_${user.id}`, JSON.stringify(updatedOfferings));
-  }, [user, serviceOfferings]);
+  }, [user, serviceOfferings, masterServices]);
 
   // Get services for display based on provider type
   const getProviderServices = useCallback((): Service[] => {

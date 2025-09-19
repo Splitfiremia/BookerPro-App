@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import createContextHook from "@/utils/contextHook";
+import createContextHook from "@nkzw/create-context-hook";
 import { useAuth } from "./AuthProvider";
 import { 
   Appointment, 
@@ -418,44 +418,8 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
   return contextValue;
 });
 
-// Safe wrapper for useAppointments that provides defaults
-export const useAppointments = () => {
-  const context = useAppointmentsInternal();
-  
-  // Provide safe defaults if context is not yet initialized
-  if (!context || !context.isInitialized) {
-    return {
-      appointments: [],
-      notifications: [],
-      unreadNotifications: [],
-      isLoading: true,
-      isInitialized: false,
-      requestAppointment: async () => ({} as any),
-      updateAppointment: async () => {},
-      updateAppointmentStatus: async () => {},
-      confirmAppointment: async () => {},
-      cancelAppointment: async () => {},
-      completeAppointment: async () => {},
-      markNoShow: async () => {},
-      bookingRequests: [],
-      confirmBookingRequest: async () => {},
-      declineBookingRequest: async () => {},
-      getAppointmentsForUser: () => [],
-      getAppointmentsByStatus: () => [],
-      getAppointmentsWithColors: () => [],
-      markNotificationRead: async () => {},
-      APPOINTMENT_COLORS: {
-        requested: '#FFC107',
-        cancelled: '#F44336',
-        confirmed: '#2196F3',
-        completed: '#4CAF50',
-        'no-show': '#9E9E9E',
-      } as const,
-    };
-  }
-  
-  return context;
-};
+// Export the hook directly from createContextHook
+export const useAppointments = useAppointmentsInternal;
 
 // Export the provider with the original name
 export const AppointmentProvider = AppointmentProviderInternal;
