@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Filter, ChevronLeft, ChevronRight, Eye, Clock, User } from 'lucide-react-native';
+import { Filter, ChevronLeft, ChevronRight, Eye, Clock, User, Users } from 'lucide-react-native';
 import { COLORS } from '@/constants/theme';
+import WaitlistManagement from '@/components/WaitlistManagement';
 
 interface Appointment {
   id: string;
@@ -63,6 +64,10 @@ export default function AggregatedCalendarScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'provider' | 'service' | 'status'>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [activeView, setActiveView] = useState<'appointments' | 'waitlist'>('appointments');
+  
+  // Mock shop ID - in a real app, this would come from the authenticated shop owner
+  const shopId = 'shop-1';
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -95,12 +100,47 @@ export default function AggregatedCalendarScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Text style={styles.title}>Aggregated Calendar</Text>
+          <Text style={styles.title}>Shop Management</Text>
           <TouchableOpacity 
             style={styles.filterButton} 
             onPress={() => setShowFilters(!showFilters)}
           >
             <Filter size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* View Toggle */}
+        <View style={styles.viewToggle}>
+          <TouchableOpacity
+            style={[
+              styles.toggleButton,
+              activeView === 'appointments' && styles.toggleButtonActive
+            ]}
+            onPress={() => setActiveView('appointments')}
+          >
+            <Clock size={16} color={activeView === 'appointments' ? COLORS.card : COLORS.secondary} />
+            <Text style={[
+              styles.toggleButtonText,
+              activeView === 'appointments' && styles.toggleButtonTextActive
+            ]}>
+              Appointments
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.toggleButton,
+              activeView === 'waitlist' && styles.toggleButtonActive
+            ]}
+            onPress={() => setActiveView('waitlist')}
+          >
+            <Users size={16} color={activeView === 'waitlist' ? COLORS.card : COLORS.secondary} />
+            <Text style={[
+              styles.toggleButtonText,
+              activeView === 'waitlist' && styles.toggleButtonTextActive
+            ]}>
+              Waitlist
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -158,69 +198,73 @@ export default function AggregatedCalendarScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.appointmentsList}>
-          {appointments.map((appointment) => (
-            <TouchableOpacity
-              key={appointment.id}
-              style={styles.appointmentCard}
-              onPress={() => handleAppointmentPress(appointment.id)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.appointmentHeader}>
-                <View style={styles.timeContainer}>
-                  <Clock size={16} color={COLORS.secondary} />
-                  <Text style={styles.appointmentTime}>{appointment.time}</Text>
-                  <Text style={styles.appointmentDuration}>({appointment.duration})</Text>
-                </View>
-                <View style={[
-                  styles.statusBadge,
-                  { backgroundColor: getStatusColor(appointment.status) }
-                ]}>
-                  <Text style={styles.statusText}>{appointment.status}</Text>
-                </View>
-              </View>
-
-              <View style={styles.appointmentContent}>
-                <View style={styles.appointmentInfo}>
-                  <View style={styles.infoRow}>
-                    <User size={14} color={COLORS.secondary} />
-                    <Text style={styles.clientName}>{appointment.clientName}</Text>
+      {activeView === 'appointments' ? (
+        <ScrollView style={styles.scrollView}>
+          <View style={styles.appointmentsList}>
+            {appointments.map((appointment) => (
+              <TouchableOpacity
+                key={appointment.id}
+                style={styles.appointmentCard}
+                onPress={() => handleAppointmentPress(appointment.id)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.appointmentHeader}>
+                  <View style={styles.timeContainer}>
+                    <Clock size={16} color={COLORS.secondary} />
+                    <Text style={styles.appointmentTime}>{appointment.time}</Text>
+                    <Text style={styles.appointmentDuration}>({appointment.duration})</Text>
                   </View>
-                  <Text style={styles.providerName}>with {appointment.providerName}</Text>
-                  <Text style={styles.serviceName}>{appointment.service}</Text>
+                  <View style={[
+                    styles.statusBadge,
+                    { backgroundColor: getStatusColor(appointment.status) }
+                  ]}>
+                    <Text style={styles.statusText}>{appointment.status}</Text>
+                  </View>
                 </View>
-                <View style={styles.appointmentPrice}>
-                  <Text style={styles.priceText}>{appointment.price}</Text>
-                </View>
-              </View>
 
-              <TouchableOpacity style={styles.viewButton}>
-                <Eye size={16} color={COLORS.primary} />
-                <Text style={styles.viewButtonText}>View Details</Text>
+                <View style={styles.appointmentContent}>
+                  <View style={styles.appointmentInfo}>
+                    <View style={styles.infoRow}>
+                      <User size={14} color={COLORS.secondary} />
+                      <Text style={styles.clientName}>{appointment.clientName}</Text>
+                    </View>
+                    <Text style={styles.providerName}>with {appointment.providerName}</Text>
+                    <Text style={styles.serviceName}>{appointment.service}</Text>
+                  </View>
+                  <View style={styles.appointmentPrice}>
+                    <Text style={styles.priceText}>{appointment.price}</Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity style={styles.viewButton}>
+                  <Eye size={16} color={COLORS.primary} />
+                  <Text style={styles.viewButtonText}>View Details</Text>
+                </TouchableOpacity>
               </TouchableOpacity>
-            </TouchableOpacity>
-          ))}
-        </View>
+            ))}
+          </View>
 
-        <View style={styles.summarySection}>
-          <Text style={styles.sectionTitle}>Daily Summary</Text>
-          <View style={styles.summaryCard}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Total Revenue</Text>
-              <Text style={styles.summaryValue}>$245</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Peak Hours</Text>
-              <Text style={styles.summaryValue}>2:00 - 4:00 PM</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Provider Capacity</Text>
-              <Text style={styles.summaryValue}>85%</Text>
+          <View style={styles.summarySection}>
+            <Text style={styles.sectionTitle}>Daily Summary</Text>
+            <View style={styles.summaryCard}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Total Revenue</Text>
+                <Text style={styles.summaryValue}>$245</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Peak Hours</Text>
+                <Text style={styles.summaryValue}>2:00 - 4:00 PM</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Provider Capacity</Text>
+                <Text style={styles.summaryValue}>85%</Text>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      ) : (
+        <WaitlistManagement shopId={shopId} />
+      )}
     </View>
   );
 }
@@ -458,5 +502,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.text,
+  },
+  viewToggle: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.background,
+    borderRadius: 8,
+    padding: 4,
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+  toggleButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    gap: 6,
+  },
+  toggleButtonActive: {
+    backgroundColor: COLORS.primary,
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.secondary,
+  },
+  toggleButtonTextActive: {
+    color: COLORS.card,
+    fontWeight: '600',
   },
 });

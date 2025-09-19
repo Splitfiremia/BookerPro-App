@@ -18,14 +18,17 @@ import {
   MapPin, 
   Phone, 
   Globe, 
-
   Star, 
   Clock,
   Heart,
   Share,
-  Users
+  Users,
+  Calendar,
+  UserPlus
 } from 'lucide-react-native';
 import { getShopById, getShopProviders, getShopRating } from '@/mocks/shops';
+import { useWaitlist } from '@/providers/WaitlistProvider';
+import JoinWaitlistModal from '@/components/JoinWaitlistModal';
 
 const tabOptions = [
   { id: 'overview', label: 'Overview' },
@@ -38,7 +41,9 @@ export default function ShopDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [isFavorited, setIsFavorited] = useState<boolean>(false);
+  const [showWaitlistModal, setShowWaitlistModal] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
+  const { getUserWaitlistEntry, getShopWaitlist } = useWaitlist();
 
   const shop = getShopById(id!);
   const providers = getShopProviders(id!);
@@ -71,6 +76,19 @@ export default function ShopDetailScreen() {
     router.push(`/(app)/(client)/provider/${providerId}`);
   };
 
+  const handleBookNow = () => {
+    // Navigate to booking flow
+    router.push(`/(app)/(client)/booking/select-service?shopId=${id}`);
+  };
+
+  const handleJoinWaitlist = () => {
+    setShowWaitlistModal(true);
+  };
+
+  const userWaitlistEntry = getUserWaitlistEntry(id!);
+  const shopWaitlist = getShopWaitlist(id!);
+  const waitingCount = shopWaitlist.filter(entry => entry.status === 'waiting').length;
+
   const renderProviderCard = ({ item }: { item: typeof providers[0] }) => (
     <TouchableOpacity 
       style={styles.providerCard}
@@ -94,8 +112,8 @@ export default function ShopDetailScreen() {
       </View>
       <View style={styles.providerActions}>
         <Text style={styles.startingPrice}>From ${item.startingPrice}</Text>
-        <TouchableOpacity style={styles.bookButton}>
-          <Text style={styles.bookButtonText}>Book</Text>
+        <TouchableOpacity style={styles.providerBookButton}>
+          <Text style={styles.providerBookButtonText}>Book</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -302,6 +320,45 @@ export default function ShopDetailScreen() {
       <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
         {renderTabContent()}
       </ScrollView>
+
+      {/* Action Buttons */}
+      <View style={styles.actionButtonsContainer}>
+        <TouchableOpacity 
+          style={styles.waitlistButton}
+          onPress={handleJoinWaitlist}
+          testID="join-waitlist-button"
+        >
+          <UserPlus size={20} color={COLORS.white} />
+          <Text style={styles.waitlistButtonText}>
+            {userWaitlistEntry && userWaitlistEntry.status === 'waiting' 
+              ? 'On Waitlist' 
+              : 'Join Waitlist'
+            }
+          </Text>
+          {waitingCount > 0 && (
+            <View style={styles.waitlistBadge}>
+              <Text style={styles.waitlistBadgeText}>{waitingCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.bookButton}
+          onPress={handleBookNow}
+          testID="book-now-button"
+        >
+          <Calendar size={20} color={COLORS.background} />
+          <Text style={styles.bookButtonText}>Book Now</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Waitlist Modal */}
+      <JoinWaitlistModal
+        visible={showWaitlistModal}
+        onClose={() => setShowWaitlistModal(false)}
+        shopId={id!}
+        shopName={shop?.name || ''}
+      />
     </View>
   );
 }
@@ -546,13 +603,13 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
     marginBottom: SPACING.xs,
   },
-  bookButton: {
+  providerBookButton: {
     backgroundColor: COLORS.accent,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.md,
   },
-  bookButtonText: {
+  providerBookButtonText: {
     color: COLORS.background,
     fontSize: FONT_SIZES.sm,
     fontFamily: FONTS.bold,
@@ -601,5 +658,63 @@ const styles = StyleSheet.create({
     color: COLORS.lightGray,
     fontSize: FONT_SIZES.md,
     fontFamily: FONTS.regular,
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    padding: SPACING.md,
+    backgroundColor: COLORS.card,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.gray,
+    gap: SPACING.md,
+  },
+  waitlistButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.background,
+    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.sm,
+    position: 'relative',
+  },
+  waitlistButtonText: {
+    color: COLORS.white,
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.bold,
+    marginLeft: SPACING.xs,
+  },
+  waitlistBadge: {
+    position: 'absolute',
+    top: -SPACING.xs,
+    right: -SPACING.xs,
+    backgroundColor: COLORS.accent,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: SPACING.xs,
+  },
+  waitlistBadgeText: {
+    color: COLORS.background,
+    fontSize: FONT_SIZES.xs,
+    fontFamily: FONTS.bold,
+  },
+  bookButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.accent,
+    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.sm,
+  },
+  bookButtonText: {
+    color: COLORS.background,
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.bold,
+    marginLeft: SPACING.xs,
   },
 });

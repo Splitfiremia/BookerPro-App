@@ -9,6 +9,7 @@ import { OnboardingProvider } from "@/providers/OnboardingProvider";
 import { ServicesProvider } from "@/providers/ServicesProvider";
 import { SocialProvider } from "@/providers/SocialProvider";
 import { PaymentProvider } from "@/providers/PaymentProvider";
+import { WaitlistProvider } from "@/providers/WaitlistProvider";
 
 import { ModeIndicator } from "@/components/ModeIndicator";
 import { COLORS } from "@/constants/theme";
@@ -55,12 +56,14 @@ export default function RootLayout() {
           <AppointmentProvider>
             <PaymentProvider>
               <SocialProvider>
-                <OnboardingProvider>
-                  <ServicesProvider>
-                    <RootLayoutNav />
-                    <ModeIndicator />
-                  </ServicesProvider>
-                </OnboardingProvider>
+                <WaitlistProvider>
+                  <OnboardingProvider>
+                    <ServicesProvider>
+                      <RootLayoutNav />
+                      <ModeIndicator />
+                    </ServicesProvider>
+                  </OnboardingProvider>
+                </WaitlistProvider>
               </SocialProvider>
             </PaymentProvider>
           </AppointmentProvider>
