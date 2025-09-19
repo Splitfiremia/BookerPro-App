@@ -45,9 +45,14 @@ const mockAppointmentsData: Appointment[] = [
     serviceId: "service-1",
     shopId: "shop-1",
     date: "2024-09-16",
+    time: "17:00",
     startTime: "17:00",
     endTime: "17:30",
+    duration: 30,
     status: "confirmed",
+    paymentStatus: "pending",
+    totalAmount: 50,
+    serviceAmount: 50,
     notes: "Regular haircut",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -60,9 +65,14 @@ const mockAppointmentsData: Appointment[] = [
     serviceId: "service-2",
     shopId: "shop-1",
     date: "2024-09-18",
+    time: "14:00",
     startTime: "14:00",
     endTime: "16:00",
+    duration: 120,
     status: "requested",
+    paymentStatus: "pending",
+    totalAmount: 150,
+    serviceAmount: 150,
     notes: "Color and highlights - please use organic products",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -75,9 +85,14 @@ const mockAppointmentsData: Appointment[] = [
     serviceId: "service-3",
     shopId: "shop-1",
     date: "2024-09-19",
+    time: "10:00",
     startTime: "10:00",
     endTime: "11:00",
+    duration: 60,
     status: "requested",
+    paymentStatus: "pending",
+    totalAmount: 75,
+    serviceAmount: 75,
     notes: "First time client - consultation needed",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -90,9 +105,14 @@ const mockAppointmentsData: Appointment[] = [
     serviceId: "service-4",
     shopId: "shop-1",
     date: "2024-09-20",
+    time: "16:00",
     startTime: "16:00",
     endTime: "16:30",
+    duration: 30,
     status: "requested",
+    paymentStatus: "pending",
+    totalAmount: 35,
+    serviceAmount: 35,
     notes: "Beard trim and styling",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -105,9 +125,15 @@ const mockAppointmentsData: Appointment[] = [
     serviceId: "service-3",
     shopId: "shop-2",
     date: "2024-09-15",
+    time: "11:00",
     startTime: "11:00",
     endTime: "11:45",
+    duration: 45,
     status: "completed",
+    paymentStatus: "paid",
+    totalAmount: 60,
+    serviceAmount: 50,
+    tipAmount: 10,
     notes: "Gel manicure",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -120,9 +146,14 @@ const mockAppointmentsData: Appointment[] = [
     serviceId: "service-1",
     shopId: "shop-1",
     date: "2024-09-14",
+    time: "10:00",
     startTime: "10:00",
     endTime: "10:30",
+    duration: 30,
     status: "cancelled",
+    paymentStatus: "refunded",
+    totalAmount: 50,
+    serviceAmount: 50,
     notes: "Regular cut",
     cancellationReason: "Client cancelled due to emergency",
     createdAt: new Date().toISOString(),
@@ -136,9 +167,14 @@ const mockAppointmentsData: Appointment[] = [
     serviceId: "service-5",
     shopId: "shop-1",
     date: "2024-09-13",
+    time: "15:00",
     startTime: "15:00",
     endTime: "16:00",
+    duration: 60,
     status: "no-show",
+    paymentStatus: "failed",
+    totalAmount: 80,
+    serviceAmount: 80,
     notes: "Hair styling",
     noShowReason: "Client did not show up",
     createdAt: new Date().toISOString(),
@@ -400,6 +436,25 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     return newAppointment;
   }, [appointments, notifications, createNotification, saveAppointments, saveNotifications]);
 
+  // General appointment update function
+  const updateAppointment = useCallback(async (appointmentId: string, updates: Partial<Appointment>) => {
+    const updatedAppointments = appointments.map(apt => {
+      if (apt.id === appointmentId) {
+        return {
+          ...apt,
+          ...updates,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+      return apt;
+    });
+    
+    setAppointments(updatedAppointments);
+    await saveAppointments(updatedAppointments);
+    
+    console.log('Updated appointment:', appointmentId, updates);
+  }, [appointments, saveAppointments]);
+
   // Convenience methods for common status updates
   const confirmAppointment = useCallback(async (appointmentId: string) => {
     await updateAppointmentStatus(appointmentId, 'confirmed');
@@ -484,6 +539,7 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     isLoading,
     // Core appointment management
     requestAppointment,
+    updateAppointment,
     updateAppointmentStatus,
     confirmAppointment,
     cancelAppointment,
@@ -507,6 +563,7 @@ export const [AppointmentProvider, useAppointments] = createContextHook(() => {
     unreadNotifications,
     isLoading,
     requestAppointment,
+    updateAppointment,
     updateAppointmentStatus,
     confirmAppointment,
     cancelAppointment,

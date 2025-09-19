@@ -94,7 +94,7 @@ export interface TipSettings {
 
 export const [PaymentProvider, usePayments] = createContextHook(() => {
   const { user, isDeveloperMode } = useAuth();
-  const { appointments, updateAppointment } = useAppointments();
+  const { appointments, updateAppointmentStatus } = useAppointments();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [payoutSettings, setPayoutSettings] = useState<PayoutSettings | null>(null);
@@ -139,7 +139,7 @@ export const [PaymentProvider, usePayments] = createContextHook(() => {
               },
             ];
             setPaymentMethods(mockPaymentMethods);
-          } else if (user.role === "stylist" || user.role === "owner") {
+          } else if (user.role === "provider" || user.role === "owner") {
             setPayoutSettings({
               schedule: "weekly",
               accountType: "bank",
@@ -255,7 +255,7 @@ export const [PaymentProvider, usePayments] = createContextHook(() => {
         if (existing) return existing;
         const apt = appointments.find((a) => a.id === appointmentId);
         if (!apt) throw new Error("Appointment not found");
-        const subtotal = opts?.totalServiceCost ?? (apt.totalAmount ?? apt.price ?? 0);
+        const subtotal = opts?.totalServiceCost ?? apt.totalAmount ?? 0;
         const newPayment: Payment = {
           id: `payment-${Date.now()}`,
           appointmentId,
@@ -493,7 +493,7 @@ export const [PaymentProvider, usePayments] = createContextHook(() => {
           
           console.log("[PaymentProvider] Reservation confirmed:", confirmationResult.appointmentId);
         } else {
-          await updateAppointment(appointmentId, { status: "paid" });
+          await updateAppointmentStatus(appointmentId, "confirmed");
         }
 
         return completedPayment;
@@ -511,7 +511,7 @@ export const [PaymentProvider, usePayments] = createContextHook(() => {
         setIsLoading(false);
       }
     },
-    [payments, paymentMethods, user, isDeveloperMode, persistPayments, updateAppointment]
+    [payments, paymentMethods, user, isDeveloperMode, persistPayments, updateAppointmentStatus]
   );
 
   const updatePayoutSettings = useCallback(
@@ -842,8 +842,8 @@ export const [PaymentProvider, usePayments] = createContextHook(() => {
           tip: payment.tipAmount || 0,
           total: payment.amount,
           paymentMethod: payment.paymentMethodType,
-          service: appointment.serviceName || "Service",
-          provider: appointment.providerName || "Provider",
+          service: `Service ${appointment.serviceId}`,
+          provider: `Provider ${appointment.providerId}`,
         };
         
         console.log("[PaymentProvider] Receipt generated:", receiptData);

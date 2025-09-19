@@ -19,7 +19,7 @@ import { validateForm, ValidationRules, ValidationErrors, required, phoneNumber,
 
 export default function BookingScreen() {
   const { selectedProvider, selectedServices, setSelectedServices, selectedDate, selectedTime, setSelectedDate, setSelectedTime } = useBooking();
-  const { bookAppointment } = useAppointments();
+  const { requestAppointment } = useAppointments();
   const [formData, setFormData] = useState({
     phoneNumber: "",
     email: "",
@@ -208,21 +208,24 @@ export default function BookingScreen() {
       setIsSubmitting(true);
       const price = calculateTotal();
       const baseAppointment = {
+        clientId: 'client-1', // In real app, this would come from auth
         providerId: selectedProvider?.id ?? 'provider-unknown',
-        providerName: selectedProvider?.name ?? 'Provider',
         serviceId: selectedServices[0] ?? 'service-unknown',
-        serviceName: `${selectedServices.length} service${selectedServices.length > 1 ? 's' : ''}`,
+        shopId: 'shop-1', // In real app, this would come from selected provider's shop
         date: selectedDate ?? '',
         time: selectedTime ?? '',
-        status: 'confirmed' as const,
-        location: selectedProvider?.shopName ?? 'Shop',
-        price,
+        startTime: selectedTime ?? '',
+        endTime: selectedTime ?? '', // Will be calculated based on duration
+        duration: totalDuration,
+        paymentStatus: 'pending' as const,
+        totalAmount: price,
+        serviceAmount: price,
         notes: formData.specialRequests,
       };
 
       const createdIds: string[] = [];
       const createForDate = async (dateStr: string) => {
-        const created = await bookAppointment(baseAppointment);
+        const created = await requestAppointment(baseAppointment);
         createdIds.push(created.id);
       };
 
