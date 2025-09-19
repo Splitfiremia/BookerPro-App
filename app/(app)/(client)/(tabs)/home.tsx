@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { APIProvider, useMapsLibrary } from '@vis.gl/react-google-maps';
+
 
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
 import { MapPin, Filter, Star, CreditCard, Heart } from 'lucide-react-native';
@@ -70,19 +70,8 @@ function HomeScreenContent() {
   const [nearbyProviders, setNearbyProviders] = useState<typeof mockProviders>([]);
   const [isLoadingProviders, setIsLoadingProviders] = useState<boolean>(false);
   const [selectedLocation, setSelectedLocation] = useState<string>('');
-  const [placesService, setPlacesService] = useState<any>(null);
   const insets = useSafeAreaInsets();
   const { getFollowedCount } = useSocial();
-  const placesLibrary = useMapsLibrary('places');
-
-  // Initialize Places service
-  useEffect(() => {
-    if (placesLibrary) {
-      const service = new placesLibrary.PlacesService(document.createElement('div'));
-      setPlacesService(service);
-      console.log('Google Places service initialized');
-    }
-  }, [placesLibrary]);
 
   // Simulate location permission check
   useEffect(() => {
@@ -135,7 +124,6 @@ function HomeScreenContent() {
     
     console.log('Place selected:', data.description);
     console.log('Place details:', details);
-    console.log('Places service available:', !!placesService);
     
     if (details?.geometry?.location?.lat && details?.geometry?.location?.lng) {
       const location: LocationCoordinates = {
@@ -146,7 +134,7 @@ function HomeScreenContent() {
     } else {
       console.warn('No location details available for selected place');
     }
-  }, [fetchProvidersNearby, placesService]);
+  }, [fetchProvidersNearby]);
 
 
 
@@ -424,24 +412,7 @@ function HomeScreenContent() {
 }
 
 export default function HomeScreen() {
-  const apiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
-  
-  if (!apiKey) {
-    console.error('Google Places API key is missing');
-    return (
-      <View style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Google Places API key is not configured</Text>
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <APIProvider apiKey={apiKey}>
-      <HomeScreenContent />
-    </APIProvider>
-  );
+  return <HomeScreenContent />;
 }
 
 const styles = StyleSheet.create({
