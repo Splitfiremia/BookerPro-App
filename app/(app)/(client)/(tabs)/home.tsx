@@ -195,6 +195,8 @@ export default function HomeScreen() {
             }}
             fetchDetails={true}
             enablePoweredByContainer={false}
+            predefinedPlaces={[]}
+            predefinedPlacesAlwaysVisible={false}
             styles={{
               container: {
                 flex: 1,
