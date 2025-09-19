@@ -82,10 +82,10 @@ const mockAppointmentsData: Appointment[] = [
 
 const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook(() => {
   const { user } = useAuth();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointmentsData);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isInitialized, setIsInitialized] = useState<boolean>(true);
 
   // Load appointments and notifications on mount with timeout
   useEffect(() => {
@@ -367,49 +367,13 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     await updateAppointmentStatus(requestId, 'cancelled', 'Declined by provider');
   }, [updateAppointmentStatus]);
 
-  const contextValue = useMemo(() => {
-    // Ensure all required properties are defined
-    const safeValue = {
-      appointments: appointments || [],
-      notifications: notifications || [],
-      unreadNotifications: unreadNotifications || [],
-      isLoading: Boolean(isLoading),
-      isInitialized: Boolean(isInitialized),
-      // Core appointment management
-      requestAppointment: requestAppointment || (() => Promise.resolve({} as Appointment)),
-      updateAppointment: updateAppointment || (() => Promise.resolve()),
-      updateAppointmentStatus: updateAppointmentStatus || (() => Promise.resolve()),
-      confirmAppointment: confirmAppointment || (() => Promise.resolve()),
-      cancelAppointment: cancelAppointment || (() => Promise.resolve()),
-      completeAppointment: completeAppointment || (() => Promise.resolve()),
-      markNoShow: markNoShow || (() => Promise.resolve()),
-      // Booking requests (for compatibility)
-      bookingRequests: bookingRequests || [],
-      confirmBookingRequest: confirmBookingRequest || (() => Promise.resolve()),
-      declineBookingRequest: declineBookingRequest || (() => Promise.resolve()),
-      // Filtering and querying
-      getAppointmentsForUser: getAppointmentsForUser || (() => []),
-      getAppointmentsByStatus: getAppointmentsByStatus || (() => []),
-      getAppointmentsWithColors: getAppointmentsWithColors || (() => []),
-      // Notifications
-      markNotificationRead: markNotificationRead || (() => Promise.resolve()),
-      // Constants
-      APPOINTMENT_COLORS: APPOINTMENT_COLORS || {},
-    };
-    
-    console.log('AppointmentProvider: Context value created with', {
-      appointmentsCount: safeValue.appointments.length,
-      isLoading: safeValue.isLoading,
-      isInitialized: safeValue.isInitialized
-    });
-    
-    return safeValue;
-  }, [
+  return {
     appointments,
     notifications,
     unreadNotifications,
     isLoading,
     isInitialized,
+    // Core appointment management
     requestAppointment,
     updateAppointment,
     updateAppointmentStatus,
@@ -417,16 +381,19 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     cancelAppointment,
     completeAppointment,
     markNoShow,
+    // Booking requests (for compatibility)
     bookingRequests,
     confirmBookingRequest,
     declineBookingRequest,
+    // Filtering and querying
     getAppointmentsForUser,
     getAppointmentsByStatus,
     getAppointmentsWithColors,
+    // Notifications
     markNotificationRead,
-  ]);
-
-  return contextValue;
+    // Constants
+    APPOINTMENT_COLORS,
+  };
 });
 
 // Export the hook directly from createContextHook
