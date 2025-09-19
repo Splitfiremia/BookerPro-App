@@ -9,9 +9,10 @@ import {
   FlatList,
   StatusBar,
   Alert,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
 import { Search, MapPin, Filter, Star, CreditCard, Heart } from 'lucide-react-native';
 import { mockProviders } from '@/mocks/providers';
@@ -108,23 +109,7 @@ export default function HomeScreen() {
     }
   }, []);
 
-  const handlePlaceSelect = useCallback((data: any, details: any) => {
-    console.log('Place selected:', data.description);
-    console.log('Place details:', details);
-    
-    if (details?.geometry?.location) {
-      const location: LocationCoordinates = {
-        lat: details.geometry.location.lat,
-        lng: details.geometry.location.lng
-      };
-      
-      setSearchText(data.description);
-      fetchProvidersNearby(location);
-    } else {
-      console.warn('No location details available for selected place');
-      Alert.alert('Location Error', 'Unable to get location details for this place.');
-    }
-  }, [fetchProvidersNearby]);
+
 
   const renderShopCard = ({ item }: { item: Shop }) => (
     <TouchableOpacity style={styles.shopCard}>
@@ -185,87 +170,20 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
         <View style={styles.searchContainer}>
-          <GooglePlacesAutocomplete
+          <Search size={20} color={COLORS.lightGray} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
             placeholder="Search for locations, stylists, or services"
-            onPress={handlePlaceSelect}
-            query={{
-              key: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || '',
-              language: 'en',
-              types: 'establishment',
-            }}
-            fetchDetails={true}
-            enablePoweredByContainer={false}
-            predefinedPlaces={[]}
-            predefinedPlacesAlwaysVisible={false}
-            styles={{
-              container: {
-                flex: 1,
-              },
-              textInputContainer: {
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: 'transparent',
-                borderTopWidth: 0,
-                borderBottomWidth: 0,
-                paddingHorizontal: 0,
-              },
-              textInput: {
-                backgroundColor: 'transparent',
-                color: COLORS.white,
-                fontSize: FONT_SIZES.md,
-                fontFamily: FONTS.regular,
-                paddingLeft: 40,
-                paddingRight: SPACING.md,
-                height: 48,
-                borderRadius: 0,
-                margin: 0,
-              },
-              listView: {
-                backgroundColor: COLORS.card,
-                borderRadius: BORDER_RADIUS.md,
-                marginTop: SPACING.xs,
-                elevation: 5,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 3.84,
-              },
-              row: {
-                backgroundColor: 'transparent',
-                padding: SPACING.md,
-                borderBottomWidth: 1,
-                borderBottomColor: COLORS.gray,
-              },
-              description: {
-                color: COLORS.white,
-                fontSize: FONT_SIZES.sm,
-                fontFamily: FONTS.regular,
-              },
-              predefinedPlacesDescription: {
-                color: COLORS.lightGray,
-              },
-            }}
-            renderLeftButton={() => (
-              <Search size={20} color={COLORS.lightGray} style={styles.searchIcon} />
-            )}
-            textInputProps={{
-              placeholderTextColor: COLORS.lightGray,
-              returnKeyType: 'search',
-              onChangeText: (text: string) => setSearchText(text),
-              value: searchText,
-            }}
-            debounce={300}
-            minLength={2}
-            onFail={(error) => {
-              console.error('Google Places API Error:', error);
-              Alert.alert('Search Error', 'Unable to search locations. Please check your internet connection.');
-            }}
-            onNotFound={() => {
-              console.log('No results found');
-            }}
-            onTimeout={() => {
-              console.log('Request timeout');
-              Alert.alert('Timeout', 'Search request timed out. Please try again.');
+            placeholderTextColor={COLORS.lightGray}
+            value={searchText}
+            onChangeText={setSearchText}
+            returnKeyType="search"
+            onSubmitEditing={() => {
+              // Simulate location search for testing
+              if (searchText.trim()) {
+                const mockLocation = { lat: 40.7128, lng: -74.0060 }; // NYC coordinates
+                fetchProvidersNearby(mockLocation);
+              }
             }}
           />
         </View>
