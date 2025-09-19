@@ -49,16 +49,28 @@ Root Layout (_layout.tsx)
 │   └── Shop Owner Onboarding (shop-owner-onboarding/)
 └── Main Application ((app)/_layout.tsx)
     ├── Client Dashboard ((client)/)
-    │   └── Tabs Layout ((tabs)/_layout.tsx)
-    │       ├── Home (home.tsx)
-    │       ├── Appointments (appointments.tsx)
-    │       └── Profile (profile.tsx)
+    │   ├── Tabs Layout ((tabs)/_layout.tsx)
+    │   │   ├── Home (home.tsx) - Dual CTA: Find Provider/Shop
+    │   │   ├── Appointments (appointments.tsx)
+    │   │   └── Profile (profile.tsx)
+    │   ├── Shop Discovery
+    │   │   ├── Shop Explore (shops/explore.tsx)
+    │   │   └── Shop Profile (shops/[id].tsx)
+    │   ├── Provider Profiles
+    │   │   └── Enhanced Provider Profile (provider/[id].tsx)
+    │   ├── Social Features
+    │   │   └── Following List (following.tsx)
+    │   └── Booking Flow
+    │       ├── Service Selection (booking/select-service.tsx)
+    │       ├── Date Selection (booking/select-date.tsx)
+    │       ├── Time Selection (booking/select-time.tsx)
+    │       └── Confirmation (booking/confirm.tsx)
     ├── Provider Dashboard ((provider)/)
     │   └── Tabs Layout ((tabs)/_layout.tsx)
     │       ├── Home (home.tsx)
     │       ├── Requests (requests.tsx)
     │       ├── Schedule (schedule.tsx)
-    │       ├── Bio (bio.tsx)
+    │       ├── Bio (bio.tsx) - Enhanced Profile Management
     │       ├── Clients (clients.tsx)
     │       ├── Earnings (earnings.tsx)
     │       └── Profile (provider-profile.tsx)
@@ -122,7 +134,10 @@ Root Layout (_layout.tsx)
 │  ├── ServicesProvider (Service Management)                 │
 │  ├── TeamManagementProvider (Team Operations)              │
 │  ├── LocationProvider (Location Services)                  │
-│  └── OnboardingProvider (Onboarding Flow)                  │
+│  ├── OnboardingProvider (Onboarding Flow)                  │
+│  ├── SocialProvider (Follow/Unfollow System)               │
+│  ├── ShopManagementProvider (Shop Operations)              │
+│  └── AvailabilityProvider (Slot Reservation System)        │
 ├─────────────────────────────────────────────────────────────┤
 │  Data Caching Layer (React Query)                          │
 │  ├── Server State Management                               │
@@ -159,14 +174,34 @@ Root Layout (_layout.tsx)
 │ Dashboard   │    │ Redirect    │    │ Determination       │
 └─────────────┘    └─────────────┘    └─────────────────────┘
 
-3.2 APPOINTMENT BOOKING FLOW
-----------------------------
+3.2 APPOINTMENT BOOKING FLOW (DUAL PATH)
+----------------------------------------
+
+3.2.1 SHOP-FIRST DISCOVERY PATH
+-------------------------------
 ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
-│   Client    │───▶│  Provider   │───▶│   Service           │
-│  Browse     │    │ Selection   │    │  Selection          │
+│   Client    │───▶│    Shop     │───▶│   Provider          │
+│   Browse    │    │ Selection   │    │  Selection          │
+│   Shops     │    │ (Explore)   │    │ (From Shop Team)    │
 └─────────────┘    └─────────────┘    └─────────────────────┘
                                                 │
                                                 ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│   Service   │◀───│  Enhanced   │◀───│   Provider          │
+│ Selection   │    │  Provider   │    │   Profile           │
+│             │    │  Profile    │    │ (Services/Portfolio)│
+└─────────────┘    └─────────────┘    └─────────────────────┘
+
+3.2.2 PROVIDER-FIRST DISCOVERY PATH
+-----------------------------------
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│   Client    │───▶│  Provider   │───▶│   Service           │
+│  Browse     │    │ Selection   │    │  Selection          │
+│ Providers   │    │ (Direct)    │    │                     │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+
+3.2.3 UNIFIED BOOKING FLOW
+--------------------------
 ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
 │   Time      │◀───│    Date     │◀───│   Availability      │
 │ Selection   │    │ Selection   │    │    Check            │
@@ -174,8 +209,16 @@ Root Layout (_layout.tsx)
                                                 │
                                                 ▼
 ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│ Slot        │◀───│ Temporary   │◀───│   Slot              │
+│ Reserved    │    │ Reservation │    │ Availability        │
+│ (5 min)     │    │ (Pending)   │    │ Validation          │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
 │ Appointment │◀───│  Payment    │◀───│   Booking           │
-│  Created    │    │ Processing  │    │ Confirmation        │
+│ Confirmed   │    │ Processing  │    │ Confirmation        │
+│             │    │ (Timer)     │    │ (5min countdown)    │
 └─────────────┘    └─────────────┘    └─────────────────────┘
 
 3.3 PROVIDER WORKFLOW
@@ -195,6 +238,60 @@ Root Layout (_layout.tsx)
 ┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
 │  Schedule   │◀───│ Appointment │◀───│   Confirmation      │
 │  Update     │    │   Added     │    │   Processing        │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+
+3.4 SOCIAL FEATURES FLOW
+------------------------
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│  Provider   │───▶│   Follow    │───▶│   SocialProvider    │
+│  Profile    │    │   Button    │    │   State Update      │
+│   View      │    │   Tap       │    │                     │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│AsyncStorage │◀───│  Follow     │◀───│   Follow/Unfollow   │
+│ Persistence │    │  Status     │    │   Function Call     │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│ Following   │◀───│   UI        │◀───│   Button State      │
+│   List      │    │  Update     │    │   Update            │
+│  Screen     │    │             │    │ (Follow/Following)  │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+
+3.5 RESERVATION SYSTEM FLOW
+---------------------------
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│   Time      │───▶│ Availability│───▶│   Slot              │
+│ Selection   │    │   Check     │    │ Validation          │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│ Temporary   │◀───│   Create    │◀───│   Available         │
+│Appointment  │    │  Pending    │    │   Slot Found        │
+│ (5 min)     │    │Appointment  │    │                     │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│   Timer     │───▶│  Payment    │───▶│   Confirmation      │
+│ Countdown   │    │  Process    │    │   Screen            │
+│ (5:00)      │    │             │    │                     │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│ Appointment │◀───│  Success    │◀───│   Payment           │
+│ Confirmed   │    │ Response    │    │   Success           │
+└─────────────┘    └─────────────┘    └─────────────────────┘
+                                                │
+                                                ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────────────┐
+│   Slot      │◀───│   Timer     │◀───│   Payment           │
+│ Released    │    │  Expired    │    │   Failed            │
 └─────────────┘    └─────────────┘    └─────────────────────┘
 
 4. TECHNICAL ARCHITECTURE
@@ -218,7 +315,8 @@ Root Layout (_layout.tsx)
 │                 State Management                            │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
 │  │React Query  │  │AsyncStorage │  │   Context API       │ │
-│  │   v5.83.0   │  │   v2.1.2    │  │  + Custom Hooks     │ │
+│  │   v5.83.0   │  │   v2.1.2    │  │ + @nkzw/create-     │ │
+│  │             │  │             │  │  context-hook       │ │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘ │
 ├─────────────────────────────────────────────────────────────┤
 │                    UI Components                            │
@@ -307,4 +405,119 @@ Root Layout (_layout.tsx)
 │  └─────────────┘  └─────────────┘  └─────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
 
-This architecture wireframe provides a comprehensive technical overview of TheCut app's structure, from high-level system design to detailed component relationships and data flow patterns.
+7. DATA MODEL ARCHITECTURE
+==========================
+
+7.1 CORE ENTITY RELATIONSHIPS
+-----------------------------
+┌─────────────────────────────────────────────────────────────┐
+│                    Entity Relationship Model               │
+├─────────────────────────────────────────────────────────────┤
+│  Shop (1) ──────── (M) Provider ──────── (M) Service      │
+│    │                    │                    │             │
+│    │                    │                    │             │
+│    ▼                    ▼                    ▼             │
+│  ShopId[]           ProviderId[]         ServiceId[]       │
+│  Address            Bio                  BasePrice         │
+│  Hours              Portfolio[]          BaseDuration      │
+│  Phone              Posts[]              Description       │
+│                     FollowerCount                          │
+│                     CustomPrices[]                         │
+├─────────────────────────────────────────────────────────────┤
+│  Appointment Entity                                         │
+│  ├── ShopId (FK)                                           │
+│  ├── ProviderId (FK)                                       │
+│  ├── ServiceId (FK)                                        │
+│  ├── ClientId (FK)                                         │
+│  ├── DateTime                                              │
+│  ├── Status ('requested'|'confirmed'|'completed'|'pending')│
+│  └── PaymentStatus                                         │
+├─────────────────────────────────────────────────────────────┤
+│  Social Features                                            │
+│  ├── User.followedProviders: ProviderId[]                  │
+│  ├── Provider.isFollowed: boolean (computed)               │
+│  ├── Provider.posts: Post[]                                │
+│  └── Provider.portfolio: Image[]                           │
+└─────────────────────────────────────────────────────────────┘
+
+7.2 RESERVATION SYSTEM ARCHITECTURE
+-----------------------------------
+┌─────────────────────────────────────────────────────────────┐
+│                 Slot Reservation Logic                     │
+├─────────────────────────────────────────────────────────────┤
+│  checkAndReserveSlot(providerId, shopId, datetime)         │
+│  ├── 1. Availability Validation                            │
+│  │   └── Query existing appointments for conflicts         │
+│  ├── 2. Temporary Reservation                              │
+│  │   └── Create 'pending' appointment (5min TTL)          │
+│  ├── 3. Timer Management                                   │
+│  │   └── Countdown timer in UI (5:00 → 0:00)             │
+│  ├── 4. Payment Processing                                 │
+│  │   ├── Success → Status: 'confirmed'                    │
+│  │   └── Failure → Remove 'pending' appointment           │
+│  └── 5. Automatic Cleanup                                  │
+│      └── Timer expiry → Release reserved slot             │
+├─────────────────────────────────────────────────────────────┤
+│  React Query Integration                                    │
+│  ├── useMutation: reserveSlot                             │
+│  ├── useMutation: confirmAppointment                      │
+│  ├── useMutation: releaseSlot                             │
+│  └── useQuery: checkAvailability                          │
+└─────────────────────────────────────────────────────────────┘
+
+8. ENHANCED COMPONENT ARCHITECTURE
+=================================
+
+8.1 PROVIDER PROFILE COMPONENTS
+-------------------------------
+┌─────────────────────────────────────────────────────────────┐
+│                Enhanced Provider Profile                   │
+├─────────────────────────────────────────────────────────────┤
+│  Header Section                                             │
+│  ├── Provider Avatar                                       │
+│  ├── Provider Name                                         │
+│  └── Follow/Following Button (Social Integration)          │
+├─────────────────────────────────────────────────────────────┤
+│  Stats Bar                                                  │
+│  ├── Follower Count                                        │
+│  ├── Post Count                                            │
+│  └── Star Rating                                           │
+├─────────────────────────────────────────────────────────────┤
+│  Tab Navigation                                             │
+│  ├── Services Tab                                          │
+│  │   ├── Service List with Custom Pricing                 │
+│  │   └── Tap-to-Book Integration                          │
+│  ├── Portfolio Tab                                         │
+│  │   └── Image Grid/Carousel                              │
+│  └── Posts Tab                                             │
+│      └── Social Feed (Image + Caption)                    │
+├─────────────────────────────────────────────────────────────┤
+│  Fixed Bottom Action                                        │
+│  └── "Book Now" Button                                     │
+└─────────────────────────────────────────────────────────────┘
+
+8.2 SHOP DISCOVERY COMPONENTS
+-----------------------------
+┌─────────────────────────────────────────────────────────────┐
+│                  Shop Discovery System                     │
+├─────────────────────────────────────────────────────────────┤
+│  Shop Explore Screen                                        │
+│  ├── Search/Filter Bar                                     │
+│  ├── Shop Cards List                                       │
+│  │   ├── Shop Name & Address                              │
+│  │   ├── Average Rating                                   │
+│  │   ├── Featured Providers Preview                       │
+│  │   └── Tap → Shop Profile                               │
+│  └── Map View Toggle (Future Enhancement)                  │
+├─────────────────────────────────────────────────────────────┤
+│  Shop Profile Screen                                        │
+│  ├── Shop Header (Name, Address, Hours)                   │
+│  ├── Shop Stats (Rating, Reviews)                         │
+│  ├── Team Section                                          │
+│  │   ├── Provider Cards Grid                              │
+│  │   └── Tap → Enhanced Provider Profile                  │
+│  ├── Services Overview                                     │
+│  └── Contact Information                                   │
+└─────────────────────────────────────────────────────────────┘
+
+This comprehensive architecture wireframe now includes all the latest enhancements: shop-first discovery, social features, enhanced provider profiles, and the robust reservation system that prevents double-booking through temporary slot reservations.
