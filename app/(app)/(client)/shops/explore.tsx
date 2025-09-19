@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   Image,
   FlatList,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
 import { Search, MapPin, Star, Users } from 'lucide-react-native';
 import { mockShops, getShopRating, getShopProviders, getShopStartingPrice } from '@/mocks/shops';
@@ -23,12 +24,65 @@ const filterOptions = [
   { id: 'available', label: 'Available Now' },
 ];
 
+interface LocationCoordinates {
+  lat: number;
+  lng: number;
+}
+
 export default function ShopsExploreScreen() {
   const [searchText, setSearchText] = useState<string>('');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [nearbyShops, setNearbyShops] = useState<typeof mockShops>([]);
+  const [isLoadingShops, setIsLoadingShops] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
 
-  const filteredShops = mockShops.filter(shop => {
+  const fetchShopsNearby = useCallback(async (location: LocationCoordinates) => {
+    console.log('Fetching shops near:', location);
+    setIsLoadingShops(true);
+    
+    try {
+      // Simulate API call to backend
+      // In a real app, this would be:
+      // const response = await fetch(`/api/shops/nearby?lat=${location.lat}&lng=${location.lng}`);
+      // const shops = await response.json();
+      
+      // For now, simulate with mock data and add distance
+      const simulatedShops = mockShops.map(shop => ({
+        ...shop,
+        distance: Math.random() * 10 + 0.5,
+        distanceText: `${(Math.random() * 10 + 0.5).toFixed(1)} mi`
+      })).sort((a, b) => a.distance - b.distance);
+      
+      setNearbyShops(simulatedShops);
+      console.log(`Found ${simulatedShops.length} shops nearby`);
+    } catch (error) {
+      console.error('Error fetching nearby shops:', error);
+      Alert.alert('Error', 'Failed to fetch nearby shops. Please try again.');
+    } finally {
+      setIsLoadingShops(false);
+    }
+  }, []);
+
+  const handlePlaceSelect = useCallback((data: any, details: any) => {
+    console.log('Place selected:', data.description);
+    console.log('Place details:', details);
+    
+    if (details?.geometry?.location) {
+      const location: LocationCoordinates = {
+        lat: details.geometry.location.lat,
+        lng: details.geometry.location.lng
+      };
+      
+      setSearchText(data.description);
+      fetchShopsNearby(location);
+    } else {
+      console.warn('No location details available for selected place');
+      Alert.alert('Location Error', 'Unable to get location details for this place.');
+    }
+  }, [fetchShopsNearby]);
+
+  const shopsToDisplay = nearbyShops.length > 0 ? nearbyShops : mockShops;
+  const filteredShops = shopsToDisplay.filter(shop => {
     const matchesSearch = shop.name.toLowerCase().includes(searchText.toLowerCase()) ||
                          shop.description?.toLowerCase().includes(searchText.toLowerCase());
     
@@ -138,14 +192,86 @@ export default function ShopsExploreScreen() {
         <Text style={styles.headerTitle}>Explore Shops</Text>
         
         <View style={styles.searchContainer}>
-          <Search size={20} color={COLORS.lightGray} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search shops..."
-            placeholderTextColor={COLORS.lightGray}
-            value={searchText}
-            onChangeText={setSearchText}
-            testID="search-input"
+          <GooglePlacesAutocomplete
+            placeholder="Search for locations or shops..."
+            onPress={handlePlaceSelect}
+            query={{
+              key: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || '',
+              language: 'en',
+              types: 'establishment',
+            }}
+            fetchDetails={true}
+            enablePoweredByContainer={false}
+            styles={{
+              container: {
+                flex: 1,
+              },
+              textInputContainer: {
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: 'transparent',
+                borderTopWidth: 0,
+                borderBottomWidth: 0,
+                paddingHorizontal: 0,
+              },
+              textInput: {
+                backgroundColor: 'transparent',
+                color: COLORS.white,
+                fontSize: FONT_SIZES.md,
+                fontFamily: FONTS.regular,
+                paddingLeft: 40,
+                paddingRight: SPACING.md,
+                height: 48,
+                borderRadius: 0,
+                margin: 0,
+              },
+              listView: {
+                backgroundColor: COLORS.card,
+                borderRadius: BORDER_RADIUS.md,
+                marginTop: SPACING.xs,
+                elevation: 5,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3.84,
+              },
+              row: {
+                backgroundColor: 'transparent',
+                padding: SPACING.md,
+                borderBottomWidth: 1,
+                borderBottomColor: COLORS.gray,
+              },
+              description: {
+                color: COLORS.white,
+                fontSize: FONT_SIZES.sm,
+                fontFamily: FONTS.regular,
+              },
+              predefinedPlacesDescription: {
+                color: COLORS.lightGray,
+              },
+            }}
+            renderLeftButton={() => (
+              <Search size={20} color={COLORS.lightGray} style={styles.searchIcon} />
+            )}
+            textInputProps={{
+              placeholderTextColor: COLORS.lightGray,
+              returnKeyType: 'search',
+              onChangeText: (text: string) => setSearchText(text),
+              value: searchText,
+            }}
+            debounce={300}
+            minLength={2}
+            onFail={(error) => {
+              console.error('Google Places API Error:', error);
+              Alert.alert('Search Error', 'Unable to search locations. Please check your internet connection.');
+            }}
+            onNotFound={() => {
+              console.log('No results found');
+            }}
+            onTimeout={() => {
+              console.log('Request timeout');
+              Alert.alert('Timeout', 'Search request timed out. Please try again.');
+            }}
           />
         </View>
       </View>
@@ -180,19 +306,26 @@ export default function ShopsExploreScreen() {
       {/* Results Count */}
       <View style={styles.resultsHeader}>
         <Text style={styles.resultsCount}>
-          {filteredShops.length} shop{filteredShops.length !== 1 ? 's' : ''} found
+          {nearbyShops.length > 0 ? 'Nearby: ' : ''}{filteredShops.length} shop{filteredShops.length !== 1 ? 's' : ''} found
         </Text>
       </View>
 
-      {/* Shops List */}
-      <FlatList
-        data={filteredShops}
-        renderItem={renderShopCard}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.shopsList}
-        testID="shops-list"
-      />
+      {/* Loading State */}
+      {isLoadingShops ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Finding shops near you...</Text>
+        </View>
+      ) : (
+        /* Shops List */
+        <FlatList
+          data={filteredShops}
+          renderItem={renderShopCard}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.shopsList}
+          testID="shops-list"
+        />
+      )}
     </View>
   );
 }
@@ -405,5 +538,17 @@ const styles = StyleSheet.create({
     color: COLORS.lightGray,
     fontSize: 9,
     fontFamily: FONTS.bold,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: SPACING.xl,
+  },
+  loadingText: {
+    color: COLORS.lightGray,
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.regular,
+    textAlign: 'center',
   },
 });
