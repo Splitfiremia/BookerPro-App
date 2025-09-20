@@ -243,8 +243,8 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   logo: {
-    width: 200,
-    height: 120,
+    width: 280,
+    height: 160,
   },
   tabContainer: {
     flexDirection: 'row',
