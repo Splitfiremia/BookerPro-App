@@ -230,7 +230,7 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
   // Create notification for real-time updates
   const createNotification = useCallback((userId: string, type: Notification['type'], title: string, message: string, appointmentId?: string): Notification => {
     return {
-      id: `notification-${Date.now()}`,
+      id: `notification-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       userId,
       type,
       title,
@@ -256,7 +256,6 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
       throw new Error('Appointment not found');
     }
 
-    // Validate transition using state machine
     const validation = AppointmentStateMachine.validateTransition(
       appointment,
       newStatus,
@@ -287,10 +286,9 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
           statusHistory: [...apt.statusHistory, statusChange]
         };
 
-        // Add status-specific updates
         if (newStatus === 'confirmed') {
           updates.confirmedAt = now;
-          updates.confirmationSent = false; // Will be sent by notification service
+          updates.confirmationSent = false;
         } else if (newStatus === 'in-progress') {
           updates.startedAt = now;
         } else if (newStatus === 'completed') {
@@ -299,11 +297,10 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
           updates.cancellationReason = reason;
         } else if (newStatus === 'no-show' && reason) {
           updates.noShowReason = reason;
-        } else if (newStatus === 'rescheduled' && reason) {
-          updates.rescheduleReason = reason;
+        } else if (newStatus === 'rescheduled') {
+          if (reason) updates.rescheduleReason = reason;
         }
 
-        // Add notes if provided
         if (notes) {
           if (user?.role === 'client') {
             updates.clientNotes = notes;
@@ -320,8 +317,42 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     setAppointments(updatedAppointments);
     await saveAppointments(updatedAppointments);
 
+    const newNotifications: Notification[] = [];
+    const clientId = appointment.clientId;
+    const providerId = appointment.providerId;
+
+    if (newStatus === 'confirmed') {
+      newNotifications.push(
+        createNotification(clientId, 'appointment_confirmed', 'Appointment Confirmed', 'Your appointment has been confirmed.', appointmentId)
+      );
+    } else if (newStatus === 'cancelled') {
+      newNotifications.push(
+        createNotification(clientId, 'appointment_cancelled', 'Appointment Cancelled', reason || 'Your appointment was cancelled.', appointmentId),
+        createNotification(providerId, 'appointment_cancelled', 'Appointment Cancelled', reason || 'The appointment was cancelled.', appointmentId)
+      );
+    } else if (newStatus === 'rescheduled') {
+      newNotifications.push(
+        createNotification(clientId, 'appointment_requested', 'Appointment Rescheduled', 'Your appointment has been rescheduled. Please review.', appointmentId),
+        createNotification(providerId, 'appointment_requested', 'Appointment Rescheduled', 'An appointment was rescheduled.', appointmentId)
+      );
+    } else if (newStatus === 'completed') {
+      newNotifications.push(
+        createNotification(providerId, 'payment_received', 'Service Completed', 'Mark payment as received if applicable.', appointmentId)
+      );
+    } else if (newStatus === 'requested') {
+      newNotifications.push(
+        createNotification(providerId, 'appointment_requested', 'New Appointment Request', 'You have a new appointment request.', appointmentId)
+      );
+    }
+
+    if (newNotifications.length > 0) {
+      const updatedNotifications = [...notifications, ...newNotifications];
+      setNotifications(updatedNotifications);
+      await saveNotifications(updatedNotifications);
+    }
+
     console.log('Updated appointment status:', appointmentId, `${appointment.status} -> ${newStatus}`);
-  }, [appointments, createStatusChange, saveAppointments, user]);
+  }, [appointments, createStatusChange, saveAppointments, notifications, saveNotifications, createNotification, user]);
 
   // Role-Based UI (RBUI) - appointment filtering
   const getAppointmentsForUser = useCallback((userRole: UserRole, userId: string) => {
@@ -379,10 +410,21 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     const updatedAppointments = [...appointments, newAppointment];
     setAppointments(updatedAppointments);
     await saveAppointments(updatedAppointments);
+
+    const newNotif = createNotification(
+      newAppointment.providerId,
+      'appointment_requested',
+      'New Appointment Request',
+      'You have a new appointment request.',
+      newAppointment.id
+    );
+    const updatedNotifications = [...notifications, newNotif];
+    setNotifications(updatedNotifications);
+    await saveNotifications(updatedNotifications);
     
     console.log('Created new appointment request:', newAppointment.id);
     return newAppointment;
-  }, [appointments, saveAppointments, createStatusChange]);
+  }, [appointments, saveAppointments, createStatusChange, createNotification, notifications, saveNotifications]);
 
   // General appointment update function (non-status changes)
   const updateAppointment = useCallback(async (appointmentId: string, updates: Partial<Appointment>) => {
@@ -693,18 +735,22 @@ export function useShopOwnerAppointments() {
       return {
         requested: [],
         confirmed: [],
+        'in-progress': [],
         completed: [],
         cancelled: [],
         'no-show': [],
-      };
+        rescheduled: [],
+      } as Record<AppointmentStatus, any[]>;
     }
     return {
       requested: context.getAppointmentsByStatus('requested'),
       confirmed: context.getAppointmentsByStatus('confirmed'),
+      'in-progress': context.getAppointmentsByStatus('in-progress'),
       completed: context.getAppointmentsByStatus('completed'),
       cancelled: context.getAppointmentsByStatus('cancelled'),
       'no-show': context.getAppointmentsByStatus('no-show'),
-    };
+      rescheduled: context.getAppointmentsByStatus('rescheduled'),
+    } as Record<AppointmentStatus, any[]>;
   }, [context]);
 
   const todaysAppointments = useMemo(() => {
@@ -745,7 +791,7 @@ export function useClientAppointments() {
   const upcomingAppointments = useMemo(() => {
     if (!context || !context.isInitialized) return [];
     return clientAppointments.filter((apt: Appointment) => 
-      apt.status === 'confirmed' || apt.status === 'requested'
+      apt.status === 'confirmed' || apt.status === 'requested' || apt.status === 'in-progress' || apt.status === 'rescheduled'
     );
   }, [clientAppointments, context]);
 

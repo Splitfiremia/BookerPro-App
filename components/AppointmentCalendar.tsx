@@ -19,9 +19,11 @@ const StatusFilter: React.FC<StatusFilterProps> = ({ selectedStatuses, onStatusT
   const statusOptions: { status: AppointmentStatus; label: string }[] = [
     { status: 'requested', label: 'Requested' },
     { status: 'confirmed', label: 'Confirmed' },
+    { status: 'in-progress', label: 'In Progress' },
     { status: 'completed', label: 'Completed' },
     { status: 'cancelled', label: 'Cancelled' },
     { status: 'no-show', label: 'No-show' },
+    { status: 'rescheduled', label: 'Rescheduled' },
   ];
 
   return (
@@ -64,7 +66,7 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
   const { getAppointmentsWithColors } = useAppointments();
   const { user } = useAuth();
   const [selectedStatuses, setSelectedStatuses] = useState<AppointmentStatus[]>([
-    'requested', 'confirmed', 'completed', 'cancelled', 'no-show'
+    'requested', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show', 'rescheduled'
   ]);
 
   const appointmentsWithColors = getAppointmentsWithColors();
@@ -190,7 +192,7 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                     {apt.startTime} - {apt.endTime}
                   </Text>
                   <Text style={styles.appointmentService}>
-                    {apt.notes || 'Service appointment'}
+                    {apt.clientNotes ?? 'Service appointment'}
                   </Text>
                   <Text style={styles.appointmentStatus}>
                     Status: {apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}

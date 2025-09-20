@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,90 +10,40 @@ import {
   Alert,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Clock, MapPin, DollarSign, User, Calendar, ChevronLeft, Check, X } from 'lucide-react-native';
+import { Clock, MapPin, DollarSign, User, Calendar as CalendarIcon, ChevronLeft } from 'lucide-react-native';
 import { COLORS, FONTS } from '@/constants/theme';
-import { mockAppointments } from '@/mocks/appointments';
+import { useAppointments } from '@/providers/AppointmentProvider';
+import AppointmentStatusManager from '@/components/AppointmentStatusManager';
+import { Appointment } from '@/models/database';
 
 export default function AppointmentDetailsScreen() {
   const { id } = useLocalSearchParams();
-  const appointment = mockAppointments.find(apt => apt.id === id);
-  
+  const { appointments } = useAppointments();
   const [notes, setNotes] = useState<string>('');
-  const [isCheckedIn, setIsCheckedIn] = useState<boolean>(false);
-  
+
+  const appointment = useMemo(() => {
+    const aptId = Array.isArray(id) ? id[0] : (id ?? '');
+    return appointments.find((apt: Appointment) => apt.id === aptId);
+  }, [appointments, id]);
+
   if (!appointment) {
     return (
       <View style={styles.container}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <ChevronLeft size={24} color={COLORS.primary} />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
         <Text style={styles.errorText}>Appointment not found</Text>
       </View>
     );
   }
-  
-  const handleCheckIn = () => {
-    setIsCheckedIn(true);
-    Alert.alert('Success', 'Client checked in successfully');
+
+  const handleGoToPayment = () => {
+    router.push({ pathname: '/(app)/(provider)/complete-payment', params: { appointmentId: appointment.id } });
   };
-  
-  const handleComplete = () => {
-    Alert.alert(
-      'Complete Appointment',
-      'Mark this appointment as completed?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Complete', 
-          onPress: () => {
-            router.push({
-              pathname: '/(app)/(provider)/complete-payment',
-              params: { appointmentId: appointment.id }
-            });
-          }
-        }
-      ]
-    );
-  };
-  
-  const handleCancel = () => {
-    Alert.alert(
-      'Cancel Appointment',
-      'Are you sure you want to cancel this appointment?',
-      [
-        { text: 'No', style: 'cancel' },
-        { 
-          text: 'Yes, Cancel', 
-          style: 'destructive',
-          onPress: () => {
-            router.back();
-          }
-        }
-      ]
-    );
-  };
-  
-  const handleReschedule = () => {
-    router.push({
-      pathname: '/(app)/(provider)/availability',
-      params: { appointmentId: appointment.id, action: 'reschedule' }
-    });
-  };
-  
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return COLORS.info;
-      case 'pending':
-        return COLORS.warning;
-      case 'completed':
-        return COLORS.success;
-      case 'cancelled':
-        return COLORS.error;
-      default:
-        return COLORS.text;
-    }
-  };
-  
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <TouchableOpacity 
         style={styles.backButton}
         onPress={() => router.back()}
@@ -101,84 +51,67 @@ export default function AppointmentDetailsScreen() {
         <ChevronLeft size={24} color={COLORS.primary} />
         <Text style={styles.backText}>Back</Text>
       </TouchableOpacity>
-      
-      {/* Client Info */}
+
       <View style={styles.clientCard}>
-        <Image source={{ uri: appointment.providerImage }} style={styles.clientImage} />
+        <Image source={{ uri: 'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=200&q=80' }} style={styles.clientImage} />
         <View style={styles.clientInfo}>
-          <Text style={styles.clientName}>{appointment.providerName}</Text>
-          <Text style={styles.clientPhone}>+1 (555) 123-4567</Text>
+          <Text style={styles.clientName}>Client {appointment.clientId}</Text>
+          <Text style={styles.clientPhone}>{appointment.shopId}</Text>
         </View>
       </View>
-      
-      {/* Appointment Details */}
+
       <View style={styles.detailsCard}>
         <Text style={styles.sectionTitle}>Appointment Details</Text>
-        
+
         <View style={styles.detailRow}>
           <View style={styles.detailIcon}>
-            <Calendar size={20} color="#999" />
+            <CalendarIcon size={20} color="#999" />
           </View>
           <View style={styles.detailContent}>
             <Text style={styles.detailLabel}>Date</Text>
-            <Text style={styles.detailValue}>
-              {appointment.day}, {appointment.month} {appointment.date}, 2025
-            </Text>
+            <Text style={styles.detailValue}>{appointment.date}</Text>
           </View>
         </View>
-        
+
         <View style={styles.detailRow}>
           <View style={styles.detailIcon}>
             <Clock size={20} color="#999" />
           </View>
           <View style={styles.detailContent}>
             <Text style={styles.detailLabel}>Time</Text>
-            <Text style={styles.detailValue}>{appointment.time}</Text>
+            <Text style={styles.detailValue}>{appointment.startTime} - {appointment.endTime}</Text>
           </View>
         </View>
-        
+
         <View style={styles.detailRow}>
           <View style={styles.detailIcon}>
             <User size={20} color="#999" />
           </View>
           <View style={styles.detailContent}>
             <Text style={styles.detailLabel}>Service</Text>
-            <Text style={styles.detailValue}>{appointment.service}</Text>
+            <Text style={styles.detailValue}>{appointment.serviceId}</Text>
           </View>
         </View>
-        
+
         <View style={styles.detailRow}>
           <View style={styles.detailIcon}>
             <DollarSign size={20} color="#999" />
           </View>
           <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>Price</Text>
-            <Text style={styles.detailValue}>${appointment.price}</Text>
+            <Text style={styles.detailLabel}>Total</Text>
+            <Text style={styles.detailValue}>${appointment.totalAmount.toFixed(2)}</Text>
           </View>
         </View>
-        
-        <View style={styles.detailRow}>
-          <View style={styles.detailIcon}>
-            <MapPin size={20} color="#999" />
-          </View>
-          <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>Location</Text>
-            <Text style={styles.detailValue}>{appointment.location}</Text>
-          </View>
-        </View>
-        
-        {/* Status Badge */}
-        <View style={styles.statusContainer}>
-          <Text style={styles.detailLabel}>Status</Text>
-          <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(appointment.status)}20` }]}>
-            <Text style={[styles.statusText, { color: getStatusColor(appointment.status) }]}>
-              {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-            </Text>
-          </View>
+
+        <View style={styles.statusManagerWrapper}>
+          <AppointmentStatusManager appointment={appointment} onStatusChange={(s) => {
+            if (s === 'completed') {
+              handleGoToPayment();
+            }
+          }} />
         </View>
       </View>
-      
-      {/* Notes Section */}
+
       <View style={styles.notesCard}>
         <Text style={styles.sectionTitle}>Appointment Notes</Text>
         <TextInput
@@ -189,70 +122,8 @@ export default function AppointmentDetailsScreen() {
           onChangeText={setNotes}
           multiline
           numberOfLines={4}
+          testID="appointment-notes"
         />
-      </View>
-      
-      {/* Action Buttons */}
-      <View style={styles.actionContainer}>
-        {appointment.status === 'confirmed' && !isCheckedIn && (
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.checkInButton]}
-            onPress={handleCheckIn}
-          >
-            <Check size={20} color="#000" />
-            <Text style={styles.checkInButtonText}>Check In Client</Text>
-          </TouchableOpacity>
-        )}
-        
-        {(appointment.status === 'confirmed' && isCheckedIn) && (
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.completeButton]}
-            onPress={handleComplete}
-          >
-            <Check size={20} color="#fff" />
-            <Text style={styles.completeButtonText}>Complete & Charge</Text>
-          </TouchableOpacity>
-        )}
-        
-        {appointment.status === 'pending' && (
-          <>
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.confirmButton]}
-              onPress={() => Alert.alert('Success', 'Appointment confirmed')}
-            >
-              <Check size={20} color="#fff" />
-              <Text style={styles.confirmButtonText}>Confirm</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.declineButton]}
-              onPress={handleCancel}
-            >
-              <X size={20} color="#fff" />
-              <Text style={styles.declineButtonText}>Decline</Text>
-            </TouchableOpacity>
-          </>
-        )}
-        
-        {(appointment.status === 'confirmed' || appointment.status === 'pending') && (
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.rescheduleButton]}
-            onPress={handleReschedule}
-          >
-            <Calendar size={20} color={COLORS.primary} />
-            <Text style={styles.rescheduleButtonText}>Reschedule</Text>
-          </TouchableOpacity>
-        )}
-        
-        {appointment.status !== 'completed' && appointment.status !== 'cancelled' && (
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.cancelButton]}
-            onPress={handleCancel}
-          >
-            <X size={20} color={COLORS.error} />
-            <Text style={styles.cancelButtonText}>Cancel Appointment</Text>
-          </TouchableOpacity>
-        )}
       </View>
     </ScrollView>
   );
@@ -262,6 +133,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   backButton: {
     flexDirection: 'row',
@@ -364,6 +238,9 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  statusManagerWrapper: {
+    marginTop: 12,
   },
   notesCard: {
     backgroundColor: COLORS.card,
