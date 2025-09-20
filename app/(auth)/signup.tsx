@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   TextInput,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -85,7 +86,13 @@ export default function SignupScreen() {
           </TouchableOpacity>
 
           {/* Logo */}
-          <Text style={styles.logo}>theCut</Text>
+          <View style={styles.logoContainer}>
+            <Image 
+              source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/yp6es0q3mhzspedoi8xim' }}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
 
           {/* Tabs */}
           <View style={styles.tabContainer}>
@@ -231,14 +238,13 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 20,
   },
-  logo: {
-    fontSize: 48,
-    fontWeight: '300',
-    fontStyle: 'italic',
-    color: '#FFFFFF',
-    textAlign: 'center',
+  logoContainer: {
+    alignItems: 'center',
     marginBottom: 30,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  logo: {
+    width: 200,
+    height: 120,
   },
   tabContainer: {
     flexDirection: 'row',
