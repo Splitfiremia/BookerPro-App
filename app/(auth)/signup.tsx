@@ -88,7 +88,7 @@ export default function SignupScreen() {
           {/* Logo */}
           <View style={styles.logoContainer}>
             <Image 
-              source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/yp6es0q3mhzspedoi8xim' }}
+              source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/g3qm3ar0sgtd2932ma5m0' }}
               style={styles.logo}
               resizeMode="contain"
             />
