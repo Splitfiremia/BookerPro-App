@@ -1,36 +1,38 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { useRouter } from "expo-router";
-import { Calendar, BarChart2, Users, DollarSign, TrendingUp } from "lucide-react-native";
-import { COLORS } from "@/constants/theme";
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Calendar, BarChart2, Users, DollarSign, TrendingUp } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { COLORS } from '@/constants/theme';
 
 export default function ShopOwnerDashboard() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const metrics = [
-    { label: "Today's Revenue", value: "$2,450", icon: DollarSign, change: "+15%", color: "#4CAF50" },
-    { label: "Total Appointments", value: "47", icon: Calendar, change: "+8%", color: "#2196F3" },
-    { label: "Active Providers", value: "12", icon: Users, change: "+2%", color: "#FF9800" },
-    { label: "Peak Hours", value: "2-4 PM", icon: TrendingUp, change: "Busy", color: "#9C27B0" },
+    { label: 'Today\'s Revenue', value: '$2,450', icon: DollarSign, change: '+15%', color: '#4CAF50' },
+    { label: 'Total Appointments', value: '47', icon: Calendar, change: '+8%', color: '#2196F3' },
+    { label: 'Active Providers', value: '12', icon: Users, change: '+2%', color: '#FF9800' },
+    { label: 'Peak Hours', value: '2-4 PM', icon: TrendingUp, change: 'Busy', color: '#9C27B0' },
   ];
 
   const quickActions = [
     {
-      title: "View Aggregated Calendar",
-      subtitle: "All providers' appointments",
+      title: 'View Aggregated Calendar',
+      subtitle: 'All providers\' appointments',
       icon: Calendar,
-      onPress: () => router.push("/calendar"),
+      onPress: () => router.push('/calendar'),
     },
     {
-      title: "Business Analytics",
-      subtitle: "Performance insights",
+      title: 'Business Analytics',
+      subtitle: 'Performance insights',
       icon: BarChart2,
-      onPress: () => router.push("/analytics"),
+      onPress: () => router.push('/analytics'),
     },
   ];
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { paddingTop: insets.top }]} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Shop Owner Dashboard</Text>
         <Text style={styles.headerSubtitle}>Oversight & Business Intelligence</Text>
@@ -76,7 +78,7 @@ export default function ShopOwnerDashboard() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Today's Overview</Text>
+        <Text style={styles.sectionTitle}>Today&apos;s Overview</Text>
         <View style={styles.overviewCard}>
           <View style={styles.overviewRow}>
             <Text style={styles.overviewLabel}>Appointments Completed</Text>
@@ -96,9 +98,9 @@ export default function ShopOwnerDashboard() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Recent Activity</Text>
         {[
-          { text: "New appointment confirmed - Sarah with Mike", time: "5 min ago" },
-          { text: "Payment processed - $85 haircut service", time: "12 min ago" },
-          { text: "Provider availability updated - Emma", time: "25 min ago" },
+          { text: 'New appointment confirmed - Sarah with Mike', time: '5 min ago' },
+          { text: 'Payment processed - $85 haircut service', time: '12 min ago' },
+          { text: 'Provider availability updated - Emma', time: '25 min ago' },
         ].map((item, index) => (
           <View key={index} style={styles.activityItem}>
             <View style={styles.activityDot} />
@@ -124,7 +126,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: 'bold' as const,
     color: COLORS.text,
   },
   headerSubtitle: {
@@ -144,7 +146,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -165,11 +167,11 @@ const styles = StyleSheet.create({
   },
   metricChange: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: 'bold' as const,
   },
   metricValue: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: 'bold' as const,
     color: COLORS.text,
     marginBottom: 4,
   },
@@ -182,7 +184,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: 'bold' as const,
     color: COLORS.text,
     marginBottom: 16,
   },
@@ -196,7 +198,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -204,22 +206,22 @@ const styles = StyleSheet.create({
   },
   actionTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600' as const,
     color: COLORS.text,
     marginTop: 8,
-    textAlign: "center",
+    textAlign: 'center' as const,
   },
   actionSubtitle: {
     fontSize: 12,
     color: COLORS.secondary,
     marginTop: 4,
-    textAlign: "center",
+    textAlign: 'center' as const,
   },
   overviewCard: {
     backgroundColor: COLORS.card,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -239,7 +241,7 @@ const styles = StyleSheet.create({
   },
   overviewValue: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: '600' as const,
     color: COLORS.text,
   },
   activityItem: {
