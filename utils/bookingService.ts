@@ -2,13 +2,231 @@ import {
   ProviderAvailability, 
   AvailableTimeSlot, 
   Appointment,
-  DayOfWeek
+  DayOfWeek,
+  AppointmentStatus,
+  AppointmentStatusChange,
+  APPOINTMENT_STATE_TRANSITIONS,
+  APPOINTMENT_PERMISSIONS,
+  UserRole
 } from '@/models/database';
 import { 
   generateAvailableSlots, 
   generateAvailableSlotsForDateRange,
   isProviderAvailable
 } from '@/utils/availability';
+
+/**
+ * TheCut-style Appointment State Machine Service
+ * Handles all appointment status transitions with proper validation
+ */
+export class AppointmentStateMachine {
+  /**
+   * Validates if a status transition is allowed
+   */
+  static canTransition(fromStatus: AppointmentStatus, toStatus: AppointmentStatus): boolean {
+    const allowedTransitions = APPOINTMENT_STATE_TRANSITIONS[fromStatus];
+    return allowedTransitions.includes(toStatus);
+  }
+
+  /**
+   * Validates if a user role can perform a specific action
+   */
+  static canPerformAction(
+    action: keyof typeof APPOINTMENT_PERMISSIONS, 
+    userRole: UserRole
+  ): boolean {
+    const allowedRoles = APPOINTMENT_PERMISSIONS[action];
+    return allowedRoles.includes(userRole);
+  }
+
+  /**
+   * Gets all possible next states for a given appointment status
+   */
+  static getNextStates(currentStatus: AppointmentStatus): AppointmentStatus[] {
+    return APPOINTMENT_STATE_TRANSITIONS[currentStatus] || [];
+  }
+
+  /**
+   * Gets available actions for a user role and appointment status
+   */
+  static getAvailableActions(
+    currentStatus: AppointmentStatus, 
+    userRole: UserRole
+  ): Array<{
+    action: keyof typeof APPOINTMENT_PERMISSIONS;
+    targetStatus: AppointmentStatus;
+    label: string;
+    requiresReason: boolean;
+  }> {
+    const actions: Array<{
+      action: keyof typeof APPOINTMENT_PERMISSIONS;
+      targetStatus: AppointmentStatus;
+      label: string;
+      requiresReason: boolean;
+    }> = [];
+
+    const nextStates = this.getNextStates(currentStatus);
+
+    // Map status transitions to actions
+    nextStates.forEach(targetStatus => {
+      switch (targetStatus) {
+        case 'confirmed':
+          if (this.canPerformAction('confirm', userRole)) {
+            actions.push({
+              action: 'confirm',
+              targetStatus: 'confirmed',
+              label: 'Confirm Appointment',
+              requiresReason: false
+            });
+          }
+          break;
+        case 'in-progress':
+          if (this.canPerformAction('start', userRole)) {
+            actions.push({
+              action: 'start',
+              targetStatus: 'in-progress',
+              label: 'Start Service',
+              requiresReason: false
+            });
+          }
+          break;
+        case 'completed':
+          if (this.canPerformAction('complete', userRole)) {
+            actions.push({
+              action: 'complete',
+              targetStatus: 'completed',
+              label: 'Complete Service',
+              requiresReason: false
+            });
+          }
+          break;
+        case 'cancelled':
+          if (this.canPerformAction('cancel', userRole)) {
+            actions.push({
+              action: 'cancel',
+              targetStatus: 'cancelled',
+              label: 'Cancel Appointment',
+              requiresReason: true
+            });
+          }
+          break;
+        case 'no-show':
+          if (this.canPerformAction('mark_no_show', userRole)) {
+            actions.push({
+              action: 'mark_no_show',
+              targetStatus: 'no-show',
+              label: 'Mark No-Show',
+              requiresReason: true
+            });
+          }
+          break;
+        case 'rescheduled':
+          if (this.canPerformAction('reschedule', userRole)) {
+            actions.push({
+              action: 'reschedule',
+              targetStatus: 'rescheduled',
+              label: 'Reschedule',
+              requiresReason: false
+            });
+          }
+          break;
+      }
+    });
+
+    return actions;
+  }
+
+  /**
+   * Creates a status change record with proper validation
+   */
+  static createStatusChange(
+    appointmentId: string,
+    fromStatus: AppointmentStatus | null,
+    toStatus: AppointmentStatus,
+    changedBy: string,
+    changedByRole: UserRole,
+    action: keyof typeof APPOINTMENT_PERMISSIONS,
+    reason?: string,
+    metadata?: Record<string, any>
+  ): AppointmentStatusChange {
+    return {
+      id: `status-change-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      appointmentId,
+      fromStatus,
+      toStatus,
+      changedBy,
+      changedByRole,
+      action,
+      reason,
+      metadata,
+      timestamp: new Date().toISOString(),
+      clientNotified: false,
+      providerNotified: false
+    };
+  }
+
+  /**
+   * Validates an appointment transition request
+   */
+  static validateTransition(
+    appointment: Appointment,
+    newStatus: AppointmentStatus,
+    userRole: UserRole,
+    action: keyof typeof APPOINTMENT_PERMISSIONS
+  ): { valid: boolean; error?: string } {
+    // Check if transition is allowed by state machine
+    if (!this.canTransition(appointment.status, newStatus)) {
+      return {
+        valid: false,
+        error: `Cannot transition from ${appointment.status} to ${newStatus}`
+      };
+    }
+
+    // Check if user has permission for this action
+    if (!this.canPerformAction(action, userRole)) {
+      return {
+        valid: false,
+        error: `User role ${userRole} cannot perform action ${action}`
+      };
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Gets appointment color based on status (for UI)
+   */
+  static getStatusColor(status: AppointmentStatus): string {
+    const colors = {
+      'requested': '#FFC107',    // Yellow - pending
+      'confirmed': '#2196F3',    // Blue - confirmed
+      'in-progress': '#FF9800',  // Orange - active
+      'completed': '#4CAF50',    // Green - done
+      'cancelled': '#F44336',    // Red - cancelled
+      'no-show': '#9E9E9E',      // Grey - no show
+      'rescheduled': '#9C27B0'   // Purple - rescheduled
+    };
+    
+    return colors[status] || '#666666';
+  }
+
+  /**
+   * Gets user-friendly status text
+   */
+  static getStatusText(status: AppointmentStatus): string {
+    const texts = {
+      'requested': 'Requested',
+      'confirmed': 'Confirmed',
+      'in-progress': 'In Progress',
+      'completed': 'Completed',
+      'cancelled': 'Cancelled',
+      'no-show': 'No Show',
+      'rescheduled': 'Rescheduled'
+    };
+    
+    return texts[status] || 'Unknown';
+  }
+}
 
 // Reservation system types
 export interface SlotReservation {
@@ -41,7 +259,7 @@ export interface ConfirmationResult {
 // In-memory storage for active reservations (in production, use Redis or similar)
 let activeReservations: SlotReservation[] = [];
 
-// Mock appointments for testing
+// Mock appointments for testing with new data structure
 let mockAppointments: Appointment[] = [
   {
     id: '1',
@@ -50,14 +268,17 @@ let mockAppointments: Appointment[] = [
     serviceId: 'service-1',
     shopId: 'shop-1',
     date: '2024-01-15',
-    time: '10:00',
     startTime: '10:00',
     endTime: '11:00',
     duration: 60,
     status: 'confirmed',
     paymentStatus: 'paid',
-    totalAmount: 50,
-    serviceAmount: 50,
+    serviceAmount: 45,
+    tipAmount: 0,
+    taxAmount: 4.05,
+    totalAmount: 49.05,
+    reminderSent: false,
+    confirmationSent: true,
     createdAt: '2024-01-10T00:00:00Z',
     updatedAt: '2024-01-10T00:00:00Z',
     statusHistory: []
@@ -69,14 +290,17 @@ let mockAppointments: Appointment[] = [
     serviceId: 'service-2',
     shopId: 'shop-1',
     date: '2024-01-15',
-    time: '14:00',
     startTime: '14:00',
     endTime: '15:30',
     duration: 90,
     status: 'confirmed',
     paymentStatus: 'paid',
-    totalAmount: 75,
-    serviceAmount: 75,
+    serviceAmount: 68,
+    tipAmount: 0,
+    taxAmount: 6.12,
+    totalAmount: 74.12,
+    reminderSent: false,
+    confirmationSent: true,
     createdAt: '2024-01-10T00:00:00Z',
     updatedAt: '2024-01-10T00:00:00Z',
     statusHistory: []
@@ -374,13 +598,13 @@ const hasTimeConflict = (
   // Clean up expired reservations first
   cleanupExpiredReservations();
   
-  // Check against confirmed appointments
+  // Check against confirmed appointments (exclude cancelled, completed, no-show)
   const appointmentConflict = existingAppointments.some(apt => {
     if (apt.providerId !== providerId || apt.date !== date) return false;
-    if (apt.status === 'cancelled') return false;
+    if (['cancelled', 'no-show', 'completed'].includes(apt.status)) return false;
     
     // Check for time overlap
-    const aptStart = apt.startTime || apt.time;
+    const aptStart = apt.startTime;
     const aptEnd = apt.endTime;
     
     return (
@@ -528,8 +752,10 @@ export const confirmReservation = (
     };
   }
   
-  // Create the actual appointment
+  // Create the actual appointment with new data structure
   const appointmentId = `appointment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const taxAmount = Math.round(paymentData.serviceAmount * 0.09 * 100) / 100; // 9% tax
+  
   const appointment: Appointment = {
     id: appointmentId,
     clientId: reservation.clientId,
@@ -537,27 +763,28 @@ export const confirmReservation = (
     serviceId: reservation.serviceId,
     shopId: reservation.shopId,
     date: reservation.date,
-    time: reservation.startTime,
     startTime: reservation.startTime,
     endTime: reservation.endTime,
     duration: reservation.duration,
-    status: 'confirmed',
+    status: 'requested', // Start as requested, not confirmed
     paymentStatus: 'paid',
-    totalAmount: paymentData.totalAmount,
     serviceAmount: paymentData.serviceAmount,
     tipAmount: paymentData.tipAmount || 0,
+    taxAmount,
+    totalAmount: paymentData.totalAmount,
+    reminderSent: false,
+    confirmationSent: false,
     createdAt: now,
     updatedAt: now,
-    statusHistory: [{
-      id: `status-${Date.now()}`,
+    statusHistory: [AppointmentStateMachine.createStatusChange(
       appointmentId,
-      fromStatus: null,
-      toStatus: 'confirmed',
-      changedBy: reservation.clientId,
-      changedByRole: 'client',
-      reason: 'Payment completed',
-      timestamp: now
-    }]
+      null,
+      'requested',
+      reservation.clientId,
+      'client',
+      'request',
+      'Payment completed and appointment requested'
+    )]
   };
   
   // Add appointment to mock data

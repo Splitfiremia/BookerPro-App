@@ -89,9 +89,39 @@ export interface ProviderServiceOffering {
   updatedAt: string;
 }
 
-// Unified Appointment model with comprehensive status management
-export type AppointmentStatus = 'requested' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
-export type PaymentStatus = 'pending' | 'paid' | 'refunded' | 'failed';
+// TheCut-style Appointment Status System with State Machine
+export type AppointmentStatus = 
+  | 'requested'     // Client requests appointment (initial state)
+  | 'confirmed'     // Provider confirms appointment
+  | 'in-progress'   // Provider marks as started (new state)
+  | 'completed'     // Provider marks as finished
+  | 'cancelled'     // Either party cancels
+  | 'no-show'       // Provider marks client as no-show
+  | 'rescheduled';  // Either party reschedules (new state)
+
+export type PaymentStatus = 'pending' | 'paid' | 'refunded' | 'failed' | 'processing';
+
+// State machine transitions - defines valid status changes
+export const APPOINTMENT_STATE_TRANSITIONS: Record<AppointmentStatus, AppointmentStatus[]> = {
+  'requested': ['confirmed', 'cancelled', 'rescheduled'],
+  'confirmed': ['in-progress', 'completed', 'cancelled', 'no-show', 'rescheduled'],
+  'in-progress': ['completed', 'cancelled'], // Can't reschedule once started
+  'completed': [], // Terminal state
+  'cancelled': ['requested'], // Can re-request if cancelled
+  'no-show': [], // Terminal state
+  'rescheduled': ['requested'] // Creates new appointment
+};
+
+// Permission matrix - who can perform which actions
+export const APPOINTMENT_PERMISSIONS = {
+  request: ['client'] as UserRole[],
+  confirm: ['provider', 'owner'] as UserRole[],
+  start: ['provider', 'owner'] as UserRole[],
+  complete: ['provider', 'owner'] as UserRole[],
+  cancel: ['client', 'provider', 'owner'] as UserRole[],
+  mark_no_show: ['provider', 'owner'] as UserRole[],
+  reschedule: ['client', 'provider', 'owner'] as UserRole[]
+} as const;
 
 export interface Appointment {
   id: string;
@@ -99,29 +129,53 @@ export interface Appointment {
   providerId: string;
   serviceId: string;
   shopId: string;
+  
+  // Scheduling Information
   date: string; // Format: "YYYY-MM-DD"
-  time: string; // Format: "HH:MM" - start time
-  startTime: string; // Format: "HH:MM" (deprecated - use time)
-  endTime: string; // Format: "HH:MM"
+  startTime: string; // Format: "HH:MM" (24-hour)
+  endTime: string; // Format: "HH:MM" (24-hour)
   duration: number; // Duration in minutes
+  
+  // Status Management (TheCut-style)
   status: AppointmentStatus;
-  paymentStatus: PaymentStatus; // Payment status tracking
-  totalAmount: number; // Total cost including tips
-  serviceAmount: number; // Cost of the service
-  tipAmount?: number; // Tip amount
-  notes?: string;
-  clientNotes?: string;
-  providerNotes?: string;
+  paymentStatus: PaymentStatus;
+  
+  // Pricing Information
+  serviceAmount: number; // Base service cost
+  tipAmount: number; // Tip amount (default 0)
+  taxAmount: number; // Tax amount
+  totalAmount: number; // Total cost (service + tip + tax)
+  
+  // Notes and Communication
+  clientNotes?: string; // Client's special requests
+  providerNotes?: string; // Provider's internal notes
+  publicNotes?: string; // Notes visible to both parties
+  
+  // Status-specific Information
   cancellationReason?: string;
   noShowReason?: string;
-  reminderSent?: boolean;
-  confirmationSent?: boolean;
+  rescheduleReason?: string;
+  
+  // Workflow Tracking
+  confirmedAt?: string; // When provider confirmed
+  startedAt?: string; // When service actually started
+  completedAt?: string; // When service was completed
+  
+  // Communication Tracking
+  reminderSent: boolean;
+  confirmationSent: boolean;
+  
+  // Metadata
   createdAt: string;
   updatedAt: string;
   statusHistory: AppointmentStatusChange[];
+  
+  // Rescheduling Support
+  originalAppointmentId?: string; // If this is a rescheduled appointment
+  rescheduledToId?: string; // If this appointment was rescheduled
 }
 
-// Status change tracking for audit trail
+// Enhanced status change tracking with action context
 export interface AppointmentStatusChange {
   id: string;
   appointmentId: string;
@@ -129,8 +183,14 @@ export interface AppointmentStatusChange {
   toStatus: AppointmentStatus;
   changedBy: string; // userId
   changedByRole: UserRole;
+  action: 'request' | 'confirm' | 'start' | 'complete' | 'cancel' | 'mark_no_show' | 'reschedule';
   reason?: string;
+  metadata?: Record<string, any>; // Additional context (e.g., reschedule details)
   timestamp: string;
+  
+  // Client/Provider context
+  clientNotified: boolean;
+  providerNotified: boolean;
 }
 
 // Notification model for real-time updates

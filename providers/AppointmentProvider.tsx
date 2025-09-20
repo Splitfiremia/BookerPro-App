@@ -7,8 +7,10 @@ import {
   AppointmentStatus, 
   AppointmentStatusChange, 
   Notification, 
-  UserRole 
+  UserRole,
+  APPOINTMENT_PERMISSIONS
 } from "@/models/database";
+import { AppointmentStateMachine } from "@/utils/bookingService";
 
 // BookingRequest type for compatibility with existing UI
 export interface BookingRequest {
@@ -27,16 +29,18 @@ export interface BookingRequest {
   createdAt: string;
 }
 
-// Color coding for appointment statuses - Visual Distinctions
+// TheCut-style Color coding for appointment statuses - Visual Distinctions
 export const APPOINTMENT_COLORS = {
-  requested: '#FFC107', // Yellow
-  cancelled: '#F44336',  // Red
-  confirmed: '#2196F3',  // Blue
-  completed: '#4CAF50',  // Green
-  'no-show': '#9E9E9E',  // Grey
+  requested: '#FFC107',     // Yellow - pending
+  confirmed: '#2196F3',     // Blue - confirmed
+  'in-progress': '#FF9800', // Orange - active
+  completed: '#4CAF50',     // Green - done
+  cancelled: '#F44336',     // Red - cancelled
+  'no-show': '#9E9E9E',     // Grey - no show
+  rescheduled: '#9C27B0'    // Purple - rescheduled
 } as const;
 
-// Mock appointments with new unified status system
+// Mock appointments with TheCut-style data structure
 const mockAppointmentsData: Appointment[] = [
   {
     id: "1",
@@ -45,15 +49,19 @@ const mockAppointmentsData: Appointment[] = [
     serviceId: "service-1",
     shopId: "shop-1",
     date: "2024-09-16",
-    time: "17:00",
     startTime: "17:00",
     endTime: "17:30",
     duration: 30,
     status: "confirmed",
-    paymentStatus: "pending",
-    totalAmount: 50,
-    serviceAmount: 50,
-    notes: "Regular haircut",
+    paymentStatus: "paid",
+    serviceAmount: 45,
+    tipAmount: 5,
+    taxAmount: 4.05,
+    totalAmount: 54.05,
+    clientNotes: "Regular haircut",
+    reminderSent: false,
+    confirmationSent: true,
+    confirmedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     statusHistory: []
@@ -65,17 +73,45 @@ const mockAppointmentsData: Appointment[] = [
     serviceId: "service-2",
     shopId: "shop-1",
     date: "2024-09-18",
-    time: "14:00",
     startTime: "14:00",
     endTime: "16:00",
     duration: 120,
     status: "requested",
-    paymentStatus: "pending",
-    totalAmount: 150,
-    serviceAmount: 150,
-    notes: "Color and highlights - please use organic products",
+    paymentStatus: "paid",
+    serviceAmount: 135,
+    tipAmount: 0,
+    taxAmount: 12.15,
+    totalAmount: 147.15,
+    clientNotes: "Color and highlights - please use organic products",
+    reminderSent: false,
+    confirmationSent: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    statusHistory: []
+  },
+  {
+    id: "3",
+    clientId: "client-1",
+    providerId: "provider-2",
+    serviceId: "service-3",
+    shopId: "shop-2",
+    date: "2024-09-20",
+    startTime: "10:00",
+    endTime: "10:45",
+    duration: 45,
+    status: "in-progress",
+    paymentStatus: "paid",
+    serviceAmount: 60,
+    tipAmount: 12,
+    taxAmount: 5.40,
+    totalAmount: 77.40,
+    clientNotes: "Beard trim and styling",
+    reminderSent: true,
+    confirmationSent: true,
+    confirmedAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+    startedAt: new Date(Date.now() - 1800000).toISOString(), // 30 min ago
+    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+    updatedAt: new Date(Date.now() - 1800000).toISOString(),
     statusHistory: []
   }
 ];
@@ -170,18 +206,25 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     }
   }, []);
 
-  // Create status change record for audit trail
-  const createStatusChange = useCallback((appointmentId: string, fromStatus: AppointmentStatus | null, toStatus: AppointmentStatus, reason?: string): AppointmentStatusChange => {
-    return {
-      id: `status-change-${Date.now()}`,
+  // Create status change record using TheCut-style state machine
+  const createStatusChange = useCallback((
+    appointmentId: string, 
+    fromStatus: AppointmentStatus | null, 
+    toStatus: AppointmentStatus, 
+    action: keyof typeof APPOINTMENT_PERMISSIONS,
+    reason?: string,
+    metadata?: Record<string, any>
+  ): AppointmentStatusChange => {
+    return AppointmentStateMachine.createStatusChange(
       appointmentId,
       fromStatus,
       toStatus,
-      changedBy: user?.id || 'unknown',
-      changedByRole: user?.role || 'client',
+      user?.id || 'unknown',
+      user?.role || 'client',
+      action,
       reason,
-      timestamp: new Date().toISOString()
-    };
+      metadata
+    );
   }, [user]);
 
   // Create notification for real-time updates
@@ -198,32 +241,78 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     };
   }, []);
 
-  // Update appointment status with audit trail and notifications
+  // Update appointment status with TheCut-style state machine validation
   const updateAppointmentStatus = useCallback(async (
     appointmentId: string, 
     newStatus: AppointmentStatus, 
+    action: keyof typeof APPOINTMENT_PERMISSIONS,
     reason?: string,
-    notes?: string
+    notes?: string,
+    metadata?: Record<string, any>
   ) => {
     const appointment = appointments.find(apt => apt.id === appointmentId);
     if (!appointment) {
       console.error('Appointment not found:', appointmentId);
-      return;
+      throw new Error('Appointment not found');
     }
 
-    const statusChange = createStatusChange(appointmentId, appointment.status, newStatus, reason);
+    // Validate transition using state machine
+    const validation = AppointmentStateMachine.validateTransition(
+      appointment,
+      newStatus,
+      user?.role || 'client',
+      action
+    );
+
+    if (!validation.valid) {
+      console.error('Invalid appointment transition:', validation.error);
+      throw new Error(validation.error);
+    }
+
+    const statusChange = createStatusChange(
+      appointmentId, 
+      appointment.status, 
+      newStatus, 
+      action,
+      reason,
+      metadata
+    );
     
+    const now = new Date().toISOString();
     const updatedAppointments = appointments.map(apt => {
       if (apt.id === appointmentId) {
-        return {
-          ...apt,
+        const updates: Partial<Appointment> = {
           status: newStatus,
-          updatedAt: new Date().toISOString(),
-          statusHistory: [...apt.statusHistory, statusChange],
-          ...(notes && { notes }),
-          ...(newStatus === 'cancelled' && reason && { cancellationReason: reason }),
-          ...(newStatus === 'no-show' && reason && { noShowReason: reason })
+          updatedAt: now,
+          statusHistory: [...apt.statusHistory, statusChange]
         };
+
+        // Add status-specific updates
+        if (newStatus === 'confirmed') {
+          updates.confirmedAt = now;
+          updates.confirmationSent = false; // Will be sent by notification service
+        } else if (newStatus === 'in-progress') {
+          updates.startedAt = now;
+        } else if (newStatus === 'completed') {
+          updates.completedAt = now;
+        } else if (newStatus === 'cancelled' && reason) {
+          updates.cancellationReason = reason;
+        } else if (newStatus === 'no-show' && reason) {
+          updates.noShowReason = reason;
+        } else if (newStatus === 'rescheduled' && reason) {
+          updates.rescheduleReason = reason;
+        }
+
+        // Add notes if provided
+        if (notes) {
+          if (user?.role === 'client') {
+            updates.clientNotes = notes;
+          } else if (user?.role === 'provider' || user?.role === 'owner') {
+            updates.providerNotes = notes;
+          }
+        }
+
+        return { ...apt, ...updates };
       }
       return apt;
     });
@@ -231,8 +320,8 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     setAppointments(updatedAppointments);
     await saveAppointments(updatedAppointments);
 
-    console.log('Updated appointment status:', appointmentId, newStatus);
-  }, [appointments, createStatusChange, saveAppointments]);
+    console.log('Updated appointment status:', appointmentId, `${appointment.status} -> ${newStatus}`);
+  }, [appointments, createStatusChange, saveAppointments, user]);
 
   // Role-Based UI (RBUI) - appointment filtering
   const getAppointmentsForUser = useCallback((userRole: UserRole, userId: string) => {
@@ -263,15 +352,28 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     }));
   }, [getAppointmentsForUser, user]);
 
-  // Request new appointment (Client Flow)
-  const requestAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'statusHistory'>) => {
+  // Request new appointment (Client Flow) - TheCut style
+  const requestAppointment = useCallback(async (
+    appointmentData: Omit<Appointment, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'statusHistory'>
+  ) => {
+    const now = new Date().toISOString();
+    const appointmentId = `appointment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const statusChange = createStatusChange(
+      appointmentId,
+      null,
+      'requested',
+      'request',
+      'New appointment request created'
+    );
+
     const newAppointment: Appointment = {
       ...appointmentData,
-      id: `appointment-${Date.now()}`,
+      id: appointmentId,
       status: 'requested',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      statusHistory: []
+      createdAt: now,
+      updatedAt: now,
+      statusHistory: [statusChange]
     };
     
     const updatedAppointments = [...appointments, newAppointment];
@@ -280,15 +382,18 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     
     console.log('Created new appointment request:', newAppointment.id);
     return newAppointment;
-  }, [appointments, saveAppointments]);
+  }, [appointments, saveAppointments, createStatusChange]);
 
-  // General appointment update function
+  // General appointment update function (non-status changes)
   const updateAppointment = useCallback(async (appointmentId: string, updates: Partial<Appointment>) => {
+    // Prevent status updates through this method - use updateAppointmentStatus instead
+    const { status, statusHistory, ...safeUpdates } = updates;
+    
     const updatedAppointments = appointments.map(apt => {
       if (apt.id === appointmentId) {
         return {
           ...apt,
-          ...updates,
+          ...safeUpdates,
           updatedAt: new Date().toISOString(),
         };
       }
@@ -298,24 +403,39 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     setAppointments(updatedAppointments);
     await saveAppointments(updatedAppointments);
     
-    console.log('Updated appointment:', appointmentId, updates);
+    console.log('Updated appointment (non-status):', appointmentId, safeUpdates);
   }, [appointments, saveAppointments]);
 
-  // Convenience methods for common status updates
-  const confirmAppointment = useCallback(async (appointmentId: string) => {
-    await updateAppointmentStatus(appointmentId, 'confirmed');
+  // TheCut-style convenience methods for common status updates
+  const confirmAppointment = useCallback(async (appointmentId: string, notes?: string) => {
+    await updateAppointmentStatus(appointmentId, 'confirmed', 'confirm', undefined, notes);
   }, [updateAppointmentStatus]);
 
-  const cancelAppointment = useCallback(async (appointmentId: string, reason?: string) => {
-    await updateAppointmentStatus(appointmentId, 'cancelled', reason);
+  const startAppointment = useCallback(async (appointmentId: string, notes?: string) => {
+    await updateAppointmentStatus(appointmentId, 'in-progress', 'start', undefined, notes);
   }, [updateAppointmentStatus]);
 
-  const completeAppointment = useCallback(async (appointmentId: string) => {
-    await updateAppointmentStatus(appointmentId, 'completed');
+  const completeAppointment = useCallback(async (appointmentId: string, tipAmount?: number, notes?: string) => {
+    const metadata = tipAmount ? { tipAmount } : undefined;
+    await updateAppointmentStatus(appointmentId, 'completed', 'complete', undefined, notes, metadata);
   }, [updateAppointmentStatus]);
 
-  const markNoShow = useCallback(async (appointmentId: string, reason?: string) => {
-    await updateAppointmentStatus(appointmentId, 'no-show', reason);
+  const cancelAppointment = useCallback(async (appointmentId: string, reason?: string, notes?: string) => {
+    await updateAppointmentStatus(appointmentId, 'cancelled', 'cancel', reason, notes);
+  }, [updateAppointmentStatus]);
+
+  const markNoShow = useCallback(async (appointmentId: string, reason?: string, notes?: string) => {
+    await updateAppointmentStatus(appointmentId, 'no-show', 'mark_no_show', reason, notes);
+  }, [updateAppointmentStatus]);
+
+  const rescheduleAppointment = useCallback(async (
+    appointmentId: string, 
+    reason?: string, 
+    newDate?: string, 
+    newStartTime?: string
+  ) => {
+    const metadata = { newDate, newStartTime };
+    await updateAppointmentStatus(appointmentId, 'rescheduled', 'reschedule', reason, undefined, metadata);
   }, [updateAppointmentStatus]);
 
   // Mark notification as read
@@ -349,22 +469,22 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
         serviceName: `Service ${apt.serviceId}`,
         date: apt.date,
         time: apt.startTime,
-        duration: 60,
-        price: 50,
-        notes: apt.notes,
+        duration: apt.duration,
+        price: apt.serviceAmount,
+        notes: apt.clientNotes,
         status: 'requested' as const,
         createdAt: apt.createdAt,
       }));
   }, [appointments, user]);
 
   // Confirm booking request (converts to confirmed appointment)
-  const confirmBookingRequest = useCallback(async (requestId: string) => {
-    await updateAppointmentStatus(requestId, 'confirmed');
+  const confirmBookingRequest = useCallback(async (requestId: string, notes?: string) => {
+    await updateAppointmentStatus(requestId, 'confirmed', 'confirm', undefined, notes);
   }, [updateAppointmentStatus]);
 
   // Decline booking request (converts to cancelled appointment)
-  const declineBookingRequest = useCallback(async (requestId: string) => {
-    await updateAppointmentStatus(requestId, 'cancelled', 'Declined by provider');
+  const declineBookingRequest = useCallback(async (requestId: string, reason?: string) => {
+    await updateAppointmentStatus(requestId, 'cancelled', 'cancel', reason || 'Declined by provider');
   }, [updateAppointmentStatus]);
 
   const contextValue = useMemo(() => {
@@ -380,9 +500,11 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
       updateAppointment: updateAppointment || (() => Promise.resolve()),
       updateAppointmentStatus: updateAppointmentStatus || (() => Promise.resolve()),
       confirmAppointment: confirmAppointment || (() => Promise.resolve()),
-      cancelAppointment: cancelAppointment || (() => Promise.resolve()),
+      startAppointment: startAppointment || (() => Promise.resolve()),
       completeAppointment: completeAppointment || (() => Promise.resolve()),
+      cancelAppointment: cancelAppointment || (() => Promise.resolve()),
       markNoShow: markNoShow || (() => Promise.resolve()),
+      rescheduleAppointment: rescheduleAppointment || (() => Promise.resolve()),
       // Booking requests (for compatibility)
       bookingRequests: bookingRequests || [],
       confirmBookingRequest: confirmBookingRequest || (() => Promise.resolve()),
@@ -414,9 +536,11 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     updateAppointment,
     updateAppointmentStatus,
     confirmAppointment,
-    cancelAppointment,
+    startAppointment,
     completeAppointment,
+    cancelAppointment,
     markNoShow,
+    rescheduleAppointment,
     bookingRequests,
     confirmBookingRequest,
     declineBookingRequest,
@@ -448,9 +572,11 @@ export function useAppointments(): ReturnType<typeof useAppointmentsInternal> {
       updateAppointment: noop,
       updateAppointmentStatus: noop,
       confirmAppointment: noop,
-      cancelAppointment: noop,
+      startAppointment: noop,
       completeAppointment: noop,
+      cancelAppointment: noop,
       markNoShow: noop,
+      rescheduleAppointment: noop,
       bookingRequests: [],
       confirmBookingRequest: noop,
       declineBookingRequest: noop,
@@ -539,9 +665,11 @@ export function useProviderAppointments() {
     todaysAppointments,
     appointmentNotifications,
     confirmAppointment: context.confirmAppointment,
-    cancelAppointment: context.cancelAppointment,
+    startAppointment: context.startAppointment,
     completeAppointment: context.completeAppointment,
+    cancelAppointment: context.cancelAppointment,
     markNoShow: context.markNoShow,
+    rescheduleAppointment: context.rescheduleAppointment,
   };
 }
 

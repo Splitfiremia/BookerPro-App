@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
-import { CheckCircle, X, Clock, AlertCircle, Calendar } from 'lucide-react-native';
+import { CheckCircle, X, Clock, AlertCircle, Calendar, Play, Square } from 'lucide-react-native';
 import { useAppointments, APPOINTMENT_COLORS } from '@/providers/AppointmentProvider';
-import { Appointment, AppointmentStatus } from '@/models/database';
+import { Appointment, AppointmentStatus, APPOINTMENT_PERMISSIONS } from '@/models/database';
 import { useAuth } from '@/providers/AuthProvider';
+import { AppointmentStateMachine } from '@/utils/bookingService';
 
 interface AppointmentStatusManagerProps {
   appointment: Appointment;
@@ -25,8 +26,12 @@ export const AppointmentStatusManager: React.FC<AppointmentStatusManagerProps> =
   const [pendingStatus, setPendingStatus] = useState<AppointmentStatus | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleStatusChange = async (newStatus: AppointmentStatus, requiresReason = false) => {
-    console.log('Attempting status change:', appointment.id, newStatus);
+  const handleStatusChange = async (
+    newStatus: AppointmentStatus, 
+    action: keyof typeof APPOINTMENT_PERMISSIONS,
+    requiresReason = false
+  ) => {
+    console.log('Attempting status change:', appointment.id, `${appointment.status} -> ${newStatus}`);
     
     if (requiresReason) {
       setPendingStatus(newStatus);
@@ -36,12 +41,12 @@ export const AppointmentStatusManager: React.FC<AppointmentStatusManagerProps> =
 
     setIsLoading(true);
     try {
-      await updateAppointmentStatus(appointment.id, newStatus);
+      await updateAppointmentStatus(appointment.id, newStatus, action);
       onStatusChange?.(newStatus);
       console.log('Status updated successfully:', newStatus);
     } catch (error) {
       console.error('Error updating appointment status:', error);
-      Alert.alert('Error', 'Failed to update appointment status. Please try again.');
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to update appointment status. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -50,9 +55,25 @@ export const AppointmentStatusManager: React.FC<AppointmentStatusManagerProps> =
   const handleReasonSubmit = async () => {
     if (!pendingStatus) return;
 
+    // Determine the action based on the target status
+    let action: keyof typeof APPOINTMENT_PERMISSIONS;
+    switch (pendingStatus) {
+      case 'cancelled':
+        action = 'cancel';
+        break;
+      case 'no-show':
+        action = 'mark_no_show';
+        break;
+      case 'rescheduled':
+        action = 'reschedule';
+        break;
+      default:
+        action = 'cancel'; // fallback
+    }
+
     setIsLoading(true);
     try {
-      await updateAppointmentStatus(appointment.id, pendingStatus, reason);
+      await updateAppointmentStatus(appointment.id, pendingStatus, action, reason);
       onStatusChange?.(pendingStatus);
       setShowReasonModal(false);
       setReason('');
@@ -60,124 +81,64 @@ export const AppointmentStatusManager: React.FC<AppointmentStatusManagerProps> =
       console.log('Status updated with reason:', pendingStatus, reason);
     } catch (error) {
       console.error('Error updating appointment status:', error);
-      Alert.alert('Error', 'Failed to update appointment status. Please try again.');
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to update appointment status. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Role-based action permissions with unified data model
+  // TheCut-style role-based action permissions using state machine
   const getAvailableActions = () => {
-    const actions: Array<{
-      status: AppointmentStatus;
-      label: string;
-      icon: React.ReactNode;
-      color: string;
-      requiresReason?: boolean;
-    }> = [];
+    if (!user) return [];
 
-    if (!user) return actions;
+    // Get available actions from the state machine
+    const machineActions = AppointmentStateMachine.getAvailableActions(
+      appointment.status,
+      user.role
+    );
 
-    const currentStatus = appointment.status;
-    const userRole = user.role;
-
-    // Client Flow: Discovery and Booking
-    if (userRole === 'client') {
-      if (currentStatus === 'requested' || currentStatus === 'confirmed') {
-        actions.push({
-          status: 'cancelled',
-          label: 'Cancel',
-          icon: <X size={16} color="#fff" />,
-          color: APPOINTMENT_COLORS.cancelled,
-          requiresReason: true
-        });
+    // Map state machine actions to UI actions with icons
+    return machineActions.map(machineAction => {
+      let icon: React.ReactNode;
+      let label = machineAction.label;
+      
+      switch (machineAction.action) {
+        case 'confirm':
+          icon = <CheckCircle size={16} color="#fff" />;
+          break;
+        case 'start':
+          icon = <Play size={16} color="#fff" />;
+          label = 'Start Service';
+          break;
+        case 'complete':
+          icon = <CheckCircle size={16} color="#fff" />;
+          label = 'Complete';
+          break;
+        case 'cancel':
+          icon = <X size={16} color="#fff" />;
+          label = appointment.status === 'requested' ? 'Decline' : 'Cancel';
+          break;
+        case 'mark_no_show':
+          icon = <AlertCircle size={16} color="#fff" />;
+          label = 'No-Show';
+          break;
+        case 'reschedule':
+          icon = <Calendar size={16} color="#fff" />;
+          label = 'Reschedule';
+          break;
+        default:
+          icon = <Square size={16} color="#fff" />;
       }
-    }
 
-    // Provider Flow: Request Management and Schedule Control
-    if (userRole === 'provider') {
-      if (currentStatus === 'requested') {
-        actions.push(
-          {
-            status: 'confirmed',
-            label: 'Confirm',
-            icon: <CheckCircle size={16} color="#fff" />,
-            color: APPOINTMENT_COLORS.confirmed
-          },
-          {
-            status: 'cancelled',
-            label: 'Decline',
-            icon: <X size={16} color="#fff" />,
-            color: APPOINTMENT_COLORS.cancelled,
-            requiresReason: true
-          }
-        );
-      } else if (currentStatus === 'confirmed') {
-        actions.push(
-          {
-            status: 'completed',
-            label: 'Complete',
-            icon: <CheckCircle size={16} color="#fff" />,
-            color: APPOINTMENT_COLORS.completed
-          },
-          {
-            status: 'no-show',
-            label: 'No-show',
-            icon: <AlertCircle size={16} color="#fff" />,
-            color: APPOINTMENT_COLORS['no-show'],
-            requiresReason: true
-          },
-          {
-            status: 'cancelled',
-            label: 'Cancel',
-            icon: <X size={16} color="#fff" />,
-            color: APPOINTMENT_COLORS.cancelled,
-            requiresReason: true
-          }
-        );
-      }
-    }
-
-    // Shop Owner Flow: Oversight and Business Intelligence
-    if (userRole === 'owner') {
-      if (showAllActions) {
-        if (currentStatus === 'requested') {
-          actions.push(
-            {
-              status: 'confirmed',
-              label: 'Override Confirm',
-              icon: <CheckCircle size={16} color="#fff" />,
-              color: APPOINTMENT_COLORS.confirmed
-            },
-            {
-              status: 'cancelled',
-              label: 'Override Cancel',
-              icon: <X size={16} color="#fff" />,
-              color: APPOINTMENT_COLORS.cancelled,
-              requiresReason: true
-            }
-          );
-        } else if (currentStatus === 'confirmed') {
-          actions.push(
-            {
-              status: 'completed',
-              label: 'Mark Complete',
-              icon: <CheckCircle size={16} color="#fff" />,
-              color: APPOINTMENT_COLORS.completed
-            },
-            {
-              status: 'no-show',
-              label: 'Mark No-show',
-              icon: <AlertCircle size={16} color="#fff" />,
-              color: APPOINTMENT_COLORS['no-show'],
-              requiresReason: true
-            }
-          );
-        }
-      }
-    }
-
-    return actions;
+      return {
+        status: machineAction.targetStatus,
+        action: machineAction.action,
+        label,
+        icon,
+        color: APPOINTMENT_COLORS[machineAction.targetStatus],
+        requiresReason: machineAction.requiresReason
+      };
+    });
   };
 
   const availableActions = getAvailableActions();
@@ -195,7 +156,7 @@ export const AppointmentStatusManager: React.FC<AppointmentStatusManagerProps> =
               <TouchableOpacity
                 key={action.status}
                 style={[styles.compactActionButton, { backgroundColor: action.color }]}
-                onPress={() => handleStatusChange(action.status, action.requiresReason)}
+                onPress={() => handleStatusChange(action.status, action.action, action.requiresReason)}
                 disabled={isLoading}
                 testID={`compact-action-${action.status}`}
               >
@@ -208,8 +169,8 @@ export const AppointmentStatusManager: React.FC<AppointmentStatusManagerProps> =
     );
   }
 
-  // Read-only status display for completed/cancelled appointments or when no actions available
-  if (availableActions.length === 0 || ['completed', 'cancelled', 'no-show'].includes(appointment.status)) {
+  // Read-only status display for terminal states or when no actions available
+  if (availableActions.length === 0 || ['completed', 'cancelled', 'no-show', 'rescheduled'].includes(appointment.status)) {
     return (
       <View style={styles.statusContainer}>
         <View style={[styles.statusBadge, { backgroundColor: APPOINTMENT_COLORS[appointment.status] }]}>
@@ -220,6 +181,9 @@ export const AppointmentStatusManager: React.FC<AppointmentStatusManagerProps> =
         )}
         {appointment.noShowReason && (
           <Text style={styles.reasonText}>No-show: {appointment.noShowReason}</Text>
+        )}
+        {appointment.rescheduleReason && (
+          <Text style={styles.reasonText}>Rescheduled: {appointment.rescheduleReason}</Text>
         )}
         {appointment.statusHistory.length > 1 && (
           <Text style={styles.historyText}>
@@ -251,7 +215,7 @@ export const AppointmentStatusManager: React.FC<AppointmentStatusManagerProps> =
                   backgroundColor: isLoading ? '#F5F5F5' : action.color
                 }
               ]}
-              onPress={() => handleStatusChange(action.status, action.requiresReason)}
+              onPress={() => handleStatusChange(action.status, action.action, action.requiresReason)}
               disabled={isLoading}
               testID={`action-${action.status}`}
             >
@@ -277,7 +241,8 @@ export const AppointmentStatusManager: React.FC<AppointmentStatusManagerProps> =
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
               {pendingStatus === 'cancelled' ? 'Cancellation Reason' : 
-               pendingStatus === 'no-show' ? 'No-show Reason' : 'Reason'}
+               pendingStatus === 'no-show' ? 'No-show Reason' : 
+               pendingStatus === 'rescheduled' ? 'Reschedule Reason' : 'Reason'}
             </Text>
             <Text style={styles.modalSubtitle}>
               Please provide a reason for this action (optional)
