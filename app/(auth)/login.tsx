@@ -155,11 +155,11 @@ export default function LoginScreen() {
             <View style={styles.logoContainer}>
               <Image
                 testID="login-logo"
-                source={{ uri: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/0sulh1gnicqeoihtkeijs" }}
+                source={{ uri: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/2r2wyb8cwd2xsx67p4v3d" }}
                 style={styles.logoImage}
                 resizeMode="contain"
                 accessible={true}
-                accessibilityLabel="A2Z Calendar Logo"
+                accessibilityLabel="BookerPro Logo"
               />
             </View>
             <Text style={styles.title}>Welcome Back</Text>
@@ -262,10 +262,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   logoImage: {
-    width: '90%',
-    maxWidth: 450,
-    height: undefined,
-    aspectRatio: 340/130,
+    width: 280,
+    height: 160,
     resizeMode: 'contain',
   },
   title: {
