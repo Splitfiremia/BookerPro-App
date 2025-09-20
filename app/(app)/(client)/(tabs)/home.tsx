@@ -1,20 +1,18 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
+  TextInput,
   TouchableOpacity,
   Image,
   FlatList,
   StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-
-
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
-import { MapPin, Filter, Star, CreditCard, Heart } from 'lucide-react-native';
+import { Search, MapPin, Filter, Star, CreditCard, Heart } from 'lucide-react-native';
 import { mockProviders } from '@/mocks/providers';
 import { useSocial } from '@/providers/SocialProvider';
 import { router } from 'expo-router';
@@ -59,84 +57,19 @@ const filterOptions = [
   { id: 'accepts', label: 'Accepts', icon: null },
 ];
 
-interface LocationCoordinates {
-  lat: number;
-  lng: number;
-}
-
-function HomeScreenContent() {
+export default function HomeScreen() {
+  const [searchText, setSearchText] = useState<string>('');
   const [selectedFilter, setSelectedFilter] = useState<string>('nearby');
   const [locationEnabled, setLocationEnabled] = useState<boolean>(false);
-  const [nearbyProviders, setNearbyProviders] = useState<typeof mockProviders>([]);
-  const [isLoadingProviders, setIsLoadingProviders] = useState<boolean>(false);
-  const [selectedLocation, setSelectedLocation] = useState<string>('');
   const insets = useSafeAreaInsets();
   const { getFollowedCount } = useSocial();
 
   // Simulate location permission check
-  useEffect(() => {
+  React.useEffect(() => {
     // In a real app, you would check location permissions here
     // For now, we'll show the location unavailable state
     setLocationEnabled(false);
   }, []);
-
-  const fetchProvidersNearby = useCallback(async (location: LocationCoordinates, placeName?: string) => {
-    if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') {
-      console.error('Invalid location coordinates provided');
-      return;
-    }
-    
-    const sanitizedPlaceName = placeName?.trim().slice(0, 200) || '';
-    console.log('Fetching providers near:', location, 'Place:', sanitizedPlaceName);
-    setIsLoadingProviders(true);
-    
-    try {
-      // TODO: Replace with real backend API call when ready
-      // const response = await fetch(`/api/providers/nearby?lat=${location.lat}&lng=${location.lng}`);
-      // const providers = await response.json();
-      
-      // For now, simulate with mock data and add distance
-      const simulatedProviders = mockProviders.map(provider => ({
-        ...provider,
-        distanceText: `${(Math.random() * 5 + 0.5).toFixed(1)} mi`,
-        distance: Math.random() * 5 + 0.5
-      })).sort((a, b) => a.distance - b.distance);
-      
-      setNearbyProviders(simulatedProviders);
-      setLocationEnabled(true);
-      if (sanitizedPlaceName) {
-        setSelectedLocation(sanitizedPlaceName);
-      }
-      
-      console.log(`Found ${simulatedProviders.length} providers near ${sanitizedPlaceName || 'selected location'}`);
-    } catch (error) {
-      console.error('Error fetching nearby providers:', error);
-    } finally {
-      setIsLoadingProviders(false);
-    }
-  }, []);
-
-  const handlePlaceSelect = useCallback((data: any, details: any) => {
-    if (!data?.description) {
-      console.warn('Invalid place data received');
-      return;
-    }
-    
-    console.log('Place selected:', data.description);
-    console.log('Place details:', details);
-    
-    if (details?.geometry?.location?.lat && details?.geometry?.location?.lng) {
-      const location: LocationCoordinates = {
-        lat: details.geometry.location.lat,
-        lng: details.geometry.location.lng
-      };
-      fetchProvidersNearby(location, data.description);
-    } else {
-      console.warn('No location details available for selected place');
-    }
-  }, [fetchProvidersNearby]);
-
-
 
   const renderShopCard = ({ item }: { item: Shop }) => (
     <TouchableOpacity style={styles.shopCard}>
@@ -197,99 +130,20 @@ function HomeScreenContent() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
         <View style={styles.searchContainer}>
-          <GooglePlacesAutocomplete
-            placeholder="Search for locations, stylists, or services"
-            onPress={handlePlaceSelect}
-            query={{
-              key: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY,
-              language: 'en',
-              types: 'establishment',
-              components: 'country:us',
-            }}
-            fetchDetails={true}
-            enablePoweredByContainer={false}
-            requestUrl={{
-              url: 'https://maps.googleapis.com/maps/api/place/autocomplete/json',
-              useOnPlatform: 'web',
-            }}
-            styles={{
-              container: {
-                flex: 1,
-              },
-              textInputContainer: {
-                backgroundColor: 'transparent',
-                borderTopWidth: 0,
-                borderBottomWidth: 0,
-                paddingHorizontal: 0,
-                marginHorizontal: 0,
-              },
-              textInput: {
-                backgroundColor: 'transparent',
-                color: COLORS.white,
-                fontSize: FONT_SIZES.md,
-                fontFamily: FONTS.regular,
-                paddingLeft: 0,
-                paddingRight: 0,
-                marginLeft: 0,
-                marginRight: 0,
-                height: 48,
-                borderWidth: 0,
-              },
-              listView: {
-                backgroundColor: COLORS.card,
-                borderRadius: BORDER_RADIUS.md,
-                marginTop: 4,
-                elevation: 5,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 4,
-              },
-              row: {
-                backgroundColor: COLORS.card,
-                paddingHorizontal: SPACING.md,
-                paddingVertical: SPACING.sm,
-                borderBottomWidth: 1,
-                borderBottomColor: COLORS.gray,
-              },
-              description: {
-                color: COLORS.white,
-                fontSize: FONT_SIZES.sm,
-                fontFamily: FONTS.regular,
-              },
-              predefinedPlacesDescription: {
-                color: COLORS.lightGray,
-              },
-            }}
-            textInputProps={{
-              placeholderTextColor: COLORS.lightGray,
-              returnKeyType: 'search',
-            }}
-            debounce={300}
-            minLength={2}
-            onFail={(error) => {
-              console.error('Google Places API Error:', error);
-              console.error('API Key:', process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY ? 'Present' : 'Missing');
-            }}
-            onNotFound={() => {
-              console.log('No results found');
-            }}
-            nearbyPlacesAPI="GooglePlacesSearch"
-            GooglePlacesSearchQuery={{
-              rankby: 'distance',
-            }}
-            timeout={20000}
-            keepResultsAfterBlur={true}
+          <Search size={20} color={COLORS.lightGray} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search"
+            placeholderTextColor={COLORS.lightGray}
+            value={searchText}
+            onChangeText={setSearchText}
           />
-
         </View>
         
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.locationContainer}>
             <MapPin size={16} color={COLORS.lightGray} />
-            <Text style={styles.locationText}>
-              {selectedLocation || 'Current Location'}
-            </Text>
+            <Text style={styles.locationText}>Current Location</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -390,29 +244,17 @@ function HomeScreenContent() {
 
           {/* Providers Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {nearbyProviders.length > 0 ? 'NEARBY PROVIDERS' : 'PROVIDERS'}
-            </Text>
-            {isLoadingProviders ? (
-              <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Finding providers near you...</Text>
+            <Text style={styles.sectionTitle}>PROVIDERS</Text>
+            {mockProviders.slice(0, 3).map((provider) => (
+              <View key={provider.id}>
+                {renderProviderCard({ item: provider })}
               </View>
-            ) : (
-              (nearbyProviders.length > 0 ? nearbyProviders : mockProviders).slice(0, 3).map((provider) => (
-                <View key={provider.id}>
-                  {renderProviderCard({ item: provider })}
-                </View>
-              ))
-            )}
+            ))}
           </View>
         </ScrollView>
       )}
     </View>
   );
-}
-
-export default function HomeScreen() {
-  return <HomeScreenContent />;
 }
 
 const styles = StyleSheet.create({
@@ -432,10 +274,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     marginBottom: SPACING.md,
     height: 48,
-    position: 'relative',
-    zIndex: 1,
   },
-
+  searchIcon: {
+    marginRight: SPACING.sm,
+  },
+  searchInput: {
+    flex: 1,
+    color: COLORS.white,
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.regular,
+  },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -478,7 +326,6 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md,
     fontFamily: FONTS.regular,
     marginLeft: SPACING.xs,
-    maxWidth: 200,
   },
   filtersContainer: {
     paddingBottom: SPACING.md,
@@ -697,28 +544,5 @@ const styles = StyleSheet.create({
     color: COLORS.lightGray,
     fontSize: FONT_SIZES.sm,
     fontFamily: FONTS.regular,
-  },
-  loadingContainer: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xl,
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: COLORS.lightGray,
-    fontSize: FONT_SIZES.md,
-    fontFamily: FONTS.regular,
-    textAlign: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-  },
-  errorText: {
-    color: COLORS.white,
-    fontSize: FONT_SIZES.lg,
-    fontFamily: FONTS.regular,
-    textAlign: 'center',
   },
 });
