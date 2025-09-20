@@ -126,7 +126,13 @@ export default function ContentScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Manage Portfolio</Text>
-            <TouchableOpacity style={styles.addButton} onPress={pickImageForPortfolio}>
+            <TouchableOpacity
+              testID="add-portfolio-button"
+              accessibilityRole="button"
+              accessibilityLabel="Add photo to portfolio"
+              style={styles.addButton}
+              onPress={pickImageForPortfolio}
+            >
               <Plus size={20} color={COLORS.background} />
               <Text style={styles.addButtonText}>Add Photo</Text>
             </TouchableOpacity>
@@ -136,8 +142,14 @@ export default function ContentScreen() {
             <View style={styles.portfolioGrid}>
               {userPortfolio.map((item) => (
                 <View key={item.id} style={styles.portfolioItem}>
-                  <Image source={{ uri: item.imageUri }} style={styles.portfolioImage} />
+                  <Image
+                    source={{ uri: item.imageUri }}
+                    style={[styles.portfolioImage, { width: Math.floor((width - 48) / 3), height: Math.floor((width - 48) / 3) }]}
+                  />
                   <TouchableOpacity
+                    testID={`delete-portfolio-${item.id}`}
+                    accessibilityRole="button"
+                    accessibilityLabel="Remove portfolio image"
                     style={styles.deleteButton}
                     onPress={() => handleRemoveFromPortfolio(item.id)}
                   >
@@ -159,7 +171,13 @@ export default function ContentScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Create Post</Text>
           
-          <TouchableOpacity style={styles.imagePickerButton} onPress={pickImageForPost}>
+          <TouchableOpacity
+            testID="pick-post-image"
+            accessibilityRole="button"
+            accessibilityLabel="Select image for post"
+            style={styles.imagePickerButton}
+            onPress={pickImageForPost}
+          >
             {selectedPostImage ? (
               <Image source={{ uri: selectedPostImage }} style={styles.selectedPostImage} />
             ) : (
@@ -171,6 +189,7 @@ export default function ContentScreen() {
           </TouchableOpacity>
 
           <TextInput
+            testID="post-caption-input"
             style={styles.captionInput}
             placeholder="Write a caption for your post..."
             placeholderTextColor={COLORS.lightGray}
@@ -179,11 +198,15 @@ export default function ContentScreen() {
             multiline
             maxLength={500}
             textAlignVertical="top"
+            accessibilityLabel="Post caption"
           />
 
           <View style={styles.postActions}>
             <Text style={styles.characterCount}>{postCaption.length}/500</Text>
             <TouchableOpacity
+              testID="submit-post-button"
+              accessibilityRole="button"
+              accessibilityLabel="Create post"
               style={[
                 styles.postButton,
                 (!selectedPostImage || !postCaption.trim() || isCreatingPost) && styles.postButtonDisabled,

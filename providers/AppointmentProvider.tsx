@@ -429,8 +429,40 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
   return contextValue;
 });
 
-// Export the hook directly from createContextHook
-export const useAppointments = useAppointmentsInternal;
+// Robust hook wrapper to avoid undefined context usage
+export function useAppointments(): ReturnType<typeof useAppointmentsInternal> {
+  const ctx = useAppointmentsInternal();
+  if (!ctx) {
+    console.warn('useAppointments called outside of AppointmentProvider. Returning safe fallbacks.');
+
+    const noop = async () => Promise.resolve();
+    const noopReturnAppointment = async () => Promise.reject(new Error('AppointmentProvider is not mounted')) as Promise<Appointment>;
+
+    return {
+      appointments: [],
+      notifications: [],
+      unreadNotifications: [],
+      isLoading: false,
+      isInitialized: false,
+      requestAppointment: noopReturnAppointment,
+      updateAppointment: noop,
+      updateAppointmentStatus: noop,
+      confirmAppointment: noop,
+      cancelAppointment: noop,
+      completeAppointment: noop,
+      markNoShow: noop,
+      bookingRequests: [],
+      confirmBookingRequest: noop,
+      declineBookingRequest: noop,
+      getAppointmentsForUser: () => [],
+      getAppointmentsByStatus: () => [],
+      getAppointmentsWithColors: () => [],
+      markNotificationRead: noop,
+      APPOINTMENT_COLORS,
+    } as unknown as ReturnType<typeof useAppointmentsInternal>;
+  }
+  return ctx;
+}
 
 // Export the provider with the original name
 export const AppointmentProvider = AppointmentProviderInternal;

@@ -4,7 +4,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Star, MapPin, Clock, Calendar, Heart, UserPlus, MessageCircle, Share2, Grid3X3 } from "lucide-react-native";
 import { mockProviders } from "@/mocks/providers";
 import { useSocial } from "@/providers/SocialProvider";
-import type { ProviderPost } from "@/models/database";
 
 type TabType = 'services' | 'portfolio' | 'posts';
 
@@ -13,7 +12,7 @@ export default function ProviderDetailsScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState<TabType>('services');
-  const { isFollowing, followProvider, unfollowProvider } = useSocial();
+  const { isFollowing, followProvider, unfollowProvider, getProviderPosts } = useSocial();
 
   // Find provider from mock data
   const mockProvider = mockProviders.find(p => p.id === id);
@@ -35,75 +34,7 @@ export default function ProviderDetailsScreen() {
     followingCount: 89,
     postsCount: 156,
     isVerified: true,
-    posts: [
-      {
-        id: '1',
-        providerId: id as string,
-        imageUrl: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=400',
-        caption: 'Fresh fade for the weekend! ✂️ #barbershop #fade #freshcut',
-        tags: ['barbershop', 'fade', 'freshcut'],
-        likes: 89,
-        comments: [],
-        createdAt: '2024-01-15T10:30:00Z',
-        updatedAt: '2024-01-15T10:30:00Z'
-      },
-      {
-        id: '2',
-        providerId: id as string,
-        imageUrl: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=400',
-        caption: 'Precision beard work 🔥 Book your appointment today!',
-        tags: ['beard', 'precision', 'grooming'],
-        likes: 124,
-        comments: [],
-        createdAt: '2024-01-14T15:45:00Z',
-        updatedAt: '2024-01-14T15:45:00Z'
-      },
-      {
-        id: '3',
-        providerId: id as string,
-        imageUrl: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400',
-        caption: 'Before and after transformation! Amazing results 💯',
-        tags: ['transformation', 'beforeafter', 'haircut'],
-        likes: 203,
-        comments: [],
-        createdAt: '2024-01-13T09:20:00Z',
-        updatedAt: '2024-01-13T09:20:00Z'
-      },
-      {
-        id: '4',
-        providerId: id as string,
-        imageUrl: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400',
-        caption: 'Custom design work - bringing creativity to life! 🎨',
-        tags: ['design', 'creative', 'art'],
-        likes: 156,
-        comments: [],
-        createdAt: '2024-01-12T14:10:00Z',
-        updatedAt: '2024-01-12T14:10:00Z'
-      },
-      {
-        id: '5',
-        providerId: id as string,
-        imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400',
-        caption: 'Classic cut never goes out of style ✨',
-        tags: ['classic', 'timeless', 'style'],
-        likes: 78,
-        comments: [],
-        createdAt: '2024-01-11T11:30:00Z',
-        updatedAt: '2024-01-11T11:30:00Z'
-      },
-      {
-        id: '6',
-        providerId: id as string,
-        imageUrl: 'https://images.unsplash.com/photo-1566492031773-4f4e44671d66?w=400',
-        caption: 'Another satisfied client! Thank you for trusting me 🙏',
-        tags: ['satisfied', 'client', 'trust'],
-        likes: 92,
-        comments: [],
-        createdAt: '2024-01-10T16:45:00Z',
-        updatedAt: '2024-01-10T16:45:00Z'
-      }
-    ] as ProviderPost[]
-  };
+  } as const;
 
   const handleBookAppointment = () => {
     router.push(`/(app)/(client)/booking/select-service?providerId=${id}`);
@@ -169,25 +100,33 @@ export default function ProviderDetailsScreen() {
     </View>
   );
 
-  const renderPostsTab = () => (
-    <View style={styles.tabContent}>
-      <FlatList
-        data={provider.posts}
-        numColumns={3}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={[styles.postItem, { width: (width - 60) / 3 }]}>
-            <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
-            <View style={styles.postOverlay}>
-              <Heart size={12} color="#fff" />
-              <Text style={styles.postLikes}>{item.likes}</Text>
+  const renderPostsTab = () => {
+    const posts = getProviderPosts((id as string) || '');
+    return (
+      <View style={styles.tabContent}>
+        <FlatList
+          data={posts.map(p => ({ id: p.id, imageUrl: p.imageUri, likes: p.likes }))}
+          numColumns={3}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={[styles.postItem, { width: (width - 60) / 3 }]}>
+              <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+              <View style={styles.postOverlay}>
+                <Heart size={12} color="#fff" />
+                <Text style={styles.postLikes}>{item.likes}</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={(
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <Text style={{ color: '#666' }}>No posts yet</Text>
             </View>
-          </TouchableOpacity>
-        )}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
-  );
+          )}
+        />
+      </View>
+    );
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
