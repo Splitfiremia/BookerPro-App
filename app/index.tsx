@@ -21,13 +21,40 @@ export default function LandingScreen() {
   const [email, setEmail] = useState<string>("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
 
   // Log auth state for debugging
   useEffect(() => {
     console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode);
   }, [isAuthenticated, user, isDeveloperMode]);
 
-  // No loading screen needed - AuthProvider now initializes synchronously
+  // Handle initialization timeout
+  useEffect(() => {
+    const initTimeout = setTimeout(() => {
+      setIsInitializing(false);
+    }, 1000); // 1 second max for initialization
+    
+    return () => clearTimeout(initTimeout);
+  }, []);
+
+  // Show loading screen during initialization
+  if (isInitializing) {
+    return (
+      <ImageBackground
+        source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/wq1viwd4zpq35fb12j801' }}
+        style={styles.container}
+        resizeMode="cover"
+      >
+        <StatusBar barStyle="light-content" backgroundColor="#000000" />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.logo}>BookerPro</Text>
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
 
   const validateEmail = (email: string): boolean => {
     if (!email || typeof email !== 'string') return false;

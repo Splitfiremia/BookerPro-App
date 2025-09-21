@@ -20,6 +20,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: false,
       staleTime: 1000 * 60 * 5, // 5 minutes
+      networkMode: 'offlineFirst', // Prevent hanging on network issues
     },
   },
 });
@@ -41,14 +42,9 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  // Global fallback to prevent app from hanging during hydration
+  // Simplified initialization without timeout warnings
   React.useEffect(() => {
-    const globalTimeout = setTimeout(() => {
-      console.warn('Global timeout: App initialization taking too long, this may indicate a hydration issue');
-      // Don't force navigation here as it can cause more issues
-    }, 2000);
-    
-    return () => clearTimeout(globalTimeout);
+    console.log('RootLayout: App initialized');
   }, []);
   
   return (
@@ -56,20 +52,20 @@ export default function RootLayout() {
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <AppointmentProvider>
-              <PaymentProvider>
-                <SocialProvider>
-                  <WaitlistProvider>
-                    <OnboardingProvider>
+            <OnboardingProvider>
+              <AppointmentProvider>
+                <PaymentProvider>
+                  <SocialProvider>
+                    <WaitlistProvider>
                       <ServicesProvider>
                         <RootLayoutNav />
                         <ModeIndicator />
                       </ServicesProvider>
-                    </OnboardingProvider>
-                  </WaitlistProvider>
-                </SocialProvider>
-              </PaymentProvider>
-            </AppointmentProvider>
+                    </WaitlistProvider>
+                  </SocialProvider>
+                </PaymentProvider>
+              </AppointmentProvider>
+            </OnboardingProvider>
           </AuthProvider>
         </QueryClientProvider>
       </ErrorBoundary>

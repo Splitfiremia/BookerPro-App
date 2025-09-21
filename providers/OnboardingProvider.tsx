@@ -27,22 +27,20 @@ export const [OnboardingProvider, useOnboarding] = createContextHook(() => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false); // Use useState for consistency
 
-  // Load onboarding state on mount with timeout
+  // Load onboarding state synchronously to prevent timeout
   useEffect(() => {
     const loadOnboardingState = async () => {
       try {
-        // Quick timeout to prevent hanging
-        const loadWithTimeout = (promise: Promise<any>, timeout: number = 200) => {
-          return Promise.race([
-            promise,
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Timeout')), timeout)
-            )
-          ]);
-        };
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 100)
+        );
         
-        const storedState = await loadWithTimeout(AsyncStorage.getItem('onboardingState'));
-        if (storedState) {
+        const storedState = await Promise.race([
+          AsyncStorage.getItem('onboardingState'),
+          timeoutPromise
+        ]);
+        
+        if (storedState && typeof storedState === 'string') {
           const parsedState = JSON.parse(storedState);
           setState(prevState => ({
             ...prevState,
@@ -50,18 +48,11 @@ export const [OnboardingProvider, useOnboarding] = createContextHook(() => {
           }));
         }
       } catch (error) {
-        console.log('OnboardingProvider: Using default state due to timeout/error');
+        // Use default state on timeout/error
       }
     };
 
     loadOnboardingState();
-    
-    // Fallback timeout
-    const fallbackTimeout = setTimeout(() => {
-      console.warn('OnboardingProvider: Fallback timeout triggered');
-    }, 400);
-    
-    return () => clearTimeout(fallbackTimeout);
   }, []);
 
   // Save onboarding state when needed
