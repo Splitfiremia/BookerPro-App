@@ -8,11 +8,13 @@ import {
   Pressable,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MapPin, Info, Camera, User, Clock } from 'lucide-react-native';
+import { MapPin, Info, Camera, User, Clock, Share, Link } from 'lucide-react-native';
 import { COLORS, FONTS } from '@/constants/theme';
 import LocationEditor from '@/components/LocationEditor';
 import { useLocation, LocationData } from '@/providers/LocationProvider';
 import AlertModal from '@/components/AlertModal';
+import { generateProviderBookingLink } from '@/utils/bookingService';
+import { Share as RNShare } from 'react-native';
 
 export default function BioScreen() {
   const insets = useSafeAreaInsets();
@@ -26,6 +28,18 @@ export default function BioScreen() {
     type: 'success' | 'error' | 'warning' | 'info';
   }>({ visible: false, title: '', message: '', type: 'info' });
   const { locationData, saveLocationData } = useLocation();
+  
+  const handleShareBookingLink = async () => {
+    try {
+      const bookingLink = generateProviderBookingLink('provider-1', 'shop-1');
+      await RNShare.share({
+        message: `Book your appointment with ${providerName} directly: ${bookingLink}`,
+        url: bookingLink,
+      });
+    } catch (error) {
+      console.error('Error sharing booking link:', error);
+    }
+  };
   
   // Create separate functions for each tab to avoid linting issues
   const handleInfoPress = () => setActiveTab('info');
@@ -76,6 +90,12 @@ export default function BioScreen() {
         </View>
         <Text style={styles.brandName}>the Cut</Text>
         <Text style={styles.providerName}>{providerName}</Text>
+        
+        {/* TheCut-style Share Button */}
+        <TouchableOpacity style={styles.shareButton} onPress={handleShareBookingLink}>
+          <Link size={16} color={COLORS.background} />
+          <Text style={styles.shareButtonText}>Share Booking Link</Text>
+        </TouchableOpacity>
       </View>
       
       <View style={styles.tabContainer}>
@@ -315,5 +335,21 @@ const styles = StyleSheet.create({
     color: '#999',
     marginLeft: 4,
     fontFamily: FONTS.regular,
-  }
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
+    marginTop: 12,
+    gap: 8,
+  },
+  shareButtonText: {
+    color: COLORS.background,
+    fontSize: 14,
+    fontWeight: '600',
+    fontFamily: FONTS.bold,
+  },
 });

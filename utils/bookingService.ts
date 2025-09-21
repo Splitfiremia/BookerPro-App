@@ -898,6 +898,119 @@ export const getProviderAvailableSlotsWithReservations = (
 };
 
 // ============================================================================
+// THECUT-STYLE BOOKING LINKS
+// ============================================================================
+
+/**
+ * Generate a shareable booking link for a provider
+ */
+export const generateProviderBookingLink = (
+  providerId: string,
+  shopId?: string,
+  serviceId?: string
+): string => {
+  const baseUrl = 'https://bookerPro.app/book';
+  const params = new URLSearchParams({
+    provider: providerId,
+    ...(shopId && { shop: shopId }),
+    ...(serviceId && { service: serviceId })
+  });
+  
+  return `${baseUrl}?${params.toString()}`;
+};
+
+/**
+ * Parse booking link parameters
+ */
+export const parseBookingLink = (url: string): {
+  providerId?: string;
+  shopId?: string;
+  serviceId?: string;
+} => {
+  try {
+    const urlObj = new URL(url);
+    return {
+      providerId: urlObj.searchParams.get('provider') || undefined,
+      shopId: urlObj.searchParams.get('shop') || undefined,
+      serviceId: urlObj.searchParams.get('service') || undefined,
+    };
+  } catch {
+    return {};
+  }
+};
+
+/**
+ * TheCut-style instant booking (simplified flow)
+ */
+export const instantBookAppointment = async (
+  providerId: string,
+  serviceId: string,
+  date: string,
+  startTime: string,
+  clientId: string,
+  paymentData: {
+    totalAmount: number;
+    serviceAmount: number;
+    tipAmount?: number;
+    paymentMethod: string;
+  }
+): Promise<ConfirmationResult> => {
+  console.log('BookingService: Instant booking for provider', providerId);
+  
+  // Skip reservation step - directly create appointment
+  const appointmentId = `appointment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const now = new Date().toISOString();
+  const taxAmount = Math.round(paymentData.serviceAmount * 0.09 * 100) / 100;
+  
+  // Calculate end time (assume 30min default)
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const endDate = new Date();
+  endDate.setHours(hours, minutes + 30, 0, 0);
+  const endTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+  
+  const appointment: Appointment = {
+    id: appointmentId,
+    clientId,
+    providerId,
+    serviceId,
+    shopId: 'default-shop', // Could be derived from provider
+    date,
+    startTime,
+    endTime,
+    duration: 30,
+    status: 'confirmed', // TheCut style - directly confirmed
+    paymentStatus: 'paid',
+    serviceAmount: paymentData.serviceAmount,
+    tipAmount: paymentData.tipAmount || 0,
+    taxAmount,
+    totalAmount: paymentData.totalAmount,
+    reminderSent: false,
+    confirmationSent: true,
+    confirmedAt: now,
+    createdAt: now,
+    updatedAt: now,
+    statusHistory: [AppointmentStateMachine.createStatusChange(
+      appointmentId,
+      null,
+      'confirmed',
+      clientId,
+      'client',
+      'confirm',
+      'Instant booking via provider link'
+    )]
+  };
+  
+  mockAppointments.push(appointment);
+  
+  console.log('BookingService: Instant appointment created:', appointmentId);
+  
+  return {
+    success: true,
+    appointmentId
+  };
+};
+
+// ============================================================================
 // USAGE EXAMPLES AND INTEGRATION NOTES
 // ============================================================================
 
