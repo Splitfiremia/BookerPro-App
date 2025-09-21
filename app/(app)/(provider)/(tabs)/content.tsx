@@ -234,9 +234,10 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     padding: 16,
+    paddingBottom: 100,
   },
   section: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -311,13 +312,13 @@ const styles = StyleSheet.create({
   },
   selectedPostImage: {
     width: '100%',
-    height: 200,
+    height: 150,
     borderRadius: 12,
     backgroundColor: COLORS.card,
   },
   imagePickerPlaceholder: {
     width: '100%',
-    height: 200,
+    height: 150,
     borderRadius: 12,
     backgroundColor: COLORS.card,
     justifyContent: 'center',
@@ -339,7 +340,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.text,
     fontFamily: FONTS.regular,
-    minHeight: 100,
+    minHeight: 80,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
