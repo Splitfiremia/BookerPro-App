@@ -33,7 +33,7 @@ function RootLayoutNav() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(app)" options={{ headerShown: false }} />
-      <Stack.Screen name="unstuck" options={{ headerShown: false }} />
+
       <Stack.Screen name="onboarding-status" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" options={{ title: "Not Found", headerShown: true }} />
     </Stack>
