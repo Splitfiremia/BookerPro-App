@@ -17,46 +17,17 @@ import { useAuth } from "@/providers/AuthProvider";
 import { testUsers } from "@/mocks/users";
 
 export default function LandingScreen() {
-  const { isDeveloperMode, setDeveloperMode, login, logout, isAuthenticated, user, isLoading } = useAuth();
+  const { isDeveloperMode, setDeveloperMode, login, logout, isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
 
   // Log auth state for debugging
   useEffect(() => {
-    console.log('Index: Auth state - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode);
-  }, [isLoading, isAuthenticated, user, isDeveloperMode]);
+    console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode);
+  }, [isAuthenticated, user, isDeveloperMode]);
 
-  // Emergency fallback - if loading takes too long, show the main interface
-  const [emergencyFallback, setEmergencyFallback] = useState<boolean>(false);
-  
-  useEffect(() => {
-    const emergencyTimeout = setTimeout(() => {
-      console.warn('Emergency fallback triggered - bypassing loading state');
-      setEmergencyFallback(true);
-    }, 2000); // 2 second emergency fallback
-    
-    return () => clearTimeout(emergencyTimeout);
-  }, []);
-  
-  // Show loading if auth is still being determined (but not for too long)
-  if (isLoading && !emergencyFallback) {
-    return (
-      <ImageBackground
-        source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/wq1viwd4zpq35fb12j801' }}
-        style={styles.container}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.loadingContainer}>
-            <Text style={styles.logo}>BookerPro</Text>
-            <Text style={styles.loadingText}>Loading...</Text>
-            <Text style={styles.loadingSubtext}>Initializing app...</Text>
-          </View>
-        </SafeAreaView>
-      </ImageBackground>
-    );
-  }
+  // No loading screen needed - AuthProvider now initializes synchronously
 
   const validateEmail = (email: string): boolean => {
     if (!email || typeof email !== 'string') return false;

@@ -31,67 +31,81 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   // Always call hooks in the same order
   const [user, setUser] = useState<User | null>(null);
   const [isDeveloperMode, setIsDeveloperMode] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Start with false to prevent hydration timeout
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
-  // Initialize on mount with immediate timeout
+  // Initialize on mount with immediate timeout to prevent hydration issues
   useEffect(() => {
+    let isMounted = true;
+    
     const loadUserAndSettings = async () => {
+      if (!isMounted) return;
+      
       try {
         console.log('AuthProvider: Loading user and settings...');
         
-        // Very short timeout to prevent hanging
-        const loadWithTimeout = (promise: Promise<any>, timeout: number = 500) => {
-          return Promise.race([
-            promise,
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Timeout')), timeout)
-            )
-          ]);
-        };
+        // Load both in parallel with very short timeout
+        const [storedUser, storedDevMode] = await Promise.allSettled([
+          AsyncStorage.getItem("user"),
+          AsyncStorage.getItem("developerMode")
+        ]);
         
-        // Try to load user data quickly
-        try {
-          const storedUser = await loadWithTimeout(AsyncStorage.getItem("user"));
-          if (storedUser) {
-            const userData = JSON.parse(storedUser);
+        // Only update state if component is still mounted
+        if (!isMounted) return;
+        
+        // Handle user data
+        if (storedUser.status === 'fulfilled' && storedUser.value) {
+          try {
+            const userData = JSON.parse(storedUser.value);
             console.log('AuthProvider: Loaded stored user:', userData.email);
             setUser(userData);
+          } catch (error) {
+            console.log('AuthProvider: Error parsing stored user data');
           }
-        } catch (error) {
-          console.log('AuthProvider: No stored user or timeout');
         }
         
-        // Try to load developer mode quickly
-        try {
-          const storedDevMode = await loadWithTimeout(AsyncStorage.getItem("developerMode"));
-          if (storedDevMode) {
-            const devMode = JSON.parse(storedDevMode);
+        // Handle developer mode
+        if (storedDevMode.status === 'fulfilled' && storedDevMode.value) {
+          try {
+            const devMode = JSON.parse(storedDevMode.value);
             console.log('AuthProvider: Loaded developer mode:', devMode);
             setIsDeveloperMode(devMode);
+          } catch (error) {
+            console.log('AuthProvider: Error parsing developer mode data');
           }
-        } catch (error) {
-          console.log('AuthProvider: No stored dev mode or timeout');
         }
         
       } catch (error) {
         console.error("AuthProvider: Error loading settings:", error);
       } finally {
-        console.log('AuthProvider: Finished loading, setting isLoading to false');
-        setIsLoading(false);
+        if (isMounted) {
+          console.log('AuthProvider: Finished loading, setting isInitialized to true');
+          setIsInitialized(true);
+        }
       }
     };
     
-    // Load immediately
-    loadUserAndSettings();
+    // Start loading after a very short delay to allow hydration to complete
+    const initTimeout = setTimeout(() => {
+      if (isMounted) {
+        loadUserAndSettings();
+      }
+    }, 100);
     
-    // Very short fallback timeout
-    const fallbackTimeout = setTimeout(() => {
-      console.warn('AuthProvider: Fallback timeout triggered, forcing isLoading to false');
-      setIsLoading(false);
+    // Emergency fallback to prevent hanging
+    const emergencyTimeout = setTimeout(() => {
+      if (isMounted && !isInitialized) {
+        console.warn('AuthProvider: Emergency timeout triggered, forcing initialization');
+        setIsInitialized(true);
+      }
     }, 1000);
     
-    return () => clearTimeout(fallbackTimeout);
-  }, []);
+    return () => {
+      isMounted = false;
+      clearTimeout(initTimeout);
+      clearTimeout(emergencyTimeout);
+    };
+  }, [isInitialized]);
 
   // Set developer mode with persistence
   const setDeveloperMode = useCallback(async (value: boolean) => {

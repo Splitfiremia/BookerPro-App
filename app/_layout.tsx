@@ -41,11 +41,12 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  // Global fallback to prevent app from hanging
+  // Global fallback to prevent app from hanging during hydration
   React.useEffect(() => {
     const globalTimeout = setTimeout(() => {
-      console.warn('Global timeout: App may be stuck, forcing navigation to index');
-    }, 3000);
+      console.warn('Global timeout: App initialization taking too long, this may indicate a hydration issue');
+      // Don't force navigation here as it can cause more issues
+    }, 2000);
     
     return () => clearTimeout(globalTimeout);
   }, []);
