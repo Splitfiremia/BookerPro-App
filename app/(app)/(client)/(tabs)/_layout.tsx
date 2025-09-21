@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Calendar, User } from "lucide-react-native";
+import { Search, Calendar, User } from "lucide-react-native";
 import { COLORS } from "@/constants/theme";
 
 export default function ClientTabsLayout() {
@@ -27,16 +27,16 @@ export default function ClientTabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: "Discover",
           headerShown: false,
-          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Search size={24} color={color} />,
         }}
       />
 
       <Tabs.Screen
         name="appointments"
         options={{
-          title: "Appointments",
+          title: "Bookings",
           tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
         }}
       />

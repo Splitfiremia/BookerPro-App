@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, Clock, DollarSign } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
 
 interface Service {
   id: string;
@@ -9,14 +10,14 @@ interface Service {
   duration: string;
   price: string;
   description?: string;
+  popular?: boolean;
 }
 
 const services: Service[] = [
-  { id: '1', name: 'Haircut', duration: '30 min', price: '$35', description: 'Professional haircut and styling' },
+  { id: '1', name: 'Haircut', duration: '30 min', price: '$35', description: 'Professional haircut and styling', popular: true },
   { id: '2', name: 'Beard Trim', duration: '20 min', price: '$25', description: 'Beard shaping and trimming' },
-  { id: '3', name: 'Hair & Beard', duration: '45 min', price: '$55', description: 'Complete grooming package' },
-  { id: '4', name: 'Hair Color', duration: '90 min', price: '$75', description: 'Professional hair coloring service' },
-  { id: '5', name: 'Hot Towel Shave', duration: '30 min', price: '$40', description: 'Classic hot towel shave experience' },
+  { id: '3', name: 'Hair & Beard', duration: '45 min', price: '$55', description: 'Complete grooming package', popular: true },
+  { id: '4', name: 'Hot Towel Shave', duration: '30 min', price: '$40', description: 'Classic hot towel shave experience' },
 ];
 
 export default function SelectServiceScreen() {
@@ -26,6 +27,10 @@ export default function SelectServiceScreen() {
 
   const handleServiceSelect = (serviceId: string) => {
     setSelectedService(serviceId);
+    // Auto-advance to next step for faster booking
+    setTimeout(() => {
+      router.push(`/(app)/(client)/booking/select-date?providerId=${providerId}&serviceId=${serviceId}`);
+    }, 300);
   };
 
   const handleContinue = () => {
@@ -38,8 +43,8 @@ export default function SelectServiceScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
-          <Text style={styles.title}>Select Service</Text>
-          <Text style={styles.subtitle}>Choose the service you'd like to book</Text>
+          <Text style={styles.title}>What service do you need?</Text>
+          <Text style={styles.subtitle}>Tap to select and continue</Text>
         </View>
 
         <View style={styles.servicesContainer}>
@@ -48,57 +53,46 @@ export default function SelectServiceScreen() {
               key={service.id}
               style={[
                 styles.serviceCard,
-                selectedService === service.id && styles.selectedCard
+                service.popular && styles.popularCard
               ]}
               onPress={() => handleServiceSelect(service.id)}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
+              {service.popular && (
+                <View style={styles.popularBadge}>
+                  <Text style={styles.popularText}>POPULAR</Text>
+                </View>
+              )}
               <View style={styles.serviceInfo}>
-                <Text style={[
-                  styles.serviceName,
-                  selectedService === service.id && styles.selectedText
-                ]}>
+                <Text style={styles.serviceName}>
                   {service.name}
                 </Text>
                 {service.description && (
                   <Text style={styles.serviceDescription}>{service.description}</Text>
                 )}
                 <View style={styles.serviceDetails}>
-                  <Text style={[
-                    styles.serviceDuration,
-                    selectedService === service.id && styles.selectedSubtext
-                  ]}>
-                    {service.duration}
-                  </Text>
-                  <Text style={[
-                    styles.servicePrice,
-                    selectedService === service.id && styles.selectedText
-                  ]}>
-                    {service.price}
-                  </Text>
+                  <View style={styles.serviceDetailItem}>
+                    <Clock size={16} color={COLORS.lightGray} />
+                    <Text style={styles.serviceDuration}>
+                      {service.duration}
+                    </Text>
+                  </View>
+                  <View style={styles.serviceDetailItem}>
+                    <DollarSign size={16} color={COLORS.accent} />
+                    <Text style={styles.servicePrice}>
+                      {service.price}
+                    </Text>
+                  </View>
                 </View>
               </View>
               <ChevronRight 
                 size={20} 
-                color={selectedService === service.id ? '#fff' : '#666'}
+                color={COLORS.lightGray}
               />
             </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
-
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.continueButton,
-            !selectedService && styles.disabledButton
-          ]}
-          onPress={handleContinue}
-          disabled={!selectedService}
-        >
-          <Text style={styles.continueButtonText}>Continue</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
@@ -106,99 +100,98 @@ export default function SelectServiceScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
   },
   header: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    padding: SPACING.lg,
+    backgroundColor: COLORS.background,
   },
   title: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    color: COLORS.white,
+    marginBottom: SPACING.xs,
+    fontFamily: FONTS.bold,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   servicesContainer: {
-    padding: 16,
+    padding: SPACING.md,
   },
   serviceCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: COLORS.card,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    position: 'relative',
   },
-  selectedCard: {
-    backgroundColor: '#007AFF',
+  popularCard: {
+    borderColor: COLORS.accent,
+    backgroundColor: COLORS.card,
+  },
+  popularBadge: {
+    position: 'absolute',
+    top: -1,
+    right: SPACING.md,
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.sm,
+    zIndex: 1,
+  },
+  popularText: {
+    color: COLORS.background,
+    fontSize: 10,
+    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
+    letterSpacing: 0.5,
   },
   serviceInfo: {
     flex: 1,
   },
   serviceName: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    color: COLORS.white,
+    marginBottom: SPACING.xs,
+    fontFamily: FONTS.bold,
   },
   serviceDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.regular,
   },
   serviceDetails: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: SPACING.lg,
+  },
+  serviceDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
   },
   serviceDuration: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   servicePrice: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.lg,
     fontWeight: '600',
-    color: '#007AFF',
-  },
-  selectedText: {
-    color: '#fff',
-  },
-  selectedSubtext: {
-    color: '#e0e0e0',
-  },
-  footer: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  continueButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  disabledButton: {
-    backgroundColor: '#ccc',
-  },
-  continueButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: COLORS.accent,
+    fontFamily: FONTS.bold,
   },
 });

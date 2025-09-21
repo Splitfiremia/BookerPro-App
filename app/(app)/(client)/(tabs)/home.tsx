@@ -195,24 +195,15 @@ export default function HomeScreen() {
         })}
       </ScrollView>
 
-      {/* Main Actions */}
-      <View style={styles.mainActionsContainer}>
+      {/* Quick Book Section */}
+      <View style={styles.quickBookContainer}>
+        <Text style={styles.quickBookTitle}>Book Your Next Cut</Text>
         <TouchableOpacity 
-          style={styles.mainActionButton}
-          onPress={() => router.push('/(app)/(client)/shops/explore')}
-          testID="find-shop-button"
+          style={styles.quickBookButton}
+          onPress={() => router.push('/(app)/(client)/booking/select-service')}
+          testID="quick-book-button"
         >
-          <Text style={styles.mainActionTitle}>Find a Shop</Text>
-          <Text style={styles.mainActionSubtitle}>Browse local shops and their teams</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.mainActionButton}
-          onPress={() => {/* Navigate to provider browse */}}
-          testID="find-provider-button"
-        >
-          <Text style={styles.mainActionTitle}>Find a Provider</Text>
-          <Text style={styles.mainActionSubtitle}>Browse individual providers</Text>
+          <Text style={styles.quickBookButtonText}>BOOK NOW</Text>
         </TouchableOpacity>
       </View>
 
@@ -522,27 +513,35 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  mainActionsContainer: {
+  quickBookContainer: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.lg,
-    gap: SPACING.md,
-  },
-  mainActionButton: {
     backgroundColor: COLORS.card,
+    marginHorizontal: SPACING.md,
     borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
-    borderWidth: 1,
+    alignItems: 'center',
+    borderWidth: 2,
     borderColor: COLORS.accent,
   },
-  mainActionTitle: {
+  quickBookTitle: {
     color: COLORS.white,
+    fontSize: FONT_SIZES.xl,
+    fontFamily: FONTS.bold,
+    marginBottom: SPACING.md,
+    textAlign: 'center',
+  },
+  quickBookButton: {
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
+    minWidth: 200,
+  },
+  quickBookButtonText: {
+    color: COLORS.background,
     fontSize: FONT_SIZES.lg,
     fontFamily: FONTS.bold,
-    marginBottom: SPACING.xs,
-  },
-  mainActionSubtitle: {
-    color: COLORS.lightGray,
-    fontSize: FONT_SIZES.sm,
-    fontFamily: FONTS.regular,
+    textAlign: 'center',
+    letterSpacing: 1,
   },
 });
