@@ -10,6 +10,7 @@ import {
   Share,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Search,
   Filter,
@@ -28,6 +29,7 @@ type FilterRole = 'all' | 'admin' | 'standard' | 'associate';
 
 export default function TeamManagementScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [roleFilter, setRoleFilter] = useState<FilterRole>('all');
@@ -37,20 +39,15 @@ export default function TeamManagementScreen() {
   
   console.log('TeamManagementScreen: Component rendering');
   
+  // Always call the hook, but handle errors gracefully
   const teamManagementContext = useTeamManagement();
   console.log('TeamManagementScreen: Context received:', teamManagementContext);
   
-  if (!teamManagementContext) {
-    console.error('TeamManagementScreen: useTeamManagement returned undefined');
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Error: Team management context not available</Text>
-      </View>
-    );
-  }
+  // Always call useMemo, but provide fallback data
+  const providers = useMemo(() => teamManagementContext?.providers || [], [teamManagementContext?.providers]);
+  const updateProvider = teamManagementContext?.updateProvider || (() => {});
+  const generateInviteLink = teamManagementContext?.generateInviteLink || (() => '');
   
-  const { providers, updateProvider, generateInviteLink } = teamManagementContext;
-
   const filteredProviders = useMemo(() => {
     return providers.filter((provider) => {
       const matchesSearch = provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,6 +60,17 @@ export default function TeamManagementScreen() {
       return matchesSearch && matchesStatus && matchesRole;
     });
   }, [providers, searchQuery, statusFilter, roleFilter]);
+  
+  // If context is not available, show error state
+  if (!teamManagementContext) {
+    console.error('TeamManagementScreen: useTeamManagement returned undefined');
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <Text style={styles.errorText}>Error: Team management context not available</Text>
+        <Text style={styles.errorText}>Context is undefined</Text>
+      </View>
+    );
+  }
 
   const handleEditProvider = (provider: Provider) => {
     setSelectedProvider(provider);
@@ -163,7 +171,7 @@ export default function TeamManagementScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Team Management</Text>

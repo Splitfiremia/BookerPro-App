@@ -1,26 +1,9 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
+import { useState, useCallback } from 'react';
+import createContextHook from '@nkzw/create-context-hook';
 import { Provider } from '@/components/EditProviderModal';
 import { Service, Shop, Appointment, mockTeamProviders, mockMasterServiceList, mockShop, mockProviderAppointments } from '@/mocks/teamData';
 
-type TeamManagementContextType = {
-  providers: Provider[];
-  updateProvider: (provider: Provider) => void;
-  addProvider: (provider: Omit<Provider, 'id'>) => void;
-  removeProvider: (providerId: string) => void;
-  shop: Shop;
-  masterServiceList: Service[];
-  updateMasterServiceList: (services: Service[]) => void;
-  appointments: Appointment[];
-  getProviderAppointments: (providerId: string) => Appointment[];
-  addAppointment: (appointment: Omit<Appointment, 'id'>) => void;
-  generateInviteLink: () => string;
-  isLoading: boolean;
-  error: string | null;
-};
-
-const TeamManagementContext = createContext<TeamManagementContextType | undefined>(undefined);
-
-export function TeamManagementProvider({ children }: { children: ReactNode }) {
+export const [TeamManagementProvider, useTeamManagement] = createContextHook(() => {
   const [providers, setProviders] = useState<Provider[]>(mockTeamProviders);
   const [shop, setShop] = useState<Shop>(mockShop);
   const [masterServiceList, setMasterServiceList] = useState<Service[]>(mockMasterServiceList);
@@ -83,7 +66,14 @@ export function TeamManagementProvider({ children }: { children: ReactNode }) {
     return `${baseUrl}/${inviteCode}`;
   }, [shop.id]);
 
-  const contextValue = useMemo<TeamManagementContextType>(() => ({
+  console.log('TeamManagementProvider: Context value created', {
+    providersCount: providers.length,
+    shopId: shop.id,
+    isLoading,
+    error
+  });
+
+  return {
     // Providers
     providers,
     updateProvider,
@@ -106,26 +96,5 @@ export function TeamManagementProvider({ children }: { children: ReactNode }) {
     // Loading states
     isLoading,
     error,
-  }), [providers, updateProvider, addProvider, removeProvider, shop, masterServiceList, updateMasterServiceList, appointments, getProviderAppointments, addAppointment, generateInviteLink, isLoading, error]);
-
-  console.log('TeamManagementProvider: Context value created', {
-    providersCount: providers.length,
-    shopId: shop.id,
-    isLoading,
-    error
-  });
-
-  return (
-    <TeamManagementContext.Provider value={contextValue}>
-      {children}
-    </TeamManagementContext.Provider>
-  );
-}
-
-export function useTeamManagement(): TeamManagementContextType {
-  const context = useContext(TeamManagementContext);
-  if (context === undefined) {
-    throw new Error('useTeamManagement must be used within a TeamManagementProvider');
-  }
-  return context;
-}
+  };
+});
