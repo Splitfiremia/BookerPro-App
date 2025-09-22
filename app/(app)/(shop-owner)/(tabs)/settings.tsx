@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, FlatList, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronRight, Bell, Lock, CreditCard, HelpCircle, LogOut, Store, Users, Calendar, Plus, Edit, Trash2, DollarSign } from 'lucide-react-native';
 import { useServices } from '@/providers/ServicesProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import ServiceEditModal from '@/components/ServiceEditModal';
 import { Service } from '@/models/database';
-import { COLORS } from '@/constants/theme';
+
 
 interface SettingItem {
   id: string;
@@ -32,7 +33,7 @@ export default function SettingsScreen() {
   const [autoAcceptBookings, setAutoAcceptBookings] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
 
   const handleSignOut = () => {
     Alert.alert(
@@ -46,7 +47,6 @@ export default function SettingsScreen() {
         {
           text: "Sign Out",
           onPress: async () => {
-            setIsLoggingOut(true);
             try {
               console.log('Shop Owner Settings: Starting logout process');
               await logout();
@@ -55,8 +55,6 @@ export default function SettingsScreen() {
             } catch (error) {
               console.error('Shop Owner Settings: Logout error:', error);
               Alert.alert('Error', 'Failed to sign out. Please try again.');
-            } finally {
-              setIsLoggingOut(false);
             }
           },
           style: "destructive"
@@ -106,7 +104,7 @@ export default function SettingsScreen() {
             <View style={styles.serviceInfo}>
               <Text style={styles.serviceName}>{item.name}</Text>
               <Text style={styles.serviceDetails}>
-                {item.duration} min • ${item.price}
+                {item.baseDuration} min • ${item.basePrice}
               </Text>
               {item.description && (
                 <Text style={styles.serviceDescription}>{item.description}</Text>
@@ -146,7 +144,7 @@ export default function SettingsScreen() {
           subtitle: 'Update shop details and hours',
           icon: Store,
           type: 'navigate' as const,
-          onPress: () => console.log('Shop info'),
+          onPress: () => router.push('/shop-settings/new'),
         },
         {
           id: 'shop-services',
@@ -154,7 +152,10 @@ export default function SettingsScreen() {
           subtitle: 'Manage your master service list',
           icon: DollarSign,
           type: 'navigate' as const,
-          onPress: () => console.log('Shop services'),
+          onPress: () => {
+            // Services are managed in this same screen - scroll to services section
+            console.log('Services section is below');
+          },
         },
         {
           id: 'team-permissions',
@@ -162,7 +163,7 @@ export default function SettingsScreen() {
           subtitle: 'Manage staff access levels',
           icon: Users,
           type: 'navigate' as const,
-          onPress: () => console.log('Team permissions'),
+          onPress: () => router.push('/(app)/(shop-owner)/(tabs)/team'),
         },
         {
           id: 'booking-settings',
@@ -170,7 +171,15 @@ export default function SettingsScreen() {
           subtitle: 'Configure appointment rules',
           icon: Calendar,
           type: 'navigate' as const,
-          onPress: () => console.log('Booking settings'),
+          onPress: () => {
+            Alert.alert(
+              'Booking Settings',
+              'Configure appointment rules, booking windows, and cancellation policies.',
+              [
+                { text: 'OK' }
+              ]
+            );
+          },
         },
       ],
     },
@@ -205,7 +214,7 @@ export default function SettingsScreen() {
           subtitle: 'Manage billing and payouts',
           icon: CreditCard,
           type: 'navigate' as const,
-          onPress: () => console.log('Payment methods'),
+          onPress: () => router.push('/payout-settings'),
         },
         {
           id: 'security',
@@ -213,7 +222,15 @@ export default function SettingsScreen() {
           subtitle: 'Password and authentication',
           icon: Lock,
           type: 'navigate' as const,
-          onPress: () => console.log('Security'),
+          onPress: () => {
+            Alert.alert(
+              'Security Settings',
+              'Manage password, two-factor authentication, and account security.',
+              [
+                { text: 'OK' }
+              ]
+            );
+          },
         },
       ],
     },
@@ -225,7 +242,15 @@ export default function SettingsScreen() {
           title: 'Help Center',
           icon: HelpCircle,
           type: 'navigate' as const,
-          onPress: () => console.log('Help center'),
+          onPress: () => {
+            Alert.alert(
+              'Help Center',
+              'Contact support: support@bookerapp.com\nPhone: 1-800-BOOKER\nHours: Mon-Fri 9AM-6PM EST',
+              [
+                { text: 'OK' }
+              ]
+            );
+          },
         },
         {
           id: 'signout',
@@ -288,8 +313,11 @@ export default function SettingsScreen() {
     );
   };
 
+  const insets = useSafeAreaInsets();
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <ScrollView style={styles.scrollView}>
       {settingSections.map((section) => (
         <View key={section.title} style={styles.section}>
           <Text style={styles.sectionTitle}>{section.title}</Text>
@@ -339,7 +367,8 @@ export default function SettingsScreen() {
         onSave={handleSaveService}
         title={editingService ? 'Edit Service' : 'Add New Service'}
       />
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -347,6 +376,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  scrollView: {
+    flex: 1,
   },
   section: {
     marginTop: 20,
