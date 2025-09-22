@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { GradientButton } from '@/components/GradientButton';
 import { FormInput } from '@/components/FormInput';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
+import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
 import { validateEmail, validatePhone } from '@/utils/validation';
 
@@ -17,7 +17,8 @@ export default function PersonalInfoScreen() {
     phone, 
     email, 
     setPersonalInfo, 
-    nextStep 
+    nextStep,
+    previousStep 
   } = useProviderOnboarding();
 
   const [formData, setFormData] = useState({
@@ -118,6 +119,11 @@ export default function PersonalInfoScreen() {
     }
   };
 
+  const handleBack = () => {
+    previousStep();
+    router.back();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -188,13 +194,11 @@ export default function PersonalInfoScreen() {
             </View>
           </View>
 
-          <View style={styles.buttonContainer}>
-            <GradientButton
-              title="CONTINUE"
-              onPress={handleContinue}
-              testID="continue-button"
-            />
-          </View>
+          <OnboardingNavigation
+            onBack={handleBack}
+            onNext={handleContinue}
+            testID="personal-info-navigation"
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

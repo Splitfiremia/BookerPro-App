@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { GradientButton } from '@/components/GradientButton';
+import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
 import { ChevronRight } from 'lucide-react-native';
 
@@ -41,14 +41,12 @@ export default function ProviderOnboardingIntro() {
           <View style={styles.indicator} />
         </View>
 
-        <View style={styles.buttonContainer}>
-          <GradientButton 
-            title="GET STARTED" 
-            onPress={handleGetStarted}
-            icon={<ChevronRight size={20} color="#000" />}
-            testID="get-started-button"
-          />
-        </View>
+        <OnboardingNavigation
+          onNext={handleGetStarted}
+          nextTitle="GET STARTED"
+          showBack={false}
+          testID="intro-navigation"
+        />
       </View>
     </SafeAreaView>
   );

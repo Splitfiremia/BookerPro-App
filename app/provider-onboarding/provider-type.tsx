@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { GradientButton } from '@/components/GradientButton';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
+import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, ProviderType } from '@/providers/ProviderOnboardingProvider';
 import { Scissors, Brush, Palette, Zap, HelpCircle } from 'lucide-react-native';
 
 export default function ProviderTypeScreen() {
   const router = useRouter();
-  const { currentStep, totalSteps, providerType, setProviderType, nextStep } = useProviderOnboarding();
+  const { currentStep, totalSteps, providerType, setProviderType, nextStep, previousStep } = useProviderOnboarding();
   const [selectedType, setSelectedType] = useState<ProviderType | null>(providerType);
 
   const handleTypeSelect = (type: ProviderType) => {
@@ -21,6 +21,11 @@ export default function ProviderTypeScreen() {
       nextStep();
       router.push('/provider-onboarding/personal-info');
     }
+  };
+
+  const handleBack = () => {
+    previousStep();
+    router.back();
   };
 
   const providerTypes: { type: ProviderType; icon: React.ReactNode; description: string }[] = [
@@ -84,14 +89,12 @@ export default function ProviderTypeScreen() {
           </View>
         </View>
 
-        <View style={styles.buttonContainer}>
-          <GradientButton
-            title="CONTINUE"
-            onPress={handleContinue}
-            disabled={!selectedType}
-            testID="continue-button"
-          />
-        </View>
+        <OnboardingNavigation
+          onBack={handleBack}
+          onNext={handleContinue}
+          nextDisabled={!selectedType}
+          testID="provider-type-navigation"
+        />
       </ScrollView>
     </SafeAreaView>
   );

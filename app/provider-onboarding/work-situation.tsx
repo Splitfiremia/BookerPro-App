@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { GradientButton } from '@/components/GradientButton';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
+import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, WorkSituation } from '@/providers/ProviderOnboardingProvider';
 import { Building2, Store, Car, Home } from 'lucide-react-native';
 
@@ -13,7 +13,8 @@ export default function WorkSituationScreen() {
     totalSteps, 
     workSituation, 
     setWorkSituation, 
-    nextStep 
+    nextStep,
+    previousStep 
   } = useProviderOnboarding();
   
   const [selected, setSelected] = useState<WorkSituation | null>(workSituation);
@@ -45,6 +46,11 @@ export default function WorkSituationScreen() {
           router.replace('/provider-onboarding/service-address');
       }
     }
+  };
+
+  const handleBack = () => {
+    previousStep();
+    router.back();
   };
 
   const workOptions: { 
@@ -114,14 +120,12 @@ export default function WorkSituationScreen() {
           </View>
         </View>
 
-        <View style={styles.buttonContainer}>
-          <GradientButton
-            title="CONTINUE"
-            onPress={handleContinue}
-            disabled={!selected}
-            testID="continue-button"
-          />
-        </View>
+        <OnboardingNavigation
+          onBack={handleBack}
+          onNext={handleContinue}
+          nextDisabled={!selected}
+          testID="work-situation-navigation"
+        />
       </ScrollView>
     </SafeAreaView>
   );

@@ -69,7 +69,7 @@ export interface ProviderOnboardingState {
 // Initial state
 const initialState: ProviderOnboardingState = {
   currentStep: 1,
-  totalSteps: 8,
+  totalSteps: 9,
   providerType: null,
   firstName: '',
   lastName: '',
@@ -100,6 +100,20 @@ const initialState: ProviderOnboardingState = {
   },
   isCompleted: false
 };
+
+// Step navigation mapping
+const STEP_ROUTES = [
+  '/provider-onboarding/index',
+  '/provider-onboarding/provider-type',
+  '/provider-onboarding/personal-info',
+  '/provider-onboarding/work-situation',
+  '/provider-onboarding/service-address',
+  '/provider-onboarding/shop-search',
+  '/provider-onboarding/services',
+  '/provider-onboarding/profile',
+  '/provider-onboarding/availability',
+  '/provider-onboarding/summary'
+];
 
 // Mock shops for demo
 const mockShops: ShopInfo[] = [
@@ -174,6 +188,53 @@ export const [ProviderOnboardingProvider, useProviderOnboarding] = createContext
     // Save after state update
     setTimeout(saveOnboardingState, 0);
   }, [saveOnboardingState]);
+
+  const navigateToStep = useCallback((step: number) => {
+    if (step >= 0 && step < STEP_ROUTES.length) {
+      router.replace(STEP_ROUTES[step] as any);
+    }
+  }, [router]);
+
+  const navigateNext = useCallback(() => {
+    const nextStepIndex = state.currentStep;
+    if (nextStepIndex < STEP_ROUTES.length) {
+      navigateToStep(nextStepIndex);
+    }
+  }, [state.currentStep, navigateToStep]);
+
+  const navigateBack = useCallback(() => {
+    const prevStepIndex = state.currentStep - 2; // -1 for 0-based index, -1 for previous
+    if (prevStepIndex >= 0) {
+      navigateToStep(prevStepIndex);
+    }
+  }, [state.currentStep, navigateToStep]);
+
+  const getNextRoute = useCallback((workSituation?: WorkSituation) => {
+    const currentStepIndex = state.currentStep - 1; // Convert to 0-based index
+    
+    // Handle conditional routing based on work situation
+    if (currentStepIndex === 3) { // work-situation step
+      const situation = workSituation || state.workSituation;
+      if (situation === 'work_at_shop') {
+        return '/provider-onboarding/shop-search';
+      } else {
+        return '/provider-onboarding/service-address';
+      }
+    }
+    
+    // Handle shop-search routing
+    if (currentStepIndex === 5) { // shop-search step
+      return '/provider-onboarding/services';
+    }
+    
+    // Default next route
+    const nextIndex = currentStepIndex + 1;
+    if (nextIndex < STEP_ROUTES.length) {
+      return STEP_ROUTES[nextIndex];
+    }
+    
+    return null;
+  }, [state.currentStep, state.workSituation]);
 
   // Update functions for each step
   const setProviderType = useCallback((type: ProviderType) => {
@@ -359,7 +420,7 @@ export const [ProviderOnboardingProvider, useProviderOnboarding] = createContext
       });
       
       // Navigate to the app which will handle role-based redirection
-      router.replace('/(app)');
+      router.replace('/(app)' as any);
       
       return true;
     } catch (error) {
@@ -383,6 +444,9 @@ export const [ProviderOnboardingProvider, useProviderOnboarding] = createContext
     nextStep,
     previousStep,
     goToStep,
+    navigateNext,
+    navigateBack,
+    getNextRoute,
     setProviderType,
     setPersonalInfo,
     setWorkSituation,
@@ -406,6 +470,9 @@ export const [ProviderOnboardingProvider, useProviderOnboarding] = createContext
     nextStep,
     previousStep,
     goToStep,
+    navigateNext,
+    navigateBack,
+    getNextRoute,
     setProviderType,
     setPersonalInfo,
     setWorkSituation,

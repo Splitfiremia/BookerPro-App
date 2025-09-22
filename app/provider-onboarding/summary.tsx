@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { GradientButton } from '@/components/GradientButton';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
+import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, ProviderService, TimeSlot } from '@/providers/ProviderOnboardingProvider';
 import { Clock, DollarSign, User, Briefcase } from 'lucide-react-native';
 
@@ -27,6 +27,7 @@ export default function SummaryScreen() {
     bio,
     availability,
     completeOnboarding,
+    previousStep,
     isLoading
   } = useProviderOnboarding();
 
@@ -37,6 +38,11 @@ export default function SummaryScreen() {
       console.error('Error completing onboarding:', error);
       // In a real app, you would show an error message to the user
     }
+  };
+
+  const handleBack = () => {
+    previousStep();
+    router.back();
   };
 
   const formatWorkSituation = (situation: string | null): string => {
@@ -193,21 +199,13 @@ export default function SummaryScreen() {
           </View>
         </View>
 
-        <View style={styles.buttonContainer}>
-          <GradientButton
-            title="COMPLETE PROFILE"
-            onPress={handleComplete}
-            loading={isLoading}
-            testID="complete-profile-button"
-          />
-          <TouchableOpacity 
-            style={styles.editButton}
-            onPress={() => router.back()}
-            testID="go-back-button"
-          >
-            <Text style={styles.editButtonText}>Go Back</Text>
-          </TouchableOpacity>
-        </View>
+        <OnboardingNavigation
+          onBack={handleBack}
+          onNext={handleComplete}
+          nextTitle="COMPLETE PROFILE"
+          loading={isLoading}
+          testID="summary-navigation"
+        />
       </ScrollView>
     </SafeAreaView>
   );
