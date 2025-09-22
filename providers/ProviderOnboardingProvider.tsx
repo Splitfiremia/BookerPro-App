@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { useRouter } from 'expo-router';
@@ -126,7 +126,7 @@ export const [ProviderOnboardingProvider, useProviderOnboarding] = createContext
   const [state, setState] = useState<ProviderOnboardingState>(initialState);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const { user, register } = useAuth();
+  const { register } = useAuth();
 
   // Load onboarding state on mount
   useEffect(() => {
@@ -438,7 +438,7 @@ export const [ProviderOnboardingProvider, useProviderOnboarding] = createContext
     setTimeout(saveOnboardingState, 0);
   }, [saveOnboardingState]);
 
-  return useMemo(() => ({
+  return {
     ...state,
     isLoading,
     nextStep,
@@ -464,31 +464,5 @@ export const [ProviderOnboardingProvider, useProviderOnboarding] = createContext
     searchShops,
     completeOnboarding,
     resetOnboarding
-  }), [
-    state,
-    isLoading,
-    nextStep,
-    previousStep,
-    goToStep,
-    navigateNext,
-    navigateBack,
-    getNextRoute,
-    setProviderType,
-    setPersonalInfo,
-    setWorkSituation,
-    setAddress,
-    setTravelRadius,
-    setShopInfo,
-    setInviteOwnerInfo,
-    addService,
-    updateService,
-    removeService,
-    setProfileImage,
-    setBio,
-    setAvailability,
-    updateDayAvailability,
-    searchShops,
-    completeOnboarding,
-    resetOnboarding
-  ]);
+  };
 });
