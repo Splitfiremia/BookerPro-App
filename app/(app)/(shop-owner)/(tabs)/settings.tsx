@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { ChevronRight, Bell, Lock, CreditCard, HelpCircle, LogOut, Store, Users, Calendar, Plus, Edit, Trash2, DollarSign } from 'lucide-react-native';
 import { useServices } from '@/providers/ServicesProvider';
 import { useAuth } from '@/providers/AuthProvider';
+import { useShopManagement } from '@/providers/ShopManagementProvider';
 import ServiceEditModal from '@/components/ServiceEditModal';
 import { Service } from '@/models/database';
 
@@ -29,6 +30,11 @@ export default function SettingsScreen() {
     deleteMasterService,
     isLoading: servicesLoading,
   } = useServices();
+  const {
+    shops,
+    selectedShop,
+    isLoading: shopLoading,
+  } = useShopManagement();
   const [notifications, setNotifications] = useState(true);
   const [autoAcceptBookings, setAutoAcceptBookings] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
