@@ -53,11 +53,38 @@ export default function ProviderProfileScreen() {
 
 
 
-  // Validate screen parameter before navigation
+  // Navigate to existing routes or show placeholder
   const navigateTo = (screen: string) => {
     if (!screen || screen.trim() === '') return;
     if (screen.length > 100) return;
-    router.push(screen.trim() as any);
+    
+    // Map to existing routes or show coming soon message
+    const routeMap: { [key: string]: string } = {
+      '/subscription': '/subscription', // Will show coming soon
+      '/payments': '/complete-payment',
+      '/discovery': '/discovery', // Will show coming soon
+      '/bookings': '/schedule', // Navigate to existing schedule
+      '/refer': '/refer', // Will show coming soon
+      '/invite': '/invite', // Will show coming soon
+      '/client-referral': '/client-referral', // Will show coming soon
+      '/loyalty': '/loyalty', // Will show coming soon
+      '/booth-rent': '/booth-rent', // Will show coming soon
+      '/find-booth': '/find-booth', // Will show coming soon
+      '/redeem': '/redeem', // Will show coming soon
+      '/help': '/help', // Will show coming soon
+    };
+    
+    const targetRoute = routeMap[screen];
+    if (targetRoute) {
+      // For routes that exist, navigate directly
+      if (targetRoute === '/schedule' || targetRoute === '/complete-payment') {
+        router.push(targetRoute as any);
+      } else {
+        // For non-existent routes, show coming soon message
+        setErrorMessage('This feature is coming soon!');
+        setShowErrorModal(true);
+      }
+    }
   };
 
   const isIndependentProvider = () => {
@@ -125,7 +152,7 @@ export default function ProviderProfileScreen() {
             <View style={styles.serviceInfo}>
               <Text style={styles.serviceName}>{item.name}</Text>
               <Text style={styles.serviceDetails}>
-                {item.duration} min • ${item.price}
+                {item.baseDuration} min • ${item.basePrice}
               </Text>
               {item.description && (
                 <Text style={styles.serviceDescription}>{item.description}</Text>
@@ -179,7 +206,7 @@ export default function ProviderProfileScreen() {
               <View style={styles.serviceInfo}>
                 <Text style={styles.serviceName}>{item.name}</Text>
                 <Text style={styles.serviceDetails}>
-                  {item.duration} min • ${item.price}
+                  {item.baseDuration} min • ${item.basePrice}
                 </Text>
                 {item.description && (
                   <Text style={styles.serviceDescription}>{item.description}</Text>
@@ -329,12 +356,12 @@ export default function ProviderProfileScreen() {
             </View>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.menuItem} onPress={() => navigateTo('/bookings')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigateTo('/schedule')}>
             <View style={styles.menuIconContainer}>
               <Clock size={24} color={COLORS.accent} />
             </View>
             <View style={styles.menuTextContainer}>
-              <Text style={styles.menuTitle}>Bookings</Text>
+              <Text style={styles.menuTitle}>Schedule</Text>
               <View style={styles.menuSubtitleRow}>
                 <View style={styles.notificationDot} />
               </View>
