@@ -166,3 +166,12 @@ export const formatPhoneNumber = (value: string): string => {
     return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
   }
 };
+
+// Image URI validation utilities
+export const validateImageUri = (uri: string | null | undefined): boolean => {
+  return !!(uri && uri.trim() !== '');
+};
+
+export const getValidImageUri = (uri: string | null | undefined): string | null => {
+  return validateImageUri(uri) ? uri! : null;
+};

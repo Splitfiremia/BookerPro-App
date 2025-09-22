@@ -106,7 +106,7 @@ export default function SummaryScreen() {
               </View>
               
               <View style={styles.profileSection}>
-                {profileImage ? (
+                {profileImage && profileImage.trim() !== '' ? (
                   <Image source={{ uri: profileImage }} style={styles.profileImage} />
                 ) : (
                   <View style={styles.profileImagePlaceholder}>

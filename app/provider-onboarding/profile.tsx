@@ -94,7 +94,7 @@ export default function ProfileScreen() {
 
           <View style={styles.profileImageContainer}>
             <View style={styles.imageContainer}>
-              {imageUri ? (
+              {imageUri && imageUri.trim() !== '' ? (
                 <Image source={{ uri: imageUri }} style={styles.profileImage} />
               ) : (
                 <View style={styles.placeholderImage}>

@@ -87,7 +87,13 @@ export default function ProviderDetailsScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={[styles.portfolioItem, { width: (width - 60) / 2 }]}>
-            <Image source={{ uri: item.image }} style={styles.portfolioImage} />
+            {item.image && item.image.trim() !== '' ? (
+              <Image source={{ uri: item.image }} style={styles.portfolioImage} />
+            ) : (
+              <View style={[styles.portfolioImage, styles.placeholderImage]}>
+                <Grid3X3 size={32} color="#ccc" />
+              </View>
+            )}
             <View style={styles.portfolioOverlay}>
               <Text style={styles.portfolioTitle}>{item.title}</Text>
               <Text style={styles.portfolioDescription}>{item.description}</Text>
@@ -110,7 +116,13 @@ export default function ProviderDetailsScreen() {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity style={[styles.postItem, { width: (width - 60) / 3 }]}>
-              <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+              {item.imageUrl && item.imageUrl.trim() !== '' ? (
+                <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+              ) : (
+                <View style={[styles.postImage, styles.placeholderImage]}>
+                  <Grid3X3 size={24} color="#ccc" />
+                </View>
+              )}
               <View style={styles.postOverlay}>
                 <Heart size={12} color="#fff" />
                 <Text style={styles.postLikes}>{item.likes}</Text>
@@ -147,10 +159,16 @@ export default function ProviderDetailsScreen() {
         {/* Header Section */}
         <View style={styles.headerSection}>
           <View style={styles.profileImageContainer}>
-            <Image 
-              source={{ uri: provider.profileImage || provider.image }} 
-              style={styles.profileImage} 
-            />
+            {(provider.profileImage && provider.profileImage.trim() !== '') || (provider.image && provider.image.trim() !== '') ? (
+              <Image 
+                source={{ uri: provider.profileImage || provider.image }} 
+                style={styles.profileImage} 
+              />
+            ) : (
+              <View style={[styles.profileImage, styles.placeholderAvatar]}>
+                <UserPlus size={32} color="#ccc" />
+              </View>
+            )}
             {provider.isVerified && (
               <View style={styles.verifiedBadge}>
                 <Star size={12} color="#fff" fill="#fff" />
@@ -558,5 +576,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  placeholderImage: {
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderAvatar: {
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

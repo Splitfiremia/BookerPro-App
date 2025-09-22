@@ -73,7 +73,13 @@ export default function HomeScreen() {
 
   const renderShopCard = ({ item }: { item: Shop }) => (
     <TouchableOpacity style={styles.shopCard}>
-      <Image source={{ uri: item.image }} style={styles.shopImage} />
+      {item.image && item.image.trim() !== '' ? (
+        <Image source={{ uri: item.image }} style={styles.shopImage} />
+      ) : (
+        <View style={[styles.shopImage, styles.placeholderImage]}>
+          <Search size={32} color={COLORS.lightGray} />
+        </View>
+      )}
       <View style={styles.shopInfo}>
         <Text style={styles.shopName} numberOfLines={2}>{item.name}</Text>
         <Text style={styles.shopDescription} numberOfLines={1}>{item.description}</Text>
@@ -88,7 +94,13 @@ export default function HomeScreen() {
       onPress={() => router.push(`/(app)/(client)/provider/${item.id}`)}
     >
       <View style={styles.providerHeader}>
-        <Image source={{ uri: item.profileImage }} style={styles.providerAvatar} />
+        {item.profileImage && item.profileImage.trim() !== '' ? (
+          <Image source={{ uri: item.profileImage }} style={styles.providerAvatar} />
+        ) : (
+          <View style={[styles.providerAvatar, styles.placeholderAvatar]}>
+            <Search size={24} color={COLORS.lightGray} />
+          </View>
+        )}
         <View style={styles.providerInfo}>
           <Text style={styles.providerName}>{item.name}</Text>
           <Text style={styles.providerService}>Free Advice</Text>
@@ -103,11 +115,17 @@ export default function HomeScreen() {
       
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.portfolioContainer}>
         {item.portfolio?.slice(0, 4).map((portfolioItem, index) => (
-          <Image 
-            key={portfolioItem.id} 
-            source={{ uri: portfolioItem.image }} 
-            style={styles.portfolioImage} 
-          />
+          portfolioItem.image && portfolioItem.image.trim() !== '' ? (
+            <Image 
+              key={portfolioItem.id} 
+              source={{ uri: portfolioItem.image }} 
+              style={styles.portfolioImage} 
+            />
+          ) : (
+            <View key={portfolioItem.id} style={[styles.portfolioImage, styles.placeholderPortfolio]}>
+              <Search size={20} color={COLORS.lightGray} />
+            </View>
+          )
         ))}
       </ScrollView>
       
@@ -543,5 +561,20 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
     textAlign: 'center',
     letterSpacing: 1,
+  },
+  placeholderImage: {
+    backgroundColor: COLORS.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderAvatar: {
+    backgroundColor: COLORS.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderPortfolio: {
+    backgroundColor: COLORS.card,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

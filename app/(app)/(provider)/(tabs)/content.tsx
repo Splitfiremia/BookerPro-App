@@ -142,10 +142,16 @@ export default function ContentScreen() {
             <View style={styles.portfolioGrid}>
               {userPortfolio.map((item) => (
                 <View key={item.id} style={styles.portfolioItem}>
-                  <Image
-                    source={{ uri: item.imageUri }}
-                    style={[styles.portfolioImage, { width: Math.floor((width - 48) / 3), height: Math.floor((width - 48) / 3) }]}
-                  />
+                  {item.imageUri && item.imageUri.trim() !== '' ? (
+                    <Image
+                      source={{ uri: item.imageUri }}
+                      style={[styles.portfolioImage, { width: Math.floor((width - 48) / 3), height: Math.floor((width - 48) / 3) }]}
+                    />
+                  ) : (
+                    <View style={[styles.portfolioImage, styles.placeholderImage, { width: Math.floor((width - 48) / 3), height: Math.floor((width - 48) / 3) }]}>
+                      <Camera size={24} color={COLORS.lightGray} />
+                    </View>
+                  )}
                   <TouchableOpacity
                     testID={`delete-portfolio-${item.id}`}
                     accessibilityRole="button"
@@ -178,7 +184,7 @@ export default function ContentScreen() {
             style={styles.imagePickerButton}
             onPress={pickImageForPost}
           >
-            {selectedPostImage ? (
+            {selectedPostImage && selectedPostImage.trim() !== '' ? (
               <Image source={{ uri: selectedPostImage }} style={styles.selectedPostImage} />
             ) : (
               <View style={styles.imagePickerPlaceholder}>
@@ -372,5 +378,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 4,
     fontFamily: FONTS.regular,
+  },
+  placeholderImage: {
+    backgroundColor: COLORS.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
 });
