@@ -28,23 +28,19 @@ export default function LandingScreen() {
     console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode);
   }, [isAuthenticated, user, isDeveloperMode]);
 
-  // Handle initialization timeout
+  // Handle initialization timeout - reduced to prevent hydration issues
   useEffect(() => {
     const initTimeout = setTimeout(() => {
       setIsInitializing(false);
-    }, 1000); // 1 second max for initialization
+    }, 200); // Reduced to 200ms to prevent hydration timeout
     
     return () => clearTimeout(initTimeout);
   }, []);
 
-  // Show loading screen during initialization
+  // Show loading screen during initialization - simplified to prevent hydration timeout
   if (isInitializing) {
     return (
-      <ImageBackground
-        source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/wq1viwd4zpq35fb12j801' }}
-        style={styles.container}
-        resizeMode="cover"
-      >
+      <View style={[styles.container, { backgroundColor: '#000000' }]}>
         <StatusBar barStyle="light-content" backgroundColor="#000000" />
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.loadingContainer}>
@@ -52,7 +48,7 @@ export default function LandingScreen() {
             <Text style={styles.loadingText}>Loading...</Text>
           </View>
         </SafeAreaView>
-      </ImageBackground>
+      </View>
     );
   }
 

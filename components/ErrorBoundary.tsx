@@ -11,35 +11,12 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
-  isTimeout?: boolean;
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
-  private timeoutId?: NodeJS.Timeout;
-
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
-  }
-
-  componentDidMount() {
-    // Set a timeout to catch hydration timeouts
-    this.timeoutId = setTimeout(() => {
-      if (!this.state.hasError) {
-        console.warn('ErrorBoundary: Potential timeout detected');
-        this.setState({ 
-          hasError: true, 
-          isTimeout: true,
-          error: new Error('Application initialization timeout') 
-        });
-      }
-    }, 8000); // 8 second timeout
-  }
-
-  componentWillUnmount() {
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
-    }
   }
 
   static getDerivedStateFromError(error: Error): State {
@@ -56,10 +33,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   handleRetry = () => {
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
-    }
-    this.setState({ hasError: false, error: undefined, isTimeout: false });
+    this.setState({ hasError: false, error: undefined });
   };
 
   render() {
@@ -74,9 +48,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             <AlertTriangle size={48} color={COLORS.error} />
             <Text style={styles.title}>Something went wrong</Text>
             <Text style={styles.message}>
-              {this.state.isTimeout 
-                ? 'The app is taking longer than expected to load. Please try again.' 
-                : 'We encountered an unexpected error. Please try again.'}
+              We encountered an unexpected error. Please try again.
             </Text>
             {__DEV__ && this.state.error && (
               <View style={styles.errorDetails}>

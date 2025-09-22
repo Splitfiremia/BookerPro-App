@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
-import { StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/providers/AuthProvider";
@@ -23,6 +23,10 @@ const queryClient = new QueryClient({
       retry: false,
       staleTime: 1000 * 60 * 5, // 5 minutes
       networkMode: 'offlineFirst', // Prevent hanging on network issues
+      refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    },
+    mutations: {
+      networkMode: 'offlineFirst',
     },
   },
 });
@@ -43,11 +47,36 @@ function RootLayoutNav() {
   );
 }
 
+// Loading component to prevent hydration timeouts
+function AppLoading() {
+  return (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color={COLORS.primary} />
+      <Text style={styles.loadingText}>Loading...</Text>
+    </View>
+  );
+}
+
 export default function RootLayout() {
-  // Simplified initialization without timeout warnings
-  React.useEffect(() => {
-    console.log('RootLayout: App initialized');
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  
+  useEffect(() => {
+    // Prevent hydration timeout by ensuring quick initialization
+    const initTimer = setTimeout(() => {
+      setIsInitialized(true);
+      console.log('RootLayout: App initialized');
+    }, 100); // Very short delay to prevent hydration issues
+    
+    return () => clearTimeout(initTimer);
   }, []);
+  
+  if (!isInitialized) {
+    return (
+      <GestureHandlerRootView style={styles.gestureHandler}>
+        <AppLoading />
+      </GestureHandlerRootView>
+    );
+  }
   
   return (
     <GestureHandlerRootView style={styles.gestureHandler}>
@@ -82,4 +111,15 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   contentStyle: { backgroundColor: COLORS.background },
   gestureHandler: { flex: 1 },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+  },
+  loadingText: {
+    color: COLORS.white,
+    fontSize: 16,
+    marginTop: 16,
+  },
 });

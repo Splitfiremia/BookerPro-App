@@ -1,15 +1,31 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import createContextHook from '@nkzw/create-context-hook';
 import { Provider } from '@/components/EditProviderModal';
 import { Service, Shop, Appointment, mockTeamProviders, mockMasterServiceList, mockShop, mockProviderAppointments } from '@/mocks/teamData';
 
 export const [TeamManagementProvider, useTeamManagement] = createContextHook(() => {
-  const [providers, setProviders] = useState<Provider[]>(mockTeamProviders);
-  const [shop, setShop] = useState<Shop>(mockShop);
-  const [masterServiceList, setMasterServiceList] = useState<Service[]>(mockMasterServiceList);
-  const [appointments, setAppointments] = useState<Appointment[]>(mockProviderAppointments);
-  const [isLoading] = useState<boolean>(false);
-  const [error] = useState<string | null>(null);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [shop, setShop] = useState<Shop | null>(null);
+  const [masterServiceList, setMasterServiceList] = useState<Service[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Initialize data to prevent hydration issues
+  useEffect(() => {
+    try {
+      setProviders(mockTeamProviders || []);
+      setShop(mockShop || null);
+      setMasterServiceList(mockMasterServiceList || []);
+      setAppointments(mockProviderAppointments || []);
+      setIsLoading(false);
+      console.log('TeamManagementProvider: Data initialized successfully');
+    } catch (err) {
+      console.error('TeamManagementProvider: Initialization error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to initialize team data');
+      setIsLoading(false);
+    }
+  }, []);
 
   const updateProvider = useCallback((updatedProvider: Provider) => {
     setProviders(prev => 
@@ -42,7 +58,7 @@ export const [TeamManagementProvider, useTeamManagement] = createContextHook(() 
       return;
     }
     setMasterServiceList(services);
-    setShop(prev => ({ ...prev, masterServiceList: services }));
+    setShop(prev => prev ? { ...prev, masterServiceList: services } : null);
     console.log('Master service list updated:', services);
   }, []);
 
@@ -61,14 +77,14 @@ export const [TeamManagementProvider, useTeamManagement] = createContextHook(() 
 
   const generateInviteLink = useCallback((): string => {
     const baseUrl = 'https://myapp.com/join';
-    const shopId = shop.id;
+    const shopId = shop?.id || 'default';
     const inviteCode = `${shopId}_${Date.now()}`;
     return `${baseUrl}/${inviteCode}`;
-  }, [shop.id]);
+  }, [shop?.id]);
 
   console.log('TeamManagementProvider: Context value created', {
     providersCount: providers.length,
-    shopId: shop.id,
+    shopId: shop?.id || 'none',
     isLoading,
     error
   });
