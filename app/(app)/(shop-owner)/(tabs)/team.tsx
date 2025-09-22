@@ -28,13 +28,28 @@ type FilterRole = 'all' | 'admin' | 'standard' | 'associate';
 
 export default function TeamManagementScreen() {
   const router = useRouter();
-  const { providers, updateProvider, generateInviteLink } = useTeamManagement();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [roleFilter, setRoleFilter] = useState<FilterRole>('all');
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
+  
+  console.log('TeamManagementScreen: Component rendering');
+  
+  const teamManagementContext = useTeamManagement();
+  console.log('TeamManagementScreen: Context received:', teamManagementContext);
+  
+  if (!teamManagementContext) {
+    console.error('TeamManagementScreen: useTeamManagement returned undefined');
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Error: Team management context not available</Text>
+      </View>
+    );
+  }
+  
+  const { providers, updateProvider, generateInviteLink } = teamManagementContext;
 
   const filteredProviders = useMemo(() => {
     return providers.filter((provider) => {
@@ -508,5 +523,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: COLORS.primary,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#F44336',
+    textAlign: 'center',
+    marginTop: 50,
   },
 });
