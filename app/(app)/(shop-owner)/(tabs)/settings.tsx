@@ -144,7 +144,15 @@ export default function SettingsScreen() {
           subtitle: 'Update shop details and hours',
           icon: Store,
           type: 'navigate' as const,
-          onPress: () => router.push('/shop-settings/new'),
+          onPress: () => {
+            console.log('Shop Owner Settings: Navigating to shop settings');
+            try {
+              router.push('/shop-settings/new');
+            } catch (error) {
+              console.error('Shop Owner Settings: Navigation error:', error);
+              Alert.alert('Error', 'Unable to navigate to shop settings');
+            }
+          },
         },
         {
           id: 'shop-services',
@@ -163,7 +171,15 @@ export default function SettingsScreen() {
           subtitle: 'Manage staff access levels',
           icon: Users,
           type: 'navigate' as const,
-          onPress: () => router.push('/(app)/(shop-owner)/(tabs)/team'),
+          onPress: () => {
+            console.log('Shop Owner Settings: Navigating to team management');
+            try {
+              router.push('/(app)/(shop-owner)/(tabs)/team');
+            } catch (error) {
+              console.error('Shop Owner Settings: Navigation error:', error);
+              Alert.alert('Error', 'Unable to navigate to team management');
+            }
+          },
         },
         {
           id: 'booking-settings',
@@ -214,7 +230,15 @@ export default function SettingsScreen() {
           subtitle: 'Manage billing and payouts',
           icon: CreditCard,
           type: 'navigate' as const,
-          onPress: () => router.push('/payout-settings'),
+          onPress: () => {
+            console.log('Shop Owner Settings: Navigating to payout settings');
+            try {
+              router.push('/payout-settings');
+            } catch (error) {
+              console.error('Shop Owner Settings: Navigation error:', error);
+              Alert.alert('Error', 'Unable to navigate to payout settings');
+            }
+          },
         },
         {
           id: 'security',
@@ -290,7 +314,19 @@ export default function SettingsScreen() {
       <TouchableOpacity
         key={item.id}
         style={styles.settingItem}
-        onPress={item.onPress}
+        onPress={() => {
+          console.log('Shop Owner Settings: Item pressed:', item.id);
+          try {
+            if (item.onPress) {
+              item.onPress();
+            } else {
+              console.warn('Shop Owner Settings: No onPress handler for item:', item.id);
+            }
+          } catch (error) {
+            console.error('Shop Owner Settings: Error handling press:', error);
+            Alert.alert('Error', 'Unable to perform this action');
+          }
+        }}
       >
         <View style={styles.settingItemLeft}>
           <item.icon size={20} color={item.id === 'signout' ? '#FF3B30' : '#666'} />

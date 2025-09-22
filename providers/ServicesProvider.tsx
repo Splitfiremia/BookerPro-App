@@ -12,56 +12,43 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
   const [services, setServices] = useState<Service[]>([]);
   const [masterServices, setMasterServices] = useState<Service[]>([]);
   const [serviceOfferings, setServiceOfferings] = useState<ProviderServiceOffering[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const loadServices = useCallback(async () => {
     if (!user) {
-      setIsLoading(false);
       return;
     }
     
-    setIsLoading(true);
     try {
-      // Quick timeout to prevent hanging
-      const loadWithTimeout = (promise: Promise<any>, timeout: number = 200) => {
-        return Promise.race([
-          promise,
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), timeout)
-          )
-        ]);
-      };
-      
-      // Load based on user role and provider type
+      // Load based on user role and provider type - synchronously set defaults first
       if (user.role === 'provider') {
         const mockData = user.mockData;
         if (mockData?.profile?.isIndependent !== false) {
-          // Independent provider - try to load personal services quickly
+          // Independent provider - initialize with mock data first
+          const initialServices: Service[] = mockData?.profile?.services?.map((s: any, index: number) => ({
+            id: `service_${index + 1}`,
+            name: s.name,
+            description: s.description || '',
+            baseDuration: parseInt(s.duration) || 30,
+            basePrice: s.price,
+            isActive: true,
+            providerId: user.id,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })) || [];
+          setServices(initialServices);
+          
+          // Then try to load from storage asynchronously
           try {
-            const storedServices = await loadWithTimeout(AsyncStorage.getItem(`services_${user.id}`));
+            const storedServices = await AsyncStorage.getItem(`services_${user.id}`);
             if (storedServices) {
               setServices(JSON.parse(storedServices));
-            } else {
-              // Initialize with mock data
-              const initialServices: Service[] = mockData?.profile?.services?.map((s: any, index: number) => ({
-                id: `service_${index + 1}`,
-                name: s.name,
-                description: s.description || '',
-                baseDuration: parseInt(s.duration) || 30,
-                basePrice: s.price,
-                isActive: true,
-                providerId: user.id,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              })) || [];
-              setServices(initialServices);
             }
           } catch (error) {
-            console.log('Using default services due to timeout/error');
-            setServices([]);
+            console.log('Could not load stored services, using defaults');
           }
         } else {
-          // Shop-based provider - load defaults quickly
+          // Shop-based provider - set defaults immediately
           const defaultMasterServices: Service[] = [
             {
               id: 'master_1',
@@ -111,7 +98,7 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
           setServiceOfferings(defaultOfferings);
         }
       } else if (user.role === 'owner') {
-        // Shop owner - load defaults quickly
+        // Shop owner - set defaults immediately
         const defaultMasterServices: Service[] = [
           {
             id: 'master_1',
@@ -140,27 +127,14 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
       }
     } catch (error) {
       console.error('Error loading services:', error);
-    } finally {
-      setIsLoading(false);
     }
   }, [user]);
 
-  // Load services on mount with timeout
+  // Load services on mount
   useEffect(() => {
-    if (!user) {
-      setIsLoading(false);
-      return;
+    if (user) {
+      loadServices();
     }
-    
-    loadServices();
-    
-    // Fallback timeout
-    const fallbackTimeout = setTimeout(() => {
-      console.warn('ServicesProvider: Fallback timeout triggered');
-      setIsLoading(false);
-    }, 600);
-    
-    return () => clearTimeout(fallbackTimeout);
   }, [user, loadServices]);
 
   // Independent provider service management

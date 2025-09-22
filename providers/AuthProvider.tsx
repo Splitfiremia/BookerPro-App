@@ -31,10 +31,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   // Always call hooks in the same order
   const [user, setUser] = useState<User | null>(null);
   const [isDeveloperMode, setIsDeveloperMode] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false); // Start with false to prevent hydration timeout
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isInitialized, setIsInitialized] = useState<boolean>(true); // Start initialized to prevent timeout
 
-  // Initialize synchronously to prevent timeout issues
+  // Initialize asynchronously but don't block rendering
   useEffect(() => {
     let isMounted = true;
     
@@ -42,37 +42,22 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       if (!isMounted) return;
       
       try {
-        // Use Promise.race with timeout to prevent hanging
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 500)
-        );
-        
-        const loadPromise = Promise.allSettled([
-          AsyncStorage.getItem("user"),
-          AsyncStorage.getItem("developerMode")
-        ]);
-        
-        const [storedUser, storedDevMode] = await Promise.race([
-          loadPromise,
-          timeoutPromise
-        ]) as PromiseSettledResult<string | null>[];
-        
-        if (!isMounted) return;
-        
-        // Handle user data
-        if (storedUser.status === 'fulfilled' && storedUser.value) {
+        // Load user data
+        const storedUser = await AsyncStorage.getItem("user");
+        if (storedUser && isMounted) {
           try {
-            const userData = JSON.parse(storedUser.value);
+            const userData = JSON.parse(storedUser);
             setUser(userData);
           } catch (error) {
             console.log('AuthProvider: Error parsing stored user data');
           }
         }
         
-        // Handle developer mode
-        if (storedDevMode.status === 'fulfilled' && storedDevMode.value) {
+        // Load developer mode
+        const storedDevMode = await AsyncStorage.getItem("developerMode");
+        if (storedDevMode && isMounted) {
           try {
-            const devMode = JSON.parse(storedDevMode.value);
+            const devMode = JSON.parse(storedDevMode);
             setIsDeveloperMode(devMode);
           } catch (error) {
             console.log('AuthProvider: Error parsing developer mode data');
@@ -80,15 +65,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         }
         
       } catch (error) {
-        console.log('AuthProvider: Using defaults due to timeout/error');
-      } finally {
-        if (isMounted) {
-          setIsInitialized(true);
-        }
+        console.log('AuthProvider: Using defaults due to error:', error);
       }
     };
     
-    // Load immediately without delay
+    // Load asynchronously without blocking
     loadUserAndSettings();
     
     return () => {
