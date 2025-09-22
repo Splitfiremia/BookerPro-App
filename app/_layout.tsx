@@ -10,6 +10,7 @@ import { ServicesProvider } from "@/providers/ServicesProvider";
 import { SocialProvider } from "@/providers/SocialProvider";
 import { PaymentProvider } from "@/providers/PaymentProvider";
 import { WaitlistProvider } from "@/providers/WaitlistProvider";
+import { TeamManagementProvider } from "@/providers/TeamManagementProvider";
 
 import { ModeIndicator } from "@/components/ModeIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -57,10 +58,12 @@ export default function RootLayout() {
                 <PaymentProvider>
                   <SocialProvider>
                     <WaitlistProvider>
-                      <ServicesProvider>
-                        <RootLayoutNav />
-                        <ModeIndicator />
-                      </ServicesProvider>
+                      <TeamManagementProvider>
+                        <ServicesProvider>
+                          <RootLayoutNav />
+                          <ModeIndicator />
+                        </ServicesProvider>
+                      </TeamManagementProvider>
                     </WaitlistProvider>
                   </SocialProvider>
                 </PaymentProvider>
