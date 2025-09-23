@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useShopOwnerOnboarding } from '@/providers/ShopOwnerOnboardingProvider';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, ChevronLeft } from 'lucide-react-native';
 
 export default function OwnerInformation() {
   const router = useRouter();
@@ -41,6 +41,15 @@ export default function OwnerInformation() {
       keyboardVerticalOffset={100}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          testID="owner-info-back-button"
+        >
+          <ChevronLeft size={20} color="#666" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+        
         <View style={styles.header}>
           <Text style={styles.title}>And who are you?</Text>
           <Text style={styles.subtitle}>
@@ -111,6 +120,18 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 24,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+  backText: {
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 8,
   },
   header: {
     marginBottom: 32,

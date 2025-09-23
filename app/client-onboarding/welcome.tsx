@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { User, Store } from 'lucide-react-native';
+import { User, Store, ChevronLeft } from 'lucide-react-native';
 
 export default function WelcomeScreen() {
   const [showWorkSelection, setShowWorkSelection] = useState<boolean>(false);
@@ -38,6 +38,15 @@ export default function WelcomeScreen() {
         
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.selectionContent}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+              testID="welcome-back-button"
+            >
+              <ChevronLeft size={20} color="#CCCCCC" />
+              <Text style={styles.backText}>Back</Text>
+            </TouchableOpacity>
+            
             <View style={styles.progressContainer}>
               <Text style={styles.progressText}>GET STARTED</Text>
               <View style={styles.progressDots}>
@@ -137,6 +146,18 @@ const styles = StyleSheet.create({
   selectionContent: {
     flex: 1,
     paddingHorizontal: 24,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: 12,
+    marginTop: 10,
+  },
+  backText: {
+    fontSize: 16,
+    color: '#CCCCCC',
+    marginLeft: 8,
   },
   progressContainer: {
     alignItems: 'center',

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useShopOwnerOnboarding, ShopServiceCategory } from '@/providers/ShopOwnerOnboardingProvider';
-import { ChevronRight, Check } from 'lucide-react-native';
+import { ChevronRight, Check, ChevronLeft } from 'lucide-react-native';
 
 export default function ShopType() {
   const router = useRouter();
@@ -36,6 +36,15 @@ export default function ShopType() {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          testID="shop-type-back-button"
+        >
+          <ChevronLeft size={20} color="#666" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+        
         <View style={styles.header}>
           <Text style={styles.title}>What services are offered at your shop?</Text>
           <Text style={styles.subtitle}>
@@ -94,6 +103,18 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 24,
     paddingBottom: 40,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+  backText: {
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 8,
   },
   header: {
     marginBottom: 32,

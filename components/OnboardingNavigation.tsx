@@ -72,9 +72,10 @@ const styles = StyleSheet.create({
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     paddingVertical: 12,
     marginBottom: 12,
+    alignSelf: 'flex-start',
   },
   backText: {
     fontSize: 16,

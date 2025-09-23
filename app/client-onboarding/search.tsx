@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Search, MapPin, Filter, Star } from 'lucide-react-native';
+import { Search, MapPin, Filter, Star, ChevronLeft } from 'lucide-react-native';
 
 interface Shop {
   id: string;
@@ -116,6 +116,15 @@ export default function SearchScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#000000" />
+        
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          testID="search-back-button"
+        >
+          <ChevronLeft size={20} color="#CCCCCC" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
         
         {/* Progress Header */}
         <View style={styles.progressContainer}>
@@ -492,6 +501,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 32,
     alignItems: 'center',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 10,
+  },
+  backText: {
+    fontSize: 16,
+    color: '#CCCCCC',
+    marginLeft: 8,
   },
   progressContainer: {
     alignItems: 'center',
