@@ -53,7 +53,7 @@ export default function ShopsExploreScreen() {
     return (
       <TouchableOpacity 
         style={styles.shopCard}
-        onPress={() => router.push(`/shops/${item.id}` as any)}
+        onPress={() => router.push(`/(app)/(client)/shops/${item.id}`)}
         testID={`shop-card-${item.id}`}
       >
         <Image source={{ uri: item.image }} style={styles.shopImage} />
