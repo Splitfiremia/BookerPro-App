@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,12 @@ import {
   Image,
   FlatList,
   StatusBar,
+  Animated,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
-import { Search, MapPin, Filter, Star, CreditCard, Heart } from 'lucide-react-native';
+import { Search, MapPin, Filter, Star, CreditCard, Heart, X, Clock, TrendingUp } from 'lucide-react-native';
 import { mockProviders } from '@/mocks/providers';
 import { useSocial } from '@/providers/SocialProvider';
 import { router } from 'expo-router';
@@ -51,24 +53,138 @@ const mockShops: Shop[] = [
 
 const filterOptions = [
   { id: 'filter', label: 'Filter', icon: Filter },
-  { id: 'nearby', label: 'Nearby', icon: null },
+  { id: 'nearby', label: 'Nearby', icon: MapPin },
   { id: 'price', label: 'Price', icon: null },
-  { id: 'available', label: 'Available', icon: null },
-  { id: 'accepts', label: 'Accepts', icon: null },
+  { id: 'available', label: 'Available', icon: Clock },
+  { id: 'rating', label: 'Top Rated', icon: Star },
 ];
+
+const searchSuggestions = [
+  'Haircut',
+  'Hair Color',
+  'Highlights',
+  'Balayage',
+  'Beard Trim',
+  'Manicure',
+  'Pedicure',
+  'Facial',
+  'Massage',
+  'Eyebrow Threading',
+];
+
+const recentSearches = [
+  'Barber near me',
+  'Hair salon Manhattan',
+  'Nail salon',
+];
+
+
 
 export default function HomeScreen() {
   const [searchText, setSearchText] = useState<string>('');
   const [selectedFilter, setSelectedFilter] = useState<string>('nearby');
   const [locationEnabled, setLocationEnabled] = useState<boolean>(false);
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState<boolean>(false);
+  const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
   const { getFollowedCount } = useSocial();
+  const searchInputRef = useRef<TextInput>(null);
+  const searchAnimation = useRef(new Animated.Value(0)).current;
+  const suggestionAnimation = useRef(new Animated.Value(0)).current;
 
   // Simulate location permission check
-  React.useEffect(() => {
+  useEffect(() => {
     // In a real app, you would check location permissions here
     // For now, we'll show the location unavailable state
     setLocationEnabled(false);
+  }, []);
+
+  // Animate search focus
+  useEffect(() => {
+    Animated.timing(searchAnimation, {
+      toValue: isSearchFocused ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [isSearchFocused, searchAnimation]);
+
+  // Animate suggestions
+  useEffect(() => {
+    Animated.timing(suggestionAnimation, {
+      toValue: showSearchSuggestions ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [showSearchSuggestions, suggestionAnimation]);
+
+  // Filter data based on search and filters
+  const filteredProviders = useMemo(() => {
+    let filtered = [...mockProviders];
+    
+    // Apply search filter
+    if (searchText.trim()) {
+      const query = searchText.toLowerCase();
+      filtered = filtered.filter(provider => 
+        provider.name.toLowerCase().includes(query) ||
+        provider.services?.some(service => 
+          service.name.toLowerCase().includes(query)
+        ) ||
+        provider.specialties?.some(specialty => 
+          specialty.toLowerCase().includes(query)
+        )
+      );
+    }
+    
+    // Apply additional filters
+    switch (selectedFilter) {
+      case 'rating':
+        filtered = filtered.filter(provider => provider.rating >= 4.5);
+        break;
+      case 'available':
+        // Filter for available providers (mock implementation)
+        filtered = filtered.filter(provider => provider.rating > 4.0);
+        break;
+      case 'price':
+        // Sort by rating as a proxy for price range
+        filtered = filtered.sort((a, b) => a.rating - b.rating);
+        break;
+      default:
+        break;
+    }
+    
+    return filtered;
+  }, [searchText, selectedFilter]);
+
+  const filteredShops = useMemo(() => {
+    if (!searchText.trim()) return mockShops;
+    
+    const query = searchText.toLowerCase();
+    return mockShops.filter(shop => 
+      shop.name.toLowerCase().includes(query) ||
+      shop.type.toLowerCase().includes(query) ||
+      shop.description.toLowerCase().includes(query)
+    );
+  }, [searchText]);
+
+  const handleSearchFocus = useCallback(() => {
+    setIsSearchFocused(true);
+    setShowSearchSuggestions(true);
+  }, []);
+
+  const handleSearchBlur = useCallback(() => {
+    setIsSearchFocused(false);
+    setTimeout(() => setShowSearchSuggestions(false), 200);
+  }, []);
+
+  const handleSuggestionPress = useCallback((suggestion: string) => {
+    setSearchText(suggestion);
+    setShowSearchSuggestions(false);
+    searchInputRef.current?.blur();
+  }, []);
+
+  const clearSearch = useCallback(() => {
+    setSearchText('');
+    searchInputRef.current?.focus();
   }, []);
 
   const renderShopCard = ({ item }: { item: Shop }) => (
@@ -147,16 +263,40 @@ export default function HomeScreen() {
       
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
-        <View style={styles.searchContainer}>
+        <Animated.View 
+          style={[
+            styles.searchContainer,
+            {
+              borderColor: searchAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['transparent', COLORS.accent],
+              }),
+              borderWidth: searchAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 2],
+              }),
+            }
+          ]}
+        >
           <Search size={20} color={COLORS.lightGray} style={styles.searchIcon} />
           <TextInput
+            ref={searchInputRef}
             style={styles.searchInput}
-            placeholder="Search"
+            placeholder="Search services, providers, shops..."
             placeholderTextColor={COLORS.lightGray}
             value={searchText}
             onChangeText={setSearchText}
+            onFocus={handleSearchFocus}
+            onBlur={handleSearchBlur}
+            returnKeyType="search"
+            testID="search-input"
           />
-        </View>
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+              <X size={18} color={COLORS.lightGray} />
+            </TouchableOpacity>
+          )}
+        </Animated.View>
         
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.locationContainer}>
@@ -225,6 +365,65 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Search Suggestions Modal */}
+      <Modal
+        visible={showSearchSuggestions}
+        transparent
+        animationType="none"
+        onRequestClose={() => setShowSearchSuggestions(false)}
+      >
+        <TouchableOpacity 
+          style={styles.suggestionOverlay}
+          activeOpacity={1}
+          onPress={() => setShowSearchSuggestions(false)}
+        >
+          <Animated.View 
+            style={[
+              styles.suggestionsContainer,
+              {
+                opacity: suggestionAnimation,
+                transform: [{
+                  translateY: suggestionAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-20, 0],
+                  })
+                }]
+              }
+            ]}
+          >
+            {recentSearches.length > 0 && (
+              <View style={styles.suggestionSection}>
+                <Text style={styles.suggestionSectionTitle}>Recent Searches</Text>
+                {recentSearches.map((search, index) => (
+                  <TouchableOpacity
+                    key={`recent-${index}`}
+                    style={styles.suggestionItem}
+                    onPress={() => handleSuggestionPress(search)}
+                  >
+                    <Clock size={16} color={COLORS.lightGray} />
+                    <Text style={styles.suggestionText}>{search}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+            
+            <View style={styles.suggestionSection}>
+              <Text style={styles.suggestionSectionTitle}>Popular Services</Text>
+              {searchSuggestions.map((suggestion, index) => (
+                <TouchableOpacity
+                  key={`suggestion-${index}`}
+                  style={styles.suggestionItem}
+                  onPress={() => handleSuggestionPress(suggestion)}
+                >
+                  <TrendingUp size={16} color={COLORS.accent} />
+                  <Text style={styles.suggestionText}>{suggestion}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+
       {/* Content */}
       {!locationEnabled ? (
         // Location Unavailable State
@@ -238,28 +437,51 @@ export default function HomeScreen() {
         </View>
       ) : (
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Search Results */}
+          {searchText.trim() && (
+            <View style={styles.searchResultsHeader}>
+              <Text style={styles.searchResultsText}>
+                {filteredProviders.length + filteredShops.length} results for &quot;{searchText}&quot;
+              </Text>
+            </View>
+          )}
+          
           {/* Shops Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>SHOPS</Text>
-            <FlatList
-              data={mockShops}
-              renderItem={renderShopCard}
-              keyExtractor={(item) => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.shopsContainer}
-            />
-          </View>
+          {(!searchText.trim() || filteredShops.length > 0) && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>SHOPS</Text>
+              <FlatList
+                data={filteredShops}
+                renderItem={renderShopCard}
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.shopsContainer}
+                ListEmptyComponent={
+                  searchText.trim() ? (
+                    <Text style={styles.noResultsText}>No shops found</Text>
+                  ) : null
+                }
+              />
+            </View>
+          )}
 
           {/* Providers Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>PROVIDERS</Text>
-            {mockProviders.slice(0, 3).map((provider) => (
-              <View key={provider.id}>
-                {renderProviderCard({ item: provider })}
-              </View>
-            ))}
-          </View>
+          {(!searchText.trim() || filteredProviders.length > 0) && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                PROVIDERS {searchText.trim() && `(${filteredProviders.length})`}
+              </Text>
+              {filteredProviders.slice(0, searchText.trim() ? filteredProviders.length : 3).map((provider) => (
+                <View key={provider.id}>
+                  {renderProviderCard({ item: provider })}
+                </View>
+              ))}
+              {filteredProviders.length === 0 && searchText.trim() && (
+                <Text style={styles.noResultsText}>No providers found</Text>
+              )}
+            </View>
+          )}
         </ScrollView>
       )}
     </View>
@@ -576,5 +798,71 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.card,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  clearButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  suggestionOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingTop: 120,
+  },
+  suggestionsContainer: {
+    backgroundColor: COLORS.card,
+    marginHorizontal: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
+    maxHeight: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  suggestionSection: {
+    paddingVertical: SPACING.md,
+  },
+  suggestionSectionTitle: {
+    fontSize: FONT_SIZES.sm,
+    fontFamily: FONTS.bold,
+    color: COLORS.lightGray,
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+  },
+  suggestionText: {
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.regular,
+    color: COLORS.white,
+    marginLeft: SPACING.sm,
+    flex: 1,
+  },
+  searchResultsHeader: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    backgroundColor: COLORS.card,
+    marginHorizontal: SPACING.md,
+    marginBottom: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+  },
+  searchResultsText: {
+    fontSize: FONT_SIZES.sm,
+    fontFamily: FONTS.regular,
+    color: COLORS.lightGray,
+  },
+  noResultsText: {
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.regular,
+    color: COLORS.lightGray,
+    textAlign: 'center',
+    paddingVertical: SPACING.xl,
+    paddingHorizontal: SPACING.md,
   },
 });

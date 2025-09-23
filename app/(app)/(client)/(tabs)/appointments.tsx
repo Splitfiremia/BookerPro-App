@@ -8,9 +8,10 @@ import {
   FlatList,
   RefreshControl,
   Image,
+  Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Calendar, Clock, User, MapPin, Phone, Star, Filter } from "lucide-react-native";
+import { Calendar, Clock, User, MapPin, Phone, Star, Filter, CheckCircle, XCircle, AlertCircle, Navigation } from "lucide-react-native";
 import { router } from "expo-router";
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from "@/constants/theme";
 import { useAuth } from "@/providers/AuthProvider";
@@ -152,11 +153,37 @@ export default function AppointmentsScreen() {
       case "upcoming":
         return COLORS.primary;
       case "completed":
-        return COLORS.success;
+        return '#4CAF50'; // Green
       case "cancelled":
-        return COLORS.error;
+        return '#F44336'; // Red
       default:
         return COLORS.text;
+    }
+  };
+
+  const getStatusIcon = (status: Appointment["status"]) => {
+    switch (status) {
+      case "upcoming":
+        return AlertCircle;
+      case "completed":
+        return CheckCircle;
+      case "cancelled":
+        return XCircle;
+      default:
+        return Clock;
+    }
+  };
+
+  const getStatusGradient = (status: Appointment["status"]) => {
+    switch (status) {
+      case "upcoming":
+        return ['#FF5A5F', '#FF8E53'];
+      case "completed":
+        return ['#4CAF50', '#66BB6A'];
+      case "cancelled":
+        return ['#F44336', '#EF5350'];
+      default:
+        return [COLORS.card, COLORS.card];
     }
   };
 
@@ -179,37 +206,88 @@ export default function AppointmentsScreen() {
   };
 
   const renderAppointment = ({ item }: { item: Appointment }) => {
+    const StatusIcon = getStatusIcon(item.status);
+    const isUpcoming = item.status === 'upcoming';
+    const isToday = item.date.toDateString() === new Date().toDateString();
+    
     return (
       <TouchableOpacity
-        style={styles.appointmentCard}
+        style={[
+          styles.appointmentCard,
+          isToday && isUpcoming && styles.todayCard,
+          item.status === 'completed' && styles.completedCard,
+          item.status === 'cancelled' && styles.cancelledCard
+        ]}
         onPress={() => {
           // Navigate to appointment details or provider profile
           console.log('Navigate to appointment details:', item.id);
         }}
         testID={`appointment-${item.id}`}
       >
+        {/* Status Indicator Strip */}
+        <View style={[
+          styles.statusStrip,
+          { backgroundColor: getStatusColor(item.status) }
+        ]} />
+        
+        {/* Today Badge */}
+        {isToday && isUpcoming && (
+          <View style={styles.todayBadge}>
+            <Text style={styles.todayBadgeText}>TODAY</Text>
+          </View>
+        )}
+        
         <View style={styles.appointmentHeader}>
           <View style={styles.providerInfo}>
-            <Image source={{ uri: item.providerImage }} style={styles.providerImage} />
+            <View style={styles.providerImageContainer}>
+              <Image source={{ uri: item.providerImage }} style={styles.providerImage} />
+              {item.status === 'completed' && (
+                <View style={styles.completedOverlay}>
+                  <CheckCircle size={20} color="#4CAF50" />
+                </View>
+              )}
+            </View>
             <View style={styles.providerDetails}>
               <Text style={styles.providerName}>{item.providerName}</Text>
               <Text style={styles.shopName}>{item.shopName}</Text>
+              <View style={styles.ratingRow}>
+                <Star size={12} color={COLORS.accent} fill={COLORS.accent} />
+                <Text style={styles.ratingText}>4.8</Text>
+              </View>
             </View>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-            <Text style={styles.statusText}>
-              {item.status.toUpperCase()}
-            </Text>
+          
+          <View style={styles.statusContainer}>
+            <View style={[
+              styles.statusBadge, 
+              { backgroundColor: getStatusColor(item.status) }
+            ]}>
+              <StatusIcon size={12} color={COLORS.white} />
+              <Text style={styles.statusText}>
+                {item.status.toUpperCase()}
+              </Text>
+            </View>
+            {isUpcoming && (
+              <Text style={styles.timeUntil}>
+                {isToday ? 'Today' : formatDate(item.date)}
+              </Text>
+            )}
           </View>
         </View>
 
         <View style={styles.appointmentBody}>
-          <Text style={styles.serviceName}>{item.service}</Text>
+          <View style={styles.serviceHeader}>
+            <Text style={styles.serviceName}>{item.service}</Text>
+            <Text style={styles.priceText}>${item.price}</Text>
+          </View>
           
           <View style={styles.appointmentDetails}>
             <View style={styles.detailRow}>
-              <Calendar size={16} color={COLORS.lightGray} />
-              <Text style={styles.detailText}>
+              <Calendar size={16} color={getStatusColor(item.status)} />
+              <Text style={[
+                styles.detailText,
+                isToday && isUpcoming && styles.todayText
+              ]}>
                 {formatDate(item.date)} at {item.time}
               </Text>
             </View>
@@ -227,18 +305,35 @@ export default function AppointmentsScreen() {
           
           <View style={styles.appointmentFooter}>
             <TouchableOpacity 
-              style={styles.phoneButton}
+              style={[
+                styles.actionButton,
+                styles.phoneButton
+              ]}
               onPress={() => console.log('Call provider:', item.phone)}
             >
               <Phone size={16} color={COLORS.primary} />
               <Text style={styles.phoneText}>Call</Text>
             </TouchableOpacity>
             
-            <Text style={styles.priceText}>${item.price}</Text>
+            {isUpcoming && (
+              <TouchableOpacity 
+                style={[
+                  styles.actionButton,
+                  styles.directionsButton
+                ]}
+                onPress={() => console.log('Get directions to:', item.address)}
+              >
+                <Navigation size={16} color={COLORS.accent} />
+                <Text style={styles.directionsText}>Directions</Text>
+              </TouchableOpacity>
+            )}
           </View>
           
           {item.notes && (
-            <Text style={styles.notesText}>Note: {item.notes}</Text>
+            <View style={styles.notesContainer}>
+              <Text style={styles.notesLabel}>Note:</Text>
+              <Text style={styles.notesText}>{item.notes}</Text>
+            </View>
           )}
         </View>
       </TouchableOpacity>
@@ -375,6 +470,49 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.lg,
     marginBottom: SPACING.md,
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  todayCard: {
+    borderWidth: 2,
+    borderColor: COLORS.accent,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.3,
+    elevation: 6,
+  },
+  completedCard: {
+    opacity: 0.8,
+  },
+  cancelledCard: {
+    opacity: 0.6,
+  },
+  statusStrip: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+  todayBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 1,
+  },
+  todayBadgeText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontFamily: FONTS.bold,
+    letterSpacing: 0.5,
   },
   appointmentHeader: {
     flexDirection: "row",
@@ -387,14 +525,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
   },
+  providerImageContainer: {
+    position: 'relative',
+    marginRight: SPACING.md,
+  },
   providerImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    marginRight: SPACING.md,
+  },
+  completedOverlay: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 2,
   },
   providerDetails: {
     flex: 1,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  ratingText: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.lightGray,
+    marginLeft: 4,
+    fontFamily: FONTS.regular,
   },
   providerName: {
     fontSize: FONT_SIZES.md,
@@ -407,25 +567,45 @@ const styles = StyleSheet.create({
     color: COLORS.lightGray,
     fontFamily: FONTS.regular,
   },
+  statusContainer: {
+    alignItems: 'flex-end',
+  },
   statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    borderRadius: BORDER_RADIUS.sm,
+    paddingVertical: 6,
+    borderRadius: BORDER_RADIUS.round,
+    minWidth: 80,
+    justifyContent: 'center',
   },
   statusText: {
     fontSize: 10,
     fontWeight: "600",
     color: COLORS.white,
     fontFamily: FONTS.bold,
+    marginLeft: 4,
+  },
+  timeUntil: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.lightGray,
+    marginTop: 4,
+    fontFamily: FONTS.regular,
   },
   appointmentBody: {
     width: "100%",
   },
+  serviceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
   serviceName: {
     fontSize: FONT_SIZES.lg,
     color: COLORS.primary,
-    marginBottom: SPACING.md,
     fontFamily: FONTS.bold,
+    flex: 1,
   },
   appointmentDetails: {
     marginBottom: SPACING.md,
@@ -442,23 +622,41 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: FONTS.regular,
   },
+  todayText: {
+    color: COLORS.accent,
+    fontFamily: FONTS.bold,
+  },
   appointmentFooter: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
+    gap: SPACING.md,
   },
-  phoneButton: {
-    flexDirection: "row",
-    alignItems: "center",
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.md,
     borderWidth: 1,
+  },
+  phoneButton: {
     borderColor: COLORS.primary,
+    backgroundColor: 'rgba(255, 90, 95, 0.1)',
+  },
+  directionsButton: {
+    borderColor: COLORS.accent,
+    backgroundColor: 'rgba(255, 90, 95, 0.1)',
   },
   phoneText: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.primary,
+    marginLeft: SPACING.xs,
+    fontFamily: FONTS.bold,
+  },
+  directionsText: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.accent,
     marginLeft: SPACING.xs,
     fontFamily: FONTS.bold,
   },
@@ -468,12 +666,28 @@ const styles = StyleSheet.create({
     color: COLORS.accent,
     fontFamily: FONTS.bold,
   },
+  notesContainer: {
+    marginTop: SPACING.md,
+    padding: SPACING.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: BORDER_RADIUS.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.accent,
+  },
+  notesLabel: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.accent,
+    fontFamily: FONTS.bold,
+    marginBottom: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   notesText: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.lightGray,
-    marginTop: SPACING.sm,
     fontStyle: "italic",
     fontFamily: FONTS.regular,
+    lineHeight: 18,
   },
   emptyContainer: {
     alignItems: "center",
