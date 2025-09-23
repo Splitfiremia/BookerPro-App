@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FormInput } from '@/components/FormInput';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
@@ -41,6 +41,56 @@ export default function PersonalInfoScreen() {
     phone: false,
     email: false,
   });
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const headerSlideAnim = useRef(new Animated.Value(-20)).current;
+  const formSlideAnim = useRef(new Animated.Value(40)).current;
+  const navigationSlideAnim = useRef(new Animated.Value(30)).current;
+  
+  useEffect(() => {
+    // Staggered animation sequence
+    const animations = Animated.stagger(100, [
+      // Header animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(headerSlideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Content animation
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 700,
+        useNativeDriver: true,
+      }),
+      // Form animation
+      Animated.timing(formSlideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      // Navigation animation
+      Animated.timing(navigationSlideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]);
+    
+    animations.start();
+    
+    return () => {
+      animations.stop();
+    };
+  }, [fadeAnim, slideAnim, headerSlideAnim, formSlideAnim, navigationSlideAnim]);
 
   const validateForm = () => {
     const newErrors = {
@@ -131,18 +181,36 @@ export default function PersonalInfoScreen() {
         style={styles.keyboardAvoidingView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
+          <Animated.View style={[
+            styles.header,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: headerSlideAnim }]
+            }
+          ]}>
             <Text style={styles.title}>GET STARTED</Text>
             <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
-          </View>
+          </Animated.View>
 
-          <View style={styles.content}>
+          <Animated.View style={[
+            styles.content,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}>
             <Text style={styles.question}>Tell us about yourself</Text>
             <Text style={styles.description}>
-              We'll use this information to set up your profile and help clients find you.
+              We&apos;ll use this information to set up your profile and help clients find you.
             </Text>
 
-            <View style={styles.formContainer}>
+            <Animated.View style={[
+              styles.formContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: formSlideAnim }]
+              }
+            ]}>
               <FormInput
                 label="FIRST NAME"
                 value={formData.firstName}
@@ -191,14 +259,22 @@ export default function PersonalInfoScreen() {
                 autoCapitalize="none"
                 testID="email-input"
               />
-            </View>
-          </View>
+            </Animated.View>
+          </Animated.View>
 
-          <OnboardingNavigation
-            onBack={handleBack}
-            onNext={handleContinue}
-            testID="personal-info-navigation"
-          />
+          <Animated.View style={[
+            styles.animatedNavigationContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: navigationSlideAnim }]
+            }
+          ]}>
+            <OnboardingNavigation
+              onBack={handleBack}
+              onNext={handleContinue}
+              testID="personal-info-navigation"
+            />
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -247,5 +323,8 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 'auto',
     marginBottom: 20,
+  },
+  animatedNavigationContainer: {
+    // Container for animated navigation
   },
 });

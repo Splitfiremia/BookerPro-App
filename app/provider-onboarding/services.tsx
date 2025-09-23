@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
@@ -35,6 +35,56 @@ export default function ServicesScreen() {
   );
 
   const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const headerSlideAnim = useRef(new Animated.Value(-20)).current;
+  const servicesSlideAnim = useRef(new Animated.Value(50)).current;
+  const navigationSlideAnim = useRef(new Animated.Value(30)).current;
+  
+  useEffect(() => {
+    // Staggered animation sequence
+    const animations = Animated.stagger(120, [
+      // Header animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(headerSlideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Content animation
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 700,
+        useNativeDriver: true,
+      }),
+      // Services animation
+      Animated.timing(servicesSlideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      // Navigation animation
+      Animated.timing(navigationSlideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]);
+    
+    animations.start();
+    
+    return () => {
+      animations.stop();
+    };
+  }, [fadeAnim, slideAnim, headerSlideAnim, servicesSlideAnim, navigationSlideAnim]);
 
   const handleAddService = () => {
     setServicesList([
@@ -132,20 +182,54 @@ export default function ServicesScreen() {
         style={styles.keyboardAvoidingView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
+          <Animated.View style={[
+            styles.header,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: headerSlideAnim }]
+            }
+          ]}>
             <Text style={styles.title}>GET STARTED</Text>
             <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
-          </View>
+          </Animated.View>
 
-          <View style={styles.content}>
+          <Animated.View style={[
+            styles.content,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}>
             <Text style={styles.question}>Set your services and prices</Text>
             <Text style={styles.description}>
               Add the services you offer, their prices, and how long they take.
             </Text>
 
-            <View style={styles.servicesContainer}>
+            <Animated.View style={[
+              styles.servicesContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: servicesSlideAnim }]
+              }
+            ]}>
               {servicesList.map((service, index) => (
-                <View key={service.id} style={styles.serviceCard}>
+                <Animated.View 
+                  key={service.id} 
+                  style={[
+                    styles.serviceCard,
+                    {
+                      opacity: fadeAnim,
+                      transform: [
+                        {
+                          translateY: Animated.add(
+                            servicesSlideAnim,
+                            new Animated.Value(index * 15)
+                          )
+                        }
+                      ]
+                    }
+                  ]}
+                >
                   <View style={styles.serviceHeader}>
                     <Text style={styles.serviceNumber}>Service {index + 1}</Text>
                     {servicesList.length > 1 && (
@@ -216,7 +300,7 @@ export default function ServicesScreen() {
                       ) : null}
                     </View>
                   </View>
-                </View>
+                </Animated.View>
               ))}
 
               <TouchableOpacity 
@@ -227,16 +311,22 @@ export default function ServicesScreen() {
                 <Plus size={20} color="#D4AF37" />
                 <Text style={styles.addServiceText}>Add Another Service</Text>
               </TouchableOpacity>
-            </View>
-          </View>
+            </Animated.View>
+          </Animated.View>
 
-          <View style={styles.buttonContainer}>
+          <Animated.View style={[
+            styles.buttonContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: navigationSlideAnim }]
+            }
+          ]}>
             <GradientButton
               title="CONTINUE"
               onPress={handleContinue}
               testID="continue-button"
             />
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -1,18 +1,71 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
-import { ChevronRight } from 'lucide-react-native';
+
 
 export default function ProviderOnboardingIntro() {
   const router = useRouter();
   const { resetOnboarding } = useProviderOnboarding();
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const imageOpacity = useRef(new Animated.Value(0)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
 
   // Reset onboarding state when starting
   useEffect(() => {
     resetOnboarding();
-  }, [resetOnboarding]);
+    
+    // Start animations
+    const animationSequence = Animated.sequence([
+      // First, fade in the image
+      Animated.timing(imageOpacity, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      // Then add overlay
+      Animated.timing(overlayOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]);
+    
+    // Animate content
+    const contentAnimation = Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]);
+    
+    // Start both animations
+    animationSequence.start();
+    const timeoutId = setTimeout(() => contentAnimation.start(), 300);
+    
+    // Cleanup function
+    return () => {
+      clearTimeout(timeoutId);
+      animationSequence.stop();
+      contentAnimation.stop();
+    };
+  }, [resetOnboarding, fadeAnim, slideAnim, scaleAnim, imageOpacity, overlayOpacity]);
 
   const handleGetStarted = () => {
     router.push('/provider-onboarding/provider-type');
@@ -22,31 +75,54 @@ export default function ProviderOnboardingIntro() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.imageContainer}>
-          <Image 
+          <Animated.Image 
             source={{ uri: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2940&auto=format&fit=crop' }} 
-            style={styles.image}
+            style={[styles.image, { opacity: imageOpacity }]}
             resizeMode="cover"
           />
-          <View style={styles.overlay} />
+          <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} />
         </View>
         
-        <View style={styles.textContainer}>
+        <Animated.View style={[
+          styles.textContainer,
+          {
+            opacity: fadeAnim,
+            transform: [
+              { translateY: slideAnim },
+              { scale: scaleAnim }
+            ]
+          }
+        ]}>
           <Text style={styles.title}>THE POWER OF BARBERING</Text>
           <Text style={styles.subtitle}>
             Barbering is an art form. When you master your craft, you have the power to transform not just appearances, but confidence.
           </Text>
-        </View>
+        </Animated.View>
 
-        <View style={styles.indicatorContainer}>
+        <Animated.View style={[
+          styles.indicatorContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }]
+          }
+        ]}>
           <View style={styles.indicator} />
-        </View>
+        </Animated.View>
 
-        <OnboardingNavigation
-          onNext={handleGetStarted}
-          nextTitle="GET STARTED"
-          showBack={false}
-          testID="intro-navigation"
-        />
+        <Animated.View style={[
+          styles.navigationContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}>
+          <OnboardingNavigation
+            onNext={handleGetStarted}
+            nextTitle="GET STARTED"
+            showBack={false}
+            testID="intro-navigation"
+          />
+        </Animated.View>
       </View>
     </SafeAreaView>
   );
@@ -107,5 +183,8 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginBottom: 40,
     paddingHorizontal: 20,
+  },
+  navigationContainer: {
+    // Empty style for animation container
   },
 });

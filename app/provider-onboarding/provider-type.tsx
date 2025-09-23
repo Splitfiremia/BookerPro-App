@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
@@ -10,6 +10,56 @@ export default function ProviderTypeScreen() {
   const router = useRouter();
   const { currentStep, totalSteps, providerType, setProviderType, nextStep, previousStep } = useProviderOnboarding();
   const [selectedType, setSelectedType] = useState<ProviderType | null>(providerType);
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const headerSlideAnim = useRef(new Animated.Value(-20)).current;
+  const optionsSlideAnim = useRef(new Animated.Value(50)).current;
+  const navigationSlideAnim = useRef(new Animated.Value(30)).current;
+  
+  useEffect(() => {
+    // Staggered animation sequence
+    const animations = Animated.stagger(150, [
+      // Header animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(headerSlideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Content animation
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 700,
+        useNativeDriver: true,
+      }),
+      // Options animation
+      Animated.timing(optionsSlideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      // Navigation animation
+      Animated.timing(navigationSlideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]);
+    
+    animations.start();
+    
+    return () => {
+      animations.stop();
+    };
+  }, [fadeAnim, slideAnim, headerSlideAnim, optionsSlideAnim, navigationSlideAnim]);
 
   const handleTypeSelect = (type: ProviderType) => {
     setSelectedType(type);
@@ -59,42 +109,85 @@ export default function ProviderTypeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
+        <Animated.View style={[
+          styles.header,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: headerSlideAnim }]
+          }
+        ]}>
           <Text style={styles.title}>GET STARTED</Text>
           <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
-        </View>
+        </Animated.View>
 
-        <View style={styles.content}>
+        <Animated.View style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}>
           <Text style={styles.question}>What type of services do you provide?</Text>
           <Text style={styles.description}>Select the category that best describes your expertise.</Text>
 
-          <View style={styles.optionsContainer}>
-            {providerTypes.map((item) => (
-              <TouchableOpacity
+          <Animated.View style={[
+            styles.optionsContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: optionsSlideAnim }]
+            }
+          ]}>
+            {providerTypes.map((item, index) => (
+              <Animated.View
                 key={item.type}
                 style={[
-                  styles.optionCard,
-                  selectedType === item.type && styles.selectedCard
+                  styles.animatedOptionContainer,
+                  {
+                    opacity: fadeAnim,
+                    transform: [
+                      {
+                        translateY: Animated.add(
+                          optionsSlideAnim,
+                          new Animated.Value(index * 10)
+                        )
+                      }
+                    ]
+                  }
                 ]}
-                onPress={() => handleTypeSelect(item.type)}
-                testID={`provider-type-${item.type}`}
               >
-                <View style={styles.iconContainer}>{item.icon}</View>
-                <View style={styles.optionTextContainer}>
-                  <Text style={styles.optionTitle}>{item.type}</Text>
-                  <Text style={styles.optionDescription}>{item.description}</Text>
-                </View>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.optionCard,
+                    selectedType === item.type && styles.selectedCard
+                  ]}
+                  onPress={() => handleTypeSelect(item.type)}
+                  testID={`provider-type-${item.type}`}
+                >
+                  <View style={styles.iconContainer}>{item.icon}</View>
+                  <View style={styles.optionTextContainer}>
+                    <Text style={styles.optionTitle}>{item.type}</Text>
+                    <Text style={styles.optionDescription}>{item.description}</Text>
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
             ))}
-          </View>
-        </View>
+          </Animated.View>
+        </Animated.View>
 
-        <OnboardingNavigation
-          onBack={handleBack}
-          onNext={handleContinue}
-          nextDisabled={!selectedType}
-          testID="provider-type-navigation"
-        />
+        <Animated.View style={[
+          styles.animatedNavigationContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: navigationSlideAnim }]
+          }
+        ]}>
+          <OnboardingNavigation
+            onBack={handleBack}
+            onNext={handleContinue}
+            nextDisabled={!selectedType}
+            testID="provider-type-navigation"
+          />
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -175,5 +268,11 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 'auto',
     marginBottom: 20,
+  },
+  animatedOptionContainer: {
+    // Container for animated option cards
+  },
+  animatedNavigationContainer: {
+    // Container for animated navigation
   },
 });
