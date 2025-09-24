@@ -286,7 +286,10 @@ export default function ProviderProfileScreen() {
         </View>
       </Modal>
 
-      <ScrollView>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Header with profile info */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
@@ -521,6 +524,9 @@ export default function ProviderProfileScreen() {
           <LogOut size={20} color="#FFFFFF" />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
+        
+        {/* Bottom spacing for safe scrolling */}
+        <View style={styles.bottomSpacer} />
         
         {/* Portfolio Management Modal */}
         <Modal
@@ -788,6 +794,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  scrollContent: {
+    paddingBottom: 100, // Extra padding at bottom for safe scrolling
+  },
+  bottomSpacer: {
+    height: 50, // Additional spacing at the very bottom
   },
   header: {
     paddingVertical: 20,
