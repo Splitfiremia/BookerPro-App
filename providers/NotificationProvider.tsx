@@ -4,7 +4,6 @@ import * as Notifications from 'expo-notifications';
 import createContextHook from '@nkzw/create-context-hook';
 import NotificationService from '@/services/NotificationService';
 
-// eslint-disable-next-line @rork/linters/general-context-optimization
 export const [NotificationProvider, useNotifications] = createContextHook(() => {
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [pushToken, setPushToken] = useState<string | null>(null);
