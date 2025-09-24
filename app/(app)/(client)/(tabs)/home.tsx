@@ -70,6 +70,11 @@ const searchSuggestions = [
   'Facial',
   'Massage',
   'Eyebrow Threading',
+  'Hair Wash',
+  'Blowout',
+  'Hair Extensions',
+  'Keratin Treatment',
+  'Hair Styling',
 ];
 
 const recentSearches = [
@@ -117,6 +122,36 @@ export default function HomeScreen() {
     }).start();
   }, [showSearchSuggestions, suggestionAnimation]);
 
+  // Enhanced autocomplete suggestions
+  const autocompleteSuggestions = useMemo(() => {
+    if (!searchText.trim()) return [];
+    
+    const query = searchText.toLowerCase();
+    const suggestions = [];
+    
+    // Add matching services
+    const matchingServices = searchSuggestions.filter(service => 
+      service.toLowerCase().includes(query)
+    );
+    suggestions.push(...matchingServices.slice(0, 3));
+    
+    // Add matching provider names
+    const matchingProviders = mockProviders
+      .filter(provider => provider.name.toLowerCase().includes(query))
+      .map(provider => provider.name)
+      .slice(0, 2);
+    suggestions.push(...matchingProviders);
+    
+    // Add matching shop names
+    const matchingShops = mockShops
+      .filter(shop => shop.name.toLowerCase().includes(query))
+      .map(shop => shop.name)
+      .slice(0, 2);
+    suggestions.push(...matchingShops);
+    
+    return [...new Set(suggestions)].slice(0, 6);
+  }, [searchText]);
+
   // Filter data based on search and filters
   const filteredProviders = useMemo(() => {
     let filtered = [...mockProviders];
@@ -131,7 +166,8 @@ export default function HomeScreen() {
         ) ||
         provider.specialties?.some(specialty => 
           specialty.toLowerCase().includes(query)
-        )
+        ) ||
+        provider.shopName?.toLowerCase().includes(query)
       );
     }
     
@@ -382,7 +418,25 @@ export default function HomeScreen() {
               }
             ]}
           >
-            {recentSearches.length > 0 && (
+            {/* Autocomplete suggestions when typing */}
+            {searchText.trim() && autocompleteSuggestions.length > 0 && (
+              <View style={styles.suggestionSection}>
+                <Text style={styles.suggestionSectionTitle}>Suggestions</Text>
+                {autocompleteSuggestions.map((suggestion, index) => (
+                  <TouchableOpacity
+                    key={`autocomplete-${index}`}
+                    style={styles.suggestionItem}
+                    onPress={() => handleSuggestionPress(suggestion)}
+                  >
+                    <Search size={16} color={COLORS.accent} />
+                    <Text style={styles.suggestionText}>{suggestion}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+            
+            {/* Recent searches when not typing */}
+            {!searchText.trim() && recentSearches.length > 0 && (
               <View style={styles.suggestionSection}>
                 <Text style={styles.suggestionSectionTitle}>Recent Searches</Text>
                 {recentSearches.map((search, index) => (
@@ -398,19 +452,22 @@ export default function HomeScreen() {
               </View>
             )}
             
-            <View style={styles.suggestionSection}>
-              <Text style={styles.suggestionSectionTitle}>Popular Services</Text>
-              {searchSuggestions.map((suggestion, index) => (
-                <TouchableOpacity
-                  key={`suggestion-${index}`}
-                  style={styles.suggestionItem}
-                  onPress={() => handleSuggestionPress(suggestion)}
-                >
-                  <TrendingUp size={16} color={COLORS.accent} />
-                  <Text style={styles.suggestionText}>{suggestion}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            {/* Popular services when not typing */}
+            {!searchText.trim() && (
+              <View style={styles.suggestionSection}>
+                <Text style={styles.suggestionSectionTitle}>Popular Services</Text>
+                {searchSuggestions.slice(0, 8).map((suggestion, index) => (
+                  <TouchableOpacity
+                    key={`suggestion-${index}`}
+                    style={styles.suggestionItem}
+                    onPress={() => handleSuggestionPress(suggestion)}
+                  >
+                    <TrendingUp size={16} color={COLORS.accent} />
+                    <Text style={styles.suggestionText}>{suggestion}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </Animated.View>
         </TouchableOpacity>
       </Modal>

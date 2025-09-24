@@ -20,25 +20,34 @@ export const OnboardingProgress: React.FC<OnboardingProgressProps> = ({
   ).current;
 
   useEffect(() => {
-    // Animate progress bar
+    // Animate progress bar with smooth easing
     Animated.timing(progressAnimation, {
       toValue: (currentStep - 1) / (totalSteps - 1),
-      duration: 500,
+      duration: 800,
       useNativeDriver: false,
     }).start();
 
-    // Animate step indicators
+    // Animate step indicators with staggered timing
+    const timeouts: NodeJS.Timeout[] = [];
     scaleAnimations.forEach((anim, index) => {
       const isActive = index + 1 <= currentStep;
       const isCurrent = index + 1 === currentStep;
       
-      Animated.spring(anim, {
-        toValue: isCurrent ? 1.2 : isActive ? 1.1 : 1,
-        useNativeDriver: true,
-        tension: 100,
-        friction: 8,
-      }).start();
+      const timeout = setTimeout(() => {
+        Animated.spring(anim, {
+          toValue: isCurrent ? 1.3 : isActive ? 1.1 : 1,
+          useNativeDriver: true,
+          tension: 120,
+          friction: 6,
+        }).start();
+      }, index * 50); // Stagger animations
+      
+      timeouts.push(timeout);
     });
+    
+    return () => {
+      timeouts.forEach(timeout => clearTimeout(timeout));
+    };
   }, [currentStep, totalSteps, progressAnimation, scaleAnimations]);
   const indicators = Array.from({ length: totalSteps }, (_, index) => {
     const isActive = index + 1 <= currentStep;
@@ -78,6 +87,11 @@ export const OnboardingProgress: React.FC<OnboardingProgressProps> = ({
     outputRange: ['0%', '100%'],
   });
 
+  const progressOpacity = progressAnimation.interpolate({
+    inputRange: [0, 0.1, 1],
+    outputRange: [0.3, 1, 1],
+  });
+
   return (
     <View style={styles.container} testID="onboarding-progress">
       {showStepTitle && stepTitles[currentStep - 1] && (
@@ -89,11 +103,14 @@ export const OnboardingProgress: React.FC<OnboardingProgressProps> = ({
         <Animated.View 
           style={[
             styles.progressBar,
-            { width: progressWidth }
+            { 
+              width: progressWidth,
+              opacity: progressOpacity
+            }
           ]} 
         />
         <View style={styles.indicatorsContainer}>
-          {indicators}
+          <>{indicators}</>
         </View>
       </View>
       
@@ -137,6 +154,11 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: '#FF5A5F',
     borderRadius: 2,
+    shadowColor: '#FF5A5F',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+    elevation: 4,
   },
   indicatorsContainer: {
     flexDirection: 'row',

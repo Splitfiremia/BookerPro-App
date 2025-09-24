@@ -11,7 +11,7 @@ import {
   Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Calendar, Clock, User, MapPin, Phone, Star, Filter, CheckCircle, XCircle, AlertCircle, Navigation } from "lucide-react-native";
+import { Calendar, Clock, User, MapPin, Phone, Star, Filter, CheckCircle, XCircle, AlertCircle, Navigation, Zap, Timer } from "lucide-react-native";
 import { router } from "expo-router";
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from "@/constants/theme";
 import { useAuth } from "@/providers/AuthProvider";
@@ -164,7 +164,7 @@ export default function AppointmentsScreen() {
   const getStatusIcon = (status: Appointment["status"]) => {
     switch (status) {
       case "upcoming":
-        return AlertCircle;
+        return Timer;
       case "completed":
         return CheckCircle;
       case "cancelled":
@@ -230,6 +230,13 @@ export default function AppointmentsScreen() {
           { backgroundColor: getStatusColor(item.status) }
         ]} />
         
+        {/* Animated Status Pulse for Upcoming */}
+        {item.status === 'upcoming' && isToday && (
+          <View style={styles.pulseContainer}>
+            <View style={[styles.pulseRing, { borderColor: getStatusColor(item.status) }]} />
+          </View>
+        )}
+        
         {/* Today Badge */}
         {isToday && isUpcoming && (
           <View style={styles.todayBadge}>
@@ -260,15 +267,24 @@ export default function AppointmentsScreen() {
           <View style={styles.statusContainer}>
             <View style={[
               styles.statusBadge, 
-              { backgroundColor: getStatusColor(item.status) }
+              { backgroundColor: getStatusColor(item.status) },
+              isToday && isUpcoming && styles.todayStatusBadge
             ]}>
               <StatusIcon size={12} color={COLORS.white} />
               <Text style={styles.statusText}>
                 {item.status.toUpperCase()}
               </Text>
+              {isToday && isUpcoming && (
+                <View style={styles.zapIcon}>
+                  <Zap size={10} color={COLORS.white} />
+                </View>
+              )}
             </View>
             {isUpcoming && (
-              <Text style={styles.timeUntil}>
+              <Text style={[
+                styles.timeUntil,
+                isToday && styles.todayTimeUntil
+              ]}>
                 {isToday ? 'Today' : formatDate(item.date)}
               </Text>
             )}
@@ -514,6 +530,26 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
     letterSpacing: 0.5,
   },
+  pulseContainer: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pulseRing: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    opacity: 0.6,
+  },
+  zapIcon: {
+    marginLeft: 4,
+  },
   appointmentHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -578,6 +614,17 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.round,
     minWidth: 80,
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  todayStatusBadge: {
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
   },
   statusText: {
     fontSize: 10,
@@ -591,6 +638,10 @@ const styles = StyleSheet.create({
     color: COLORS.lightGray,
     marginTop: 4,
     fontFamily: FONTS.regular,
+  },
+  todayTimeUntil: {
+    color: COLORS.accent,
+    fontFamily: FONTS.bold,
   },
   appointmentBody: {
     width: "100%",

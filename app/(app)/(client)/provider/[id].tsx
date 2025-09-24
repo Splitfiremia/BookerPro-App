@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, useWindowDimensions, FlatList } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Star, MapPin, Clock, Calendar, Heart, UserPlus, MessageCircle, Share2, Grid3X3 } from "lucide-react-native";
+import { Star, MapPin, Clock, Calendar, Heart, UserPlus, MessageCircle, Share2, Grid3X3, Award, Scissors, Palette, Camera, Play, Eye } from "lucide-react-native";
 import { mockProviders } from "@/mocks/providers";
 import { useSocial } from "@/providers/SocialProvider";
 
@@ -79,32 +79,132 @@ export default function ProviderDetailsScreen() {
     </View>
   );
 
-  const renderPortfolioTab = () => (
-    <View style={styles.tabContent}>
-      <FlatList
-        data={provider.portfolio || []}
-        numColumns={2}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={[styles.portfolioItem, { width: (width - 60) / 2 }]}>
-            {item.image && item.image.trim() !== '' ? (
-              <Image source={{ uri: item.image }} style={styles.portfolioImage} />
-            ) : (
-              <View style={[styles.portfolioImage, styles.placeholderImage]}>
-                <Grid3X3 size={32} color="#ccc" />
+  const renderPortfolioTab = () => {
+    const portfolioData = provider.portfolio || [];
+    const featuredWork = portfolioData.slice(0, 2);
+    const recentWork = portfolioData.slice(2);
+    
+    return (
+      <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+        {/* Provider Stats */}
+        <View style={styles.portfolioStats}>
+          <View style={styles.statItemMain}>
+            <Award size={20} color="#FFB800" />
+            <Text style={styles.statValue}>5+</Text>
+            <Text style={styles.statLabel}>Years Experience</Text>
+          </View>
+          <View style={styles.statItemMain}>
+            <Scissors size={20} color="#007AFF" />
+            <Text style={styles.statValue}>500+</Text>
+            <Text style={styles.statLabel}>Happy Clients</Text>
+          </View>
+          <View style={styles.statItemMain}>
+            <Palette size={20} color="#FF3B30" />
+            <Text style={styles.statValue}>12</Text>
+            <Text style={styles.statLabel}>Specialties</Text>
+          </View>
+        </View>
+        
+        {/* Specialties */}
+        <View style={styles.specialtiesSection}>
+          <Text style={styles.sectionTitle}>Specialties</Text>
+          <View style={styles.specialtiesContainer}>
+            {(provider.specialties || ['Haircuts', 'Color', 'Styling', 'Treatments']).map((specialty, index) => (
+              <View key={index} style={styles.specialtyTag}>
+                <Text style={styles.specialtyText}>{specialty}</Text>
               </View>
-            )}
-            <View style={styles.portfolioOverlay}>
-              <Text style={styles.portfolioTitle}>{item.title}</Text>
-              <Text style={styles.portfolioDescription}>{item.description}</Text>
+            ))}
+          </View>
+        </View>
+        
+        {/* Featured Work */}
+        {featuredWork.length > 0 && (
+          <View style={styles.portfolioSection}>
+            <Text style={styles.sectionTitle}>Featured Work</Text>
+            <View style={styles.featuredGrid}>
+              {featuredWork.map((item) => (
+                <TouchableOpacity key={item.id} style={styles.featuredItem}>
+                  {item.image && item.image.trim() !== '' ? (
+                    <Image source={{ uri: item.image }} style={styles.featuredImage} />
+                  ) : (
+                    <View style={[styles.featuredImage, styles.placeholderImage]}>
+                      <Camera size={32} color="#ccc" />
+                    </View>
+                  )}
+                  <View style={styles.featuredOverlay}>
+                    <View style={styles.featuredHeader}>
+                      <Text style={styles.featuredTitle}>{item.title}</Text>
+                      <View style={styles.viewsContainer}>
+                        <Eye size={12} color="#fff" />
+                        <Text style={styles.viewsText}>1.2k</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.featuredDescription}>{item.description}</Text>
+                    <View style={styles.featuredTags}>
+                      <View style={styles.featuredTag}>
+                        <Text style={styles.featuredTagText}>Before & After</Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
         )}
-        columnWrapperStyle={styles.portfolioRow}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
-  );
+        
+        {/* Recent Work Grid */}
+        {recentWork.length > 0 && (
+          <View style={styles.portfolioSection}>
+            <Text style={styles.sectionTitle}>Recent Work</Text>
+            <View style={styles.portfolioGrid}>
+              {recentWork.map((item) => (
+                <TouchableOpacity key={item.id} style={[styles.portfolioItem, { width: (width - 60) / 2 }]}>
+                  {item.image && item.image.trim() !== '' ? (
+                    <Image source={{ uri: item.image }} style={styles.portfolioImage} />
+                  ) : (
+                    <View style={[styles.portfolioImage, styles.placeholderImage]}>
+                      <Grid3X3 size={32} color="#ccc" />
+                    </View>
+                  )}
+                  <View style={styles.portfolioOverlay}>
+                    <Text style={styles.portfolioTitle}>{item.title}</Text>
+                    <Text style={styles.portfolioDescription}>{item.description}</Text>
+                  </View>
+                  <View style={styles.portfolioActions}>
+                    <View style={styles.portfolioLikes}>
+                      <Heart size={12} color="#fff" />
+                      <Text style={styles.portfolioLikesText}>24</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+        
+        {/* Video Portfolio */}
+        <View style={styles.portfolioSection}>
+          <Text style={styles.sectionTitle}>Video Portfolio</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {[1, 2, 3].map((index) => (
+              <TouchableOpacity key={index} style={styles.videoItem}>
+                <View style={styles.videoThumbnail}>
+                  <View style={styles.videoPlaceholder}>
+                    <Camera size={24} color="#ccc" />
+                  </View>
+                  <View style={styles.playButton}>
+                    <Play size={16} color="#fff" fill="#fff" />
+                  </View>
+                </View>
+                <Text style={styles.videoTitle}>Hair Transformation #{index}</Text>
+                <Text style={styles.videoDuration}>2:30</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </ScrollView>
+    );
+  };
 
   const renderPostsTab = () => {
     const posts = getProviderPosts((id as string) || '');
@@ -131,8 +231,8 @@ export default function ProviderDetailsScreen() {
           )}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={(
-            <View style={{ padding: 20, alignItems: 'center' }}>
-              <Text style={{ color: '#666' }}>No posts yet</Text>
+            <View style={styles.emptyPostsContainer}>
+              <Text style={styles.emptyPostsText}>No posts yet</Text>
             </View>
           )}
         />
@@ -215,22 +315,22 @@ export default function ProviderDetailsScreen() {
 
         {/* Stats Bar */}
         <View style={styles.statsSection}>
-          <View style={styles.statItem}>
+          <View style={styles.statItemMain}>
             <Text style={styles.statNumber}>{provider.followerCount.toLocaleString()}</Text>
-            <Text style={styles.statLabel}>Followers</Text>
+            <Text style={styles.statLabelMain}>Followers</Text>
           </View>
           <View style={styles.statDivider} />
-          <View style={styles.statItem}>
+          <View style={styles.statItemMain}>
             <Text style={styles.statNumber}>{provider.postsCount}</Text>
-            <Text style={styles.statLabel}>Posts</Text>
+            <Text style={styles.statLabelMain}>Posts</Text>
           </View>
           <View style={styles.statDivider} />
-          <View style={styles.statItem}>
+          <View style={styles.statItemMain}>
             <View style={styles.ratingContainer}>
               <Star size={14} color="#FFB800" fill="#FFB800" />
               <Text style={styles.statNumber}>{provider.rating}</Text>
             </View>
-            <Text style={styles.statLabel}>({provider.reviewCount} reviews)</Text>
+            <Text style={styles.statLabelMain}>({provider.reviewCount} reviews)</Text>
           </View>
         </View>
 
@@ -410,7 +510,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  statItem: {
+  statItemMain: {
     alignItems: 'center',
   },
   statNumber: {
@@ -419,7 +519,7 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 2,
   },
-  statLabel: {
+  statLabelMain: {
     fontSize: 12,
     color: '#666',
   },
@@ -496,10 +596,187 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#007AFF',
   },
-  portfolioRow: {
-    justifyContent: 'space-between',
+  portfolioStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 20,
     paddingHorizontal: 20,
-    marginBottom: 16,
+    backgroundColor: '#f8f9fa',
+    marginBottom: 20,
+  },
+  statItem: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  specialtiesSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  specialtiesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  specialtyTag: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  specialtyText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  portfolioSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  featuredGrid: {
+    gap: 12,
+  },
+  featuredItem: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#f0f0f0',
+    marginBottom: 12,
+  },
+  featuredImage: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#f0f0f0',
+  },
+  featuredOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    padding: 12,
+  },
+  featuredHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  featuredTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
+  },
+  viewsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  viewsText: {
+    color: '#fff',
+    fontSize: 12,
+    opacity: 0.8,
+  },
+  featuredDescription: {
+    color: '#fff',
+    fontSize: 12,
+    opacity: 0.9,
+    marginBottom: 8,
+  },
+  featuredTags: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  featuredTag: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  featuredTagText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  portfolioGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  portfolioActions: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
+  portfolioLikes: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  portfolioLikesText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  videoItem: {
+    width: 140,
+    marginRight: 12,
+  },
+  videoThumbnail: {
+    position: 'relative',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  videoPlaceholder: {
+    width: '100%',
+    height: 100,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playButton: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -12 }, { translateY: -12 }],
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoTitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 2,
+  },
+  videoDuration: {
+    fontSize: 10,
+    color: '#666',
   },
   portfolioItem: {
     borderRadius: 12,
@@ -586,5 +863,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyPostsContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyPostsText: {
+    color: '#666',
   },
 });
