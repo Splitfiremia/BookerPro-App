@@ -68,7 +68,7 @@ export default function ProviderOnboardingIntro() {
   }, [resetOnboarding, fadeAnim, slideAnim, scaleAnim, imageOpacity, overlayOpacity]);
 
   const handleGetStarted = () => {
-    router.push('/provider-onboarding/provider-type');
+    router.push('/provider-onboarding/employment-type');
   };
 
   return (
