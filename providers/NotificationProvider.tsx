@@ -1,2 +1,125 @@
-import React from "react";
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';\nimport { Platform } from 'react-native';\nimport * as Notifications from 'expo-notifications';\nimport NotificationService, { PushNotificationData } from '@/services/NotificationService';\nimport { useAuth } from './AuthProvider';\n\ninterface NotificationContextType {\n  isInitialized: boolean;\n  pushToken: string | null;\n  unreadCount: number;\n  lastNotification: Notifications.Notification | null;\n  sendTestNotification: () => Promise<void>;\n  scheduleAppointmentReminder: (appointmentId: string, title: string, body: string, reminderTime: Date) => Promise<void>;\n  clearBadge: () => Promise<void>;\n  requestPermissions: () => Promise<boolean>;\n}\n\nconst NotificationContext = createContext<NotificationContextType | undefined>(undefined);\n\nexport const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {\n  const { user } = useAuth();\n  const [isInitialized, setIsInitialized] = useState<boolean>(false);\n  const [pushToken, setPushToken] = useState<string | null>(null);\n  const [unreadCount, setUnreadCount] = useState<number>(0);\n  const [lastNotification, setLastNotification] = useState<Notifications.Notification | null>(null);\n\n  useEffect(() => {\n    const initializeNotifications = async () => {\n      try {\n        console.log('Initializing notification provider...');\n        await NotificationService.initialize();\n        const token = NotificationService.getPushToken();\n        setPushToken(token);\n        setIsInitialized(true);\n        console.log('Notification provider initialized successfully');\n      } catch (error) {\n        console.error('Failed to initialize notification provider:', error);\n      }\n    };\n\n    initializeNotifications();\n  }, []);\n\n  useEffect(() => {\n    if (!isInitialized) return;\n\n    const notificationListener = Notifications.addNotificationReceivedListener(notification => {\n      console.log('Notification received:', notification);\n      setLastNotification(notification);\n      updateBadgeCount();\n    });\n\n    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {\n      console.log('Notification response:', response);\n      const data = response.notification.request.content.data;\n      \n      if (data?.type && data?.appointmentId) {\n        handleNotificationAction(data.type as string, data.appointmentId as string);\n      }\n    });\n\n    updateBadgeCount();\n\n    return () => {\n      Notifications.removeNotificationSubscription(notificationListener);\n      Notifications.removeNotificationSubscription(responseListener);\n    };\n  }, [isInitialized]);\n\n  const updateBadgeCount = useCallback(async () => {\n    try {\n      const count = await NotificationService.getBadgeCount();\n      setUnreadCount(count);\n    } catch (error) {\n      console.error('Failed to update badge count:', error);\n    }\n  }, []);\n\n  const handleNotificationAction = useCallback((type: string, appointmentId: string) => {\n    console.log('Handling notification action:', type, appointmentId);\n  }, []);\n\n  const sendTestNotification = useCallback(async () => {\n    if (!user) {\n      console.warn('No user available for test notification');\n      return;\n    }\n\n    const testData: PushNotificationData = {\n      type: 'general',\n      title: 'Test Notification',\n      body: `Hello ${user.name}! This is a test notification.`,\n      data: { testId: Date.now().toString() },\n    };\n\n    try {\n      await NotificationService.scheduleLocalNotification(testData, 2);\n      console.log('Test notification scheduled');\n    } catch (error) {\n      console.error('Failed to send test notification:', error);\n    }\n  }, [user]);\n\n  const scheduleAppointmentReminder = useCallback(async (\n    appointmentId: string,\n    title: string,\n    body: string,\n    reminderTime: Date\n  ) => {\n    try {\n      await NotificationService.scheduleAppointmentReminder(\n        appointmentId,\n        title,\n        body,\n        reminderTime\n      );\n      console.log('Appointment reminder scheduled for:', reminderTime);\n    } catch (error) {\n      console.error('Failed to schedule appointment reminder:', error);\n    }\n  }, []);\n\n  const clearBadge = useCallback(async () => {\n    try {\n      await NotificationService.clearBadge();\n      setUnreadCount(0);\n      console.log('Badge cleared');\n    } catch (error) {\n      console.error('Failed to clear badge:', error);\n    }\n  }, []);\n\n  const requestPermissions = useCallback(async (): Promise<boolean> => {\n    try {\n      const { status } = await Notifications.requestPermissionsAsync();\n      const granted = status === 'granted';\n      console.log('Notification permissions:', granted ? 'granted' : 'denied');\n      return granted;\n    } catch (error) {\n      console.error('Failed to request notification permissions:', error);\n      return false;\n    }\n  }, []);\n\n  useEffect(() => {\n    if (!isInitialized || !user) return;\n\n    const sendWelcomeNotification = async () => {\n      if (user.role === 'provider') {\n        await NotificationService.scheduleLocalNotification({\n          type: 'general',\n          title: 'Welcome to theCut Pro!',\n          body: 'Start managing your appointments and grow your business.',\n          data: { welcomeType: 'provider' },\n        }, 3);\n      } else if (user.role === 'client') {\n        await NotificationService.scheduleLocalNotification({\n          type: 'general',\n          title: 'Welcome to theCut!',\n          body: 'Find and book appointments with top providers near you.',\n          data: { welcomeType: 'client' },\n        }, 3);\n      }\n    };\n\n    if (Platform.OS !== 'web') {\n      sendWelcomeNotification();\n    }\n  }, [isInitialized, user]);\n\n  const value: NotificationContextType = {\n    isInitialized,\n    pushToken,\n    unreadCount,\n    lastNotification,\n    sendTestNotification,\n    scheduleAppointmentReminder,\n    clearBadge,\n    requestPermissions,\n  };\n\n  return (\n    <NotificationContext.Provider value={value}>\n      {children}\n    </NotificationContext.Provider>\n  );\n};\n\nexport const useNotifications = (): NotificationContextType => {\n  const context = useContext(NotificationContext);\n  if (context === undefined) {\n    throw new Error('useNotifications must be used within a NotificationProvider');\n  }\n  return context;\n};\n\nexport default NotificationProvider;
+import { useEffect, useState, useCallback } from 'react';
+import { Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import createContextHook from '@nkzw/create-context-hook';
+import NotificationService from '@/services/NotificationService';
+
+// eslint-disable-next-line @rork/linters/general-context-optimization
+export const [NotificationProvider, useNotifications] = createContextHook(() => {
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [pushToken, setPushToken] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [lastNotification, setLastNotification] = useState<Notifications.Notification | null>(null);
+
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      try {
+        console.log('Initializing notification provider...');
+        await NotificationService.initialize();
+        const token = NotificationService.getPushToken();
+        setPushToken(token);
+        setIsInitialized(true);
+        console.log('Notification provider initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize notification provider:', error);
+      }
+    };
+
+    initializeNotifications();
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+      if (notification) {
+        console.log('Notification received:', notification);
+        setLastNotification(notification);
+        setUnreadCount(prev => prev + 1);
+      }
+    });
+
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      if (response) {
+        console.log('Notification response received:', response);
+        const data = response.notification.request.content.data;
+        
+        if (data && typeof data === 'object' && 'type' in data && data.type === 'appointment_reminder' && 'appointmentId' in data) {
+          console.log('Appointment reminder tapped:', data.appointmentId);
+        }
+      }
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener);
+      Notifications.removeNotificationSubscription(responseListener);
+    };
+  }, [isInitialized]);
+
+  const requestPermissions = useCallback(async (): Promise<boolean> => {
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      return status === 'granted';
+    } catch (error) {
+      console.error('Failed to request notification permissions:', error);
+      return false;
+    }
+  }, []);
+
+  const sendTestNotification = useCallback(async (): Promise<void> => {
+    try {
+      await NotificationService.scheduleLocalNotification({
+        type: 'general',
+        title: 'Test Notification',
+        body: 'This is a test notification from your app!',
+      });
+    } catch (error) {
+      console.error('Failed to send test notification:', error);
+    }
+  }, []);
+
+  const scheduleAppointmentReminder = useCallback(async (
+    appointmentId: string,
+    title: string,
+    body: string,
+    reminderTime: Date
+  ): Promise<void> => {
+    try {
+      if (!appointmentId?.trim() || !title?.trim() || !body?.trim() || !reminderTime) {
+        console.error('Invalid parameters for appointment reminder');
+        return;
+      }
+      
+      await NotificationService.scheduleAppointmentReminder(
+        appointmentId,
+        title,
+        body,
+        reminderTime
+      );
+    } catch (error) {
+      console.error('Failed to schedule appointment reminder:', error);
+    }
+  }, []);
+
+  const clearBadge = useCallback(async (): Promise<void> => {
+    try {
+      if (Platform.OS !== 'web') {
+        await Notifications.setBadgeCountAsync(0);
+      }
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Failed to clear badge:', error);
+    }
+  }, []);
+
+  return {
+    isInitialized,
+    pushToken,
+    unreadCount,
+    lastNotification,
+    sendTestNotification,
+    scheduleAppointmentReminder,
+    clearBadge,
+    requestPermissions,
+  };
+});
