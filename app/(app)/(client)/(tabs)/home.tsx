@@ -6,12 +6,12 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Image,
   FlatList,
   StatusBar,
   Animated,
   Modal,
 } from 'react-native';
+import ImageWithFallback from '@/components/ImageWithFallback';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
 import { Search, MapPin, Filter, Star, CreditCard, Heart, X, Clock, TrendingUp } from 'lucide-react-native';
@@ -189,13 +189,11 @@ export default function HomeScreen() {
 
   const renderShopCard = ({ item }: { item: Shop }) => (
     <TouchableOpacity style={styles.shopCard}>
-      {item.image && item.image.trim() !== '' ? (
-        <Image source={{ uri: item.image }} style={styles.shopImage} />
-      ) : (
-        <View style={[styles.shopImage, styles.placeholderImage]}>
-          <Search size={32} color={COLORS.lightGray} />
-        </View>
-      )}
+      <ImageWithFallback
+        source={{ uri: item.image }}
+        style={styles.shopImage}
+        fallbackIcon="image"
+      />
       <View style={styles.shopInfo}>
         <Text style={styles.shopName} numberOfLines={2}>{item.name}</Text>
         <Text style={styles.shopDescription} numberOfLines={1}>{item.description}</Text>
@@ -210,13 +208,11 @@ export default function HomeScreen() {
       onPress={() => router.push(`/(app)/(client)/provider/${item.id}`)}
     >
       <View style={styles.providerHeader}>
-        {item.profileImage && item.profileImage.trim() !== '' ? (
-          <Image source={{ uri: item.profileImage }} style={styles.providerAvatar} />
-        ) : (
-          <View style={[styles.providerAvatar, styles.placeholderAvatar]}>
-            <Search size={24} color={COLORS.lightGray} />
-          </View>
-        )}
+        <ImageWithFallback
+          source={{ uri: item.profileImage }}
+          style={styles.providerAvatar}
+          fallbackIcon="user"
+        />
         <View style={styles.providerInfo}>
           <Text style={styles.providerName}>{item.name}</Text>
           <Text style={styles.providerService}>Free Advice</Text>
@@ -230,18 +226,13 @@ export default function HomeScreen() {
       </View>
       
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.portfolioContainer}>
-        {item.portfolio?.slice(0, 4).map((portfolioItem, index) => (
-          portfolioItem.image && portfolioItem.image.trim() !== '' ? (
-            <Image 
-              key={portfolioItem.id} 
-              source={{ uri: portfolioItem.image }} 
-              style={styles.portfolioImage} 
-            />
-          ) : (
-            <View key={portfolioItem.id} style={[styles.portfolioImage, styles.placeholderPortfolio]}>
-              <Search size={20} color={COLORS.lightGray} />
-            </View>
-          )
+        {item.portfolio?.slice(0, 4).map((portfolioItem) => (
+          <ImageWithFallback
+            key={portfolioItem.id}
+            source={{ uri: portfolioItem.image }}
+            style={styles.portfolioImage}
+            fallbackIcon="camera"
+          />
         ))}
       </ScrollView>
       
@@ -784,21 +775,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 1,
   },
-  placeholderImage: {
-    backgroundColor: COLORS.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderAvatar: {
-    backgroundColor: COLORS.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderPortfolio: {
-    backgroundColor: COLORS.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+
   clearButton: {
     padding: 4,
     marginLeft: 8,

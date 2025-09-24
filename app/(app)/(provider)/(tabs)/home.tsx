@@ -1,5 +1,7 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useMemo, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import NotificationService from '@/services/NotificationService';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Bell, ChevronRight, Clock, CheckCircle, XCircle } from 'lucide-react-native';
@@ -15,6 +17,15 @@ export default function ProviderHomeScreen() {
   const { user } = useAuth();
   const { pendingRequests, confirmAppointment, cancelAppointment } = useProviderAppointments();
   const insets = useSafeAreaInsets();
+
+  // Initialize notification service
+  useEffect(() => {
+    const initNotifications = async () => {
+      await NotificationService.initialize();
+      console.log('Notification service initialized for provider');
+    };
+    initNotifications();
+  }, []);
   
   // Enrich pending requests with client and service information
   const enrichedPendingRequests = useMemo(() => {
@@ -105,9 +116,10 @@ export default function ProviderHomeScreen() {
               <View key={request.id} style={styles.requestCard}>
                 <View style={styles.requestHeader}>
                   <View style={styles.clientInfo}>
-                    <Image 
-                      source={{ uri: request.clientImage || 'https://i.pravatar.cc/150?img=1' }} 
-                      style={styles.clientImage} 
+                    <ImageWithFallback
+                      source={{ uri: request.clientImage || 'https://i.pravatar.cc/150?img=1' }}
+                      style={styles.clientImage}
+                      fallbackIcon="user"
                     />
                     <View>
                       <Text style={styles.clientName}>{request.clientName}</Text>
@@ -125,9 +137,7 @@ export default function ProviderHomeScreen() {
                   <Text style={styles.requestDate}>{request.date}</Text>
                 </View>
                 
-                {request.notes && (
-                  <Text style={styles.requestNotes}>Note: {request.notes}</Text>
-                )}
+
                 
                 <View style={styles.requestActions}>
                   <TouchableOpacity 
