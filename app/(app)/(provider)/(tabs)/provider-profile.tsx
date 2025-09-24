@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Switch, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/theme';
-import { Clock, Settings, Edit, LogOut, CreditCard, Search, Users, Award, Store, QrCode, Gift, HelpCircle, Banknote, X, Plus, DollarSign, Trash2 } from 'lucide-react-native';
+import { Clock, Settings, Edit, LogOut, CreditCard, Search, Users, Award, Store, QrCode, Gift, HelpCircle, Banknote, X, Plus, DollarSign, Trash2, Camera, Image as ImageIcon, Video, Star, Eye, Heart, Grid3X3, Upload, Palette, Scissors } from 'lucide-react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { useServices } from '@/providers/ServicesProvider';
 import { router } from 'expo-router';
@@ -31,6 +31,8 @@ export default function ProviderProfileScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [showPortfolioModal, setShowPortfolioModal] = useState(false);
+  const [activePortfolioTab, setActivePortfolioTab] = useState<'gallery' | 'stats' | 'achievements'>('gallery');
 
   const handleSignOut = () => {
     setShowSignOutModal(true);
@@ -426,6 +428,66 @@ export default function ProviderProfileScreen() {
           <Text style={styles.singleMenuText}>Help & Resources</Text>
         </TouchableOpacity>
 
+        {/* Portfolio Section */}
+        {user?.role === 'provider' && (
+          <View style={styles.portfolioSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>My Portfolio</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => setShowPortfolioModal(true)}
+              >
+                <Plus size={20} color={COLORS.accent} />
+                <Text style={styles.addButtonText}>Manage</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {/* Portfolio Stats */}
+            <View style={styles.portfolioStatsContainer}>
+              <View style={styles.portfolioStatItem}>
+                <ImageIcon size={20} color={COLORS.accent} />
+                <Text style={styles.portfolioStatNumber}>24</Text>
+                <Text style={styles.portfolioStatLabel}>Photos</Text>
+              </View>
+              <View style={styles.portfolioStatItem}>
+                <Video size={20} color={COLORS.accent} />
+                <Text style={styles.portfolioStatNumber}>8</Text>
+                <Text style={styles.portfolioStatLabel}>Videos</Text>
+              </View>
+              <View style={styles.portfolioStatItem}>
+                <Eye size={20} color={COLORS.accent} />
+                <Text style={styles.portfolioStatNumber}>1.2k</Text>
+                <Text style={styles.portfolioStatLabel}>Views</Text>
+              </View>
+              <View style={styles.portfolioStatItem}>
+                <Heart size={20} color={COLORS.accent} />
+                <Text style={styles.portfolioStatNumber}>156</Text>
+                <Text style={styles.portfolioStatLabel}>Likes</Text>
+              </View>
+            </View>
+            
+            {/* Recent Portfolio Items */}
+            <View style={styles.recentPortfolioContainer}>
+              <Text style={styles.recentPortfolioTitle}>Recent Work</Text>
+              <View style={styles.portfolioGrid}>
+                {[1, 2, 3, 4].map((item) => (
+                  <TouchableOpacity key={item} style={styles.portfolioGridItem}>
+                    <View style={styles.portfolioImagePlaceholder}>
+                      <Camera size={24} color={COLORS.secondary} />
+                    </View>
+                    <View style={styles.portfolioItemOverlay}>
+                      <View style={styles.portfolioItemStats}>
+                        <Heart size={12} color="#fff" />
+                        <Text style={styles.portfolioItemStatsText}>24</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
+
         {/* Services Section */}
         {user?.role === 'provider' && (
           <View style={styles.servicesSection}>
@@ -460,6 +522,190 @@ export default function ProviderProfileScreen() {
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
         
+        {/* Portfolio Management Modal */}
+        <Modal
+          visible={showPortfolioModal}
+          transparent
+          animationType="slide"
+        >
+          <View style={styles.portfolioModalOverlay}>
+            <View style={styles.portfolioModalContainer}>
+              <View style={styles.portfolioModalHeader}>
+                <Text style={styles.portfolioModalTitle}>Portfolio Management</Text>
+                <TouchableOpacity onPress={() => setShowPortfolioModal(false)}>
+                  <X size={24} color={COLORS.text} />
+                </TouchableOpacity>
+              </View>
+              
+              {/* Portfolio Tab Navigation */}
+              <View style={styles.portfolioTabNavigation}>
+                <TouchableOpacity 
+                  style={[styles.portfolioTabButton, activePortfolioTab === 'gallery' && styles.activePortfolioTabButton]}
+                  onPress={() => setActivePortfolioTab('gallery')}
+                >
+                  <Grid3X3 size={16} color={activePortfolioTab === 'gallery' ? COLORS.accent : COLORS.secondary} />
+                  <Text style={[styles.portfolioTabButtonText, activePortfolioTab === 'gallery' && styles.activePortfolioTabButtonText]}>Gallery</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.portfolioTabButton, activePortfolioTab === 'stats' && styles.activePortfolioTabButton]}
+                  onPress={() => setActivePortfolioTab('stats')}
+                >
+                  <Eye size={16} color={activePortfolioTab === 'stats' ? COLORS.accent : COLORS.secondary} />
+                  <Text style={[styles.portfolioTabButtonText, activePortfolioTab === 'stats' && styles.activePortfolioTabButtonText]}>Analytics</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.portfolioTabButton, activePortfolioTab === 'achievements' && styles.activePortfolioTabButton]}
+                  onPress={() => setActivePortfolioTab('achievements')}
+                >
+                  <Award size={16} color={activePortfolioTab === 'achievements' ? COLORS.accent : COLORS.secondary} />
+                  <Text style={[styles.portfolioTabButtonText, activePortfolioTab === 'achievements' && styles.activePortfolioTabButtonText]}>Awards</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {/* Portfolio Tab Content */}
+              <ScrollView style={styles.portfolioTabContent}>
+                {activePortfolioTab === 'gallery' && (
+                  <View>
+                    <TouchableOpacity style={styles.uploadButton}>
+                      <Upload size={20} color={COLORS.accent} />
+                      <Text style={styles.uploadButtonText}>Upload New Work</Text>
+                    </TouchableOpacity>
+                    
+                    <View style={styles.portfolioManagementGrid}>
+                      {[1, 2, 3, 4, 5, 6].map((item) => (
+                        <TouchableOpacity key={item} style={styles.portfolioManagementItem}>
+                          <View style={styles.portfolioManagementImagePlaceholder}>
+                            <Camera size={20} color={COLORS.secondary} />
+                          </View>
+                          <View style={styles.portfolioManagementOverlay}>
+                            <TouchableOpacity style={styles.portfolioEditButton}>
+                              <Edit size={12} color="#fff" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.portfolioDeleteButton}>
+                              <Trash2 size={12} color="#fff" />
+                            </TouchableOpacity>
+                          </View>
+                          <View style={styles.portfolioManagementStats}>
+                            <View style={styles.portfolioManagementStatItem}>
+                              <Heart size={10} color={COLORS.accent} />
+                              <Text style={styles.portfolioManagementStatText}>24</Text>
+                            </View>
+                            <View style={styles.portfolioManagementStatItem}>
+                              <Eye size={10} color={COLORS.accent} />
+                              <Text style={styles.portfolioManagementStatText}>156</Text>
+                            </View>
+                          </View>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
+                
+                {activePortfolioTab === 'stats' && (
+                  <View>
+                    <View style={styles.analyticsCard}>
+                      <Text style={styles.analyticsCardTitle}>Portfolio Performance</Text>
+                      <View style={styles.analyticsMetrics}>
+                        <View style={styles.analyticsMetricItem}>
+                          <Text style={styles.analyticsMetricValue}>2.4k</Text>
+                          <Text style={styles.analyticsMetricLabel}>Total Views</Text>
+                          <Text style={styles.analyticsMetricChange}>+12% this week</Text>
+                        </View>
+                        <View style={styles.analyticsMetricItem}>
+                          <Text style={styles.analyticsMetricValue}>342</Text>
+                          <Text style={styles.analyticsMetricLabel}>Total Likes</Text>
+                          <Text style={styles.analyticsMetricChange}>+8% this week</Text>
+                        </View>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.analyticsCard}>
+                      <Text style={styles.analyticsCardTitle}>Top Performing Work</Text>
+                      <View style={styles.topPerformingList}>
+                        {[1, 2, 3].map((item) => (
+                          <View key={item} style={styles.topPerformingItem}>
+                            <View style={styles.topPerformingImagePlaceholder}>
+                              <Camera size={16} color={COLORS.secondary} />
+                            </View>
+                            <View style={styles.topPerformingInfo}>
+                              <Text style={styles.topPerformingTitle}>Hair Transformation #{item}</Text>
+                              <View style={styles.topPerformingStats}>
+                                <View style={styles.topPerformingStat}>
+                                  <Eye size={12} color={COLORS.accent} />
+                                  <Text style={styles.topPerformingStatText}>456</Text>
+                                </View>
+                                <View style={styles.topPerformingStat}>
+                                  <Heart size={12} color={COLORS.accent} />
+                                  <Text style={styles.topPerformingStatText}>89</Text>
+                                </View>
+                              </View>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                )}
+                
+                {activePortfolioTab === 'achievements' && (
+                  <View>
+                    <View style={styles.achievementsCard}>
+                      <Text style={styles.achievementsCardTitle}>Professional Achievements</Text>
+                      <View style={styles.achievementsList}>
+                        <View style={styles.achievementItem}>
+                          <Award size={20} color="#FFB800" />
+                          <View style={styles.achievementInfo}>
+                            <Text style={styles.achievementTitle}>Master Stylist Certification</Text>
+                            <Text style={styles.achievementDate}>Earned 2023</Text>
+                          </View>
+                        </View>
+                        <View style={styles.achievementItem}>
+                          <Scissors size={20} color="#007AFF" />
+                          <View style={styles.achievementInfo}>
+                            <Text style={styles.achievementTitle}>5+ Years Experience</Text>
+                            <Text style={styles.achievementDate}>Since 2019</Text>
+                          </View>
+                        </View>
+                        <View style={styles.achievementItem}>
+                          <Palette size={20} color="#FF3B30" />
+                          <View style={styles.achievementInfo}>
+                            <Text style={styles.achievementTitle}>Color Specialist</Text>
+                            <Text style={styles.achievementDate}>Certified 2022</Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.achievementsCard}>
+                      <Text style={styles.achievementsCardTitle}>Client Milestones</Text>
+                      <View style={styles.milestonesList}>
+                        <View style={styles.milestoneItem}>
+                          <View style={styles.milestoneIcon}>
+                            <Users size={16} color={COLORS.accent} />
+                          </View>
+                          <View style={styles.milestoneInfo}>
+                            <Text style={styles.milestoneNumber}>500+</Text>
+                            <Text style={styles.milestoneLabel}>Happy Clients</Text>
+                          </View>
+                        </View>
+                        <View style={styles.milestoneItem}>
+                          <View style={styles.milestoneIcon}>
+                            <Star size={16} color={COLORS.accent} />
+                          </View>
+                          <View style={styles.milestoneInfo}>
+                            <Text style={styles.milestoneNumber}>4.9</Text>
+                            <Text style={styles.milestoneLabel}>Average Rating</Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
         {/* Service Edit Modal */}
         <ServiceEditModal
           visible={showServiceModal}
@@ -784,6 +1030,349 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   toggleLabel: {
+    fontSize: 12,
+    color: COLORS.secondary,
+    textAlign: 'center',
+  },
+  portfolioSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  portfolioStatsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 16,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  portfolioStatItem: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  portfolioStatNumber: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginTop: 4,
+  },
+  portfolioStatLabel: {
+    fontSize: 12,
+    color: COLORS.secondary,
+  },
+  recentPortfolioContainer: {
+    marginTop: 8,
+  },
+  recentPortfolioTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  portfolioGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  portfolioGridItem: {
+    width: '23%',
+    aspectRatio: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  portfolioImagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: COLORS.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  portfolioItemOverlay: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+  },
+  portfolioItemStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 2,
+  },
+  portfolioItemStatsText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  portfolioModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  portfolioModalContainer: {
+    backgroundColor: COLORS.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '90%',
+    paddingTop: 20,
+  },
+  portfolioModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  portfolioModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+  },
+  portfolioTabNavigation: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: COLORS.card,
+  },
+  portfolioTabButton: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 6,
+    borderRadius: 8,
+  },
+  activePortfolioTabButton: {
+    backgroundColor: COLORS.background,
+  },
+  portfolioTabButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.secondary,
+  },
+  activePortfolioTabButtonText: {
+    color: COLORS.accent,
+  },
+  portfolioTabContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    paddingVertical: 16,
+    marginBottom: 20,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: COLORS.accent,
+    borderStyle: 'dashed',
+  },
+  uploadButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.accent,
+  },
+  portfolioManagementGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  portfolioManagementItem: {
+    width: '31%',
+    aspectRatio: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: COLORS.card,
+  },
+  portfolioManagementImagePlaceholder: {
+    width: '100%',
+    height: '70%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+  },
+  portfolioManagementOverlay: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    flexDirection: 'row',
+    gap: 4,
+  },
+  portfolioEditButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    padding: 4,
+    borderRadius: 4,
+  },
+  portfolioDeleteButton: {
+    backgroundColor: 'rgba(220, 38, 38, 0.8)',
+    padding: 4,
+    borderRadius: 4,
+  },
+  portfolioManagementStats: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: COLORS.card,
+    paddingVertical: 4,
+  },
+  portfolioManagementStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  portfolioManagementStatText: {
+    fontSize: 10,
+    color: COLORS.text,
+    fontWeight: '500',
+  },
+  analyticsCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  analyticsCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  analyticsMetrics: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  analyticsMetricItem: {
+    alignItems: 'center',
+  },
+  analyticsMetricValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.accent,
+    marginBottom: 4,
+  },
+  analyticsMetricLabel: {
+    fontSize: 12,
+    color: COLORS.secondary,
+    marginBottom: 2,
+  },
+  analyticsMetricChange: {
+    fontSize: 10,
+    color: '#10B981',
+    fontWeight: '500',
+  },
+  topPerformingList: {
+    gap: 12,
+  },
+  topPerformingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  topPerformingImagePlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topPerformingInfo: {
+    flex: 1,
+  },
+  topPerformingTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  topPerformingStats: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  topPerformingStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  topPerformingStatText: {
+    fontSize: 12,
+    color: COLORS.secondary,
+  },
+  achievementsCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  achievementsCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  achievementsList: {
+    gap: 12,
+  },
+  achievementItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  achievementInfo: {
+    flex: 1,
+  },
+  achievementTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.text,
+    marginBottom: 2,
+  },
+  achievementDate: {
+    fontSize: 12,
+    color: COLORS.secondary,
+  },
+  milestonesList: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  milestoneItem: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  milestoneIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  milestoneInfo: {
+    alignItems: 'center',
+  },
+  milestoneNumber: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 2,
+  },
+  milestoneLabel: {
     fontSize: 12,
     color: COLORS.secondary,
     textAlign: 'center',

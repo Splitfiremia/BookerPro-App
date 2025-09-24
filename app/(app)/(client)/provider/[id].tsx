@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, useWindowDimensions, FlatList } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, useWindowDimensions, FlatList, Modal } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Star, MapPin, Clock, Calendar, Heart, UserPlus, MessageCircle, Share2, Grid3X3, Award, Scissors, Palette, Camera, Play, Eye } from "lucide-react-native";
+import { Star, MapPin, Clock, Calendar, Heart, UserPlus, MessageCircle, Share2, Grid3X3, Award, Scissors, Palette, Camera, Play, Eye, TrendingUp, Users, Trophy, Bookmark, Filter, ChevronDown, Image as ImageIcon, Video } from "lucide-react-native";
 import { mockProviders } from "@/mocks/providers";
 import { useSocial } from "@/providers/SocialProvider";
 
@@ -12,6 +12,8 @@ export default function ProviderDetailsScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState<TabType>('services');
+  const [portfolioFilter, setPortfolioFilter] = useState<string>('all');
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const { isFollowing, followProvider, unfollowProvider, getProviderPosts } = useSocial();
 
   // Find provider from mock data
@@ -84,46 +86,121 @@ export default function ProviderDetailsScreen() {
     const featuredWork = portfolioData.slice(0, 2);
     const recentWork = portfolioData.slice(2);
     
+    const portfolioCategories = ['all', 'Before & After', 'Beard Work', 'Creative Work', 'Color Work'];
+    const filteredPortfolio = portfolioFilter === 'all' 
+      ? portfolioData 
+      : portfolioData.filter(item => item.category === portfolioFilter);
+    
     return (
       <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-        {/* Provider Stats */}
-        <View style={styles.portfolioStats}>
-          <View style={styles.statItemMain}>
-            <Award size={20} color="#FFB800" />
-            <Text style={styles.statValue}>5+</Text>
-            <Text style={styles.statLabel}>Years Experience</Text>
+        {/* Enhanced Portfolio Stats */}
+        <View style={styles.enhancedPortfolioStats}>
+          <View style={styles.portfolioStatsRow}>
+            <View style={styles.statItemEnhanced}>
+              <View style={styles.statIconContainer}>
+                <Award size={18} color="#FFB800" />
+              </View>
+              <Text style={styles.statValueEnhanced}>5+</Text>
+              <Text style={styles.statLabelEnhanced}>Years Experience</Text>
+            </View>
+            <View style={styles.statItemEnhanced}>
+              <View style={styles.statIconContainer}>
+                <Users size={18} color="#007AFF" />
+              </View>
+              <Text style={styles.statValueEnhanced}>500+</Text>
+              <Text style={styles.statLabelEnhanced}>Happy Clients</Text>
+            </View>
+            <View style={styles.statItemEnhanced}>
+              <View style={styles.statIconContainer}>
+                <TrendingUp size={18} color="#10B981" />
+              </View>
+              <Text style={styles.statValueEnhanced}>98%</Text>
+              <Text style={styles.statLabelEnhanced}>Satisfaction</Text>
+            </View>
           </View>
-          <View style={styles.statItemMain}>
-            <Scissors size={20} color="#007AFF" />
-            <Text style={styles.statValue}>500+</Text>
-            <Text style={styles.statLabel}>Happy Clients</Text>
-          </View>
-          <View style={styles.statItemMain}>
-            <Palette size={20} color="#FF3B30" />
-            <Text style={styles.statValue}>12</Text>
-            <Text style={styles.statLabel}>Specialties</Text>
+          
+          <View style={styles.portfolioStatsRow}>
+            <View style={styles.statItemEnhanced}>
+              <View style={styles.statIconContainer}>
+                <ImageIcon size={18} color="#8B5CF6" />
+              </View>
+              <Text style={styles.statValueEnhanced}>24</Text>
+              <Text style={styles.statLabelEnhanced}>Portfolio Items</Text>
+            </View>
+            <View style={styles.statItemEnhanced}>
+              <View style={styles.statIconContainer}>
+                <Video size={18} color="#F59E0B" />
+              </View>
+              <Text style={styles.statValueEnhanced}>8</Text>
+              <Text style={styles.statLabelEnhanced}>Video Demos</Text>
+            </View>
+            <View style={styles.statItemEnhanced}>
+              <View style={styles.statIconContainer}>
+                <Trophy size={18} color="#EF4444" />
+              </View>
+              <Text style={styles.statValueEnhanced}>3</Text>
+              <Text style={styles.statLabelEnhanced}>Awards</Text>
+            </View>
           </View>
         </View>
         
-        {/* Specialties */}
+        {/* Professional Achievements */}
+        <View style={styles.achievementsSection}>
+          <Text style={styles.sectionTitle}>Professional Achievements</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.achievementCard}>
+              <Trophy size={24} color="#FFB800" />
+              <Text style={styles.achievementTitle}>Master Stylist</Text>
+              <Text style={styles.achievementSubtitle}>Certified 2023</Text>
+            </View>
+            <View style={styles.achievementCard}>
+              <Award size={24} color="#007AFF" />
+              <Text style={styles.achievementTitle}>Top Rated</Text>
+              <Text style={styles.achievementSubtitle}>2024</Text>
+            </View>
+            <View style={styles.achievementCard}>
+              <Palette size={24} color="#FF3B30" />
+              <Text style={styles.achievementTitle}>Color Expert</Text>
+              <Text style={styles.achievementSubtitle}>Specialized</Text>
+            </View>
+          </ScrollView>
+        </View>
+        
+        {/* Specialties with Enhanced Design */}
         <View style={styles.specialtiesSection}>
-          <Text style={styles.sectionTitle}>Specialties</Text>
+          <Text style={styles.sectionTitle}>Specialties & Skills</Text>
           <View style={styles.specialtiesContainer}>
             {(provider.specialties || ['Haircuts', 'Color', 'Styling', 'Treatments']).map((specialty, index) => (
-              <View key={index} style={styles.specialtyTag}>
+              <View key={index} style={styles.enhancedSpecialtyTag}>
+                <Scissors size={12} color="#fff" />
                 <Text style={styles.specialtyText}>{specialty}</Text>
               </View>
             ))}
           </View>
         </View>
         
-        {/* Featured Work */}
+        {/* Portfolio Filter */}
+        <View style={styles.portfolioFilterSection}>
+          <View style={styles.portfolioFilterHeader}>
+            <Text style={styles.sectionTitle}>Portfolio Gallery</Text>
+            <TouchableOpacity 
+              style={styles.filterButton}
+              onPress={() => setShowFilterModal(true)}
+            >
+              <Filter size={16} color="#007AFF" />
+              <Text style={styles.filterButtonText}>{portfolioFilter === 'all' ? 'All Work' : portfolioFilter}</Text>
+              <ChevronDown size={16} color="#007AFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        {/* Featured Work with Enhanced Layout */}
         {featuredWork.length > 0 && (
           <View style={styles.portfolioSection}>
-            <Text style={styles.sectionTitle}>Featured Work</Text>
+            <Text style={styles.subsectionTitle}>Featured Transformations</Text>
             <View style={styles.featuredGrid}>
               {featuredWork.map((item) => (
-                <TouchableOpacity key={item.id} style={styles.featuredItem}>
+                <TouchableOpacity key={item.id} style={styles.enhancedFeaturedItem}>
                   {item.image && item.image.trim() !== '' ? (
                     <Image source={{ uri: item.image }} style={styles.featuredImage} />
                   ) : (
@@ -131,18 +208,26 @@ export default function ProviderDetailsScreen() {
                       <Camera size={32} color="#ccc" />
                     </View>
                   )}
-                  <View style={styles.featuredOverlay}>
+                  <View style={styles.enhancedFeaturedOverlay}>
                     <View style={styles.featuredHeader}>
                       <Text style={styles.featuredTitle}>{item.title}</Text>
-                      <View style={styles.viewsContainer}>
-                        <Eye size={12} color="#fff" />
-                        <Text style={styles.viewsText}>1.2k</Text>
+                      <View style={styles.featuredActions}>
+                        <TouchableOpacity style={styles.bookmarkButton}>
+                          <Bookmark size={14} color="#fff" />
+                        </TouchableOpacity>
+                        <View style={styles.viewsContainer}>
+                          <Eye size={12} color="#fff" />
+                          <Text style={styles.viewsText}>1.2k</Text>
+                        </View>
                       </View>
                     </View>
                     <Text style={styles.featuredDescription}>{item.description}</Text>
                     <View style={styles.featuredTags}>
                       <View style={styles.featuredTag}>
-                        <Text style={styles.featuredTagText}>Before & After</Text>
+                        <Text style={styles.featuredTagText}>{item.category}</Text>
+                      </View>
+                      <View style={styles.featuredTag}>
+                        <Text style={styles.featuredTagText}>Trending</Text>
                       </View>
                     </View>
                   </View>
@@ -152,13 +237,13 @@ export default function ProviderDetailsScreen() {
           </View>
         )}
         
-        {/* Recent Work Grid */}
-        {recentWork.length > 0 && (
+        {/* Enhanced Recent Work Grid */}
+        {filteredPortfolio.length > 0 && (
           <View style={styles.portfolioSection}>
-            <Text style={styles.sectionTitle}>Recent Work</Text>
-            <View style={styles.portfolioGrid}>
-              {recentWork.map((item) => (
-                <TouchableOpacity key={item.id} style={[styles.portfolioItem, { width: (width - 60) / 2 }]}>
+            <Text style={styles.subsectionTitle}>Recent Work ({filteredPortfolio.length} items)</Text>
+            <View style={styles.enhancedPortfolioGrid}>
+              {filteredPortfolio.map((item) => (
+                <TouchableOpacity key={item.id} style={[styles.enhancedPortfolioItem, { width: (width - 60) / 2 }]}>
                   {item.image && item.image.trim() !== '' ? (
                     <Image source={{ uri: item.image }} style={styles.portfolioImage} />
                   ) : (
@@ -166,14 +251,22 @@ export default function ProviderDetailsScreen() {
                       <Grid3X3 size={32} color="#ccc" />
                     </View>
                   )}
-                  <View style={styles.portfolioOverlay}>
-                    <Text style={styles.portfolioTitle}>{item.title}</Text>
+                  <View style={styles.enhancedPortfolioOverlay}>
+                    <View style={styles.portfolioHeader}>
+                      <Text style={styles.portfolioTitle}>{item.title}</Text>
+                      <TouchableOpacity style={styles.portfolioLikeButton}>
+                        <Heart size={14} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
                     <Text style={styles.portfolioDescription}>{item.description}</Text>
-                  </View>
-                  <View style={styles.portfolioActions}>
-                    <View style={styles.portfolioLikes}>
-                      <Heart size={12} color="#fff" />
-                      <Text style={styles.portfolioLikesText}>24</Text>
+                    <View style={styles.portfolioFooter}>
+                      <View style={styles.portfolioCategory}>
+                        <Text style={styles.portfolioCategoryText}>{item.category}</Text>
+                      </View>
+                      <View style={styles.portfolioStats}>
+                        <Eye size={10} color="#fff" />
+                        <Text style={styles.portfolioStatsText}>156</Text>
+                      </View>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -182,12 +275,12 @@ export default function ProviderDetailsScreen() {
           </View>
         )}
         
-        {/* Video Portfolio */}
+        {/* Enhanced Video Portfolio */}
         <View style={styles.portfolioSection}>
-          <Text style={styles.sectionTitle}>Video Portfolio</Text>
+          <Text style={styles.subsectionTitle}>Video Transformations</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {[1, 2, 3].map((index) => (
-              <TouchableOpacity key={index} style={styles.videoItem}>
+            {[1, 2, 3, 4].map((index) => (
+              <TouchableOpacity key={index} style={styles.enhancedVideoItem}>
                 <View style={styles.videoThumbnail}>
                   <View style={styles.videoPlaceholder}>
                     <Camera size={24} color="#ccc" />
@@ -195,10 +288,52 @@ export default function ProviderDetailsScreen() {
                   <View style={styles.playButton}>
                     <Play size={16} color="#fff" fill="#fff" />
                   </View>
+                  <View style={styles.videoDurationBadge}>
+                    <Text style={styles.videoDurationText}>2:30</Text>
+                  </View>
                 </View>
-                <Text style={styles.videoTitle}>Hair Transformation #{index}</Text>
-                <Text style={styles.videoDuration}>2:30</Text>
+                <View style={styles.videoInfo}>
+                  <Text style={styles.videoTitle}>Hair Transformation #{index}</Text>
+                  <View style={styles.videoStats}>
+                    <View style={styles.videoStat}>
+                      <Eye size={12} color="#666" />
+                      <Text style={styles.videoStatText}>1.2k</Text>
+                    </View>
+                    <View style={styles.videoStat}>
+                      <Heart size={12} color="#666" />
+                      <Text style={styles.videoStatText}>89</Text>
+                    </View>
+                  </View>
+                </View>
               </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+        
+        {/* Client Testimonials in Portfolio */}
+        <View style={styles.portfolioSection}>
+          <Text style={styles.subsectionTitle}>Client Testimonials</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {[1, 2, 3].map((index) => (
+              <View key={index} style={styles.testimonialCard}>
+                <View style={styles.testimonialHeader}>
+                  <View style={styles.testimonialAvatar}>
+                    <Text style={styles.testimonialAvatarText}>J</Text>
+                  </View>
+                  <View style={styles.testimonialInfo}>
+                    <Text style={styles.testimonialName}>John D.</Text>
+                    <View style={styles.testimonialRating}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star key={star} size={12} color="#FFB800" fill="#FFB800" />
+                      ))}
+                    </View>
+                  </View>
+                </View>
+                <Text style={styles.testimonialText}>
+                  &quot;Amazing work! Best haircut I&apos;ve ever had. Highly recommend!&quot;
+                </Text>
+                <Text style={styles.testimonialDate}>2 weeks ago</Text>
+              </View>
             ))}
           </ScrollView>
         </View>
@@ -368,6 +503,46 @@ export default function ProviderDetailsScreen() {
         {/* Tab Content */}
         {renderTabContent()}
       </ScrollView>
+
+      {/* Portfolio Filter Modal */}
+      <Modal
+        visible={showFilterModal}
+        transparent
+        animationType="slide"
+      >
+        <View style={styles.filterModalOverlay}>
+          <View style={styles.filterModalContainer}>
+            <View style={styles.filterModalHeader}>
+              <Text style={styles.filterModalTitle}>Filter Portfolio</Text>
+              <TouchableOpacity onPress={() => setShowFilterModal(false)}>
+                <Text style={styles.filterModalClose}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.filterOptions}>
+              {['all', 'Before & After', 'Beard Work', 'Creative Work', 'Color Work'].map((category) => (
+                <TouchableOpacity
+                  key={category}
+                  style={[
+                    styles.filterOption,
+                    portfolioFilter === category && styles.activeFilterOption
+                  ]}
+                  onPress={() => {
+                    setPortfolioFilter(category);
+                    setShowFilterModal(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.filterOptionText,
+                    portfolioFilter === category && styles.activeFilterOptionText
+                  ]}>
+                    {category === 'all' ? 'All Work' : category}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Fixed Book Button */}
       <View style={styles.bookButtonContainer}>
@@ -596,14 +771,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#007AFF',
   },
-  portfolioStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    backgroundColor: '#f8f9fa',
-    marginBottom: 20,
-  },
+
   statItem: {
     alignItems: 'center',
     gap: 4,
@@ -870,5 +1038,358 @@ const styles = StyleSheet.create({
   },
   emptyPostsText: {
     color: '#666',
+  },
+  enhancedPortfolioStats: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 20,
+    marginBottom: 24,
+  },
+  portfolioStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  statItemEnhanced: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statValueEnhanced: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  statLabelEnhanced: {
+    fontSize: 11,
+    color: '#666',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  achievementsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  achievementCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginRight: 12,
+    alignItems: 'center',
+    minWidth: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  achievementTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  achievementSubtitle: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  enhancedSpecialtyTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  portfolioFilterSection: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  portfolioFilterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  filterButtonText: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
+  },
+  subsectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  enhancedFeaturedItem: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#f0f0f0',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  enhancedFeaturedOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    padding: 16,
+  },
+  featuredActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  bookmarkButton: {
+    padding: 4,
+  },
+  enhancedPortfolioGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  enhancedPortfolioItem: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  enhancedPortfolioOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    padding: 12,
+  },
+  portfolioHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  portfolioLikeButton: {
+    padding: 2,
+  },
+  portfolioFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  portfolioCategory: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  portfolioCategoryText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  portfolioStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  portfolioStatsText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  enhancedVideoItem: {
+    width: 160,
+    marginRight: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  videoDurationBadge: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  videoDurationText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  videoInfo: {
+    padding: 12,
+  },
+  videoStats: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 4,
+  },
+  videoStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  videoStatText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  testimonialCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginRight: 16,
+    width: 280,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  testimonialHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  testimonialAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  testimonialAvatarText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  testimonialInfo: {
+    flex: 1,
+  },
+  testimonialName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  testimonialRating: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  testimonialText: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
+  testimonialDate: {
+    fontSize: 12,
+    color: '#666',
+  },
+  filterModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  filterModalContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  filterModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  filterModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  filterModalClose: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  filterOptions: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  filterOption: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: '#f8f9fa',
+  },
+  activeFilterOption: {
+    backgroundColor: '#007AFF',
+  },
+  filterOptionText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  activeFilterOptionText: {
+    color: '#fff',
   },
 });
