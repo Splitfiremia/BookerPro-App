@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import ImageWithFallback from '@/components/ImageWithFallback';
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Star, MapPin, Heart, ArrowLeft } from "lucide-react-native";
@@ -34,9 +35,10 @@ export default function FollowingScreen() {
       onPress={() => handleProviderPress(item.id)}
     >
       <View style={styles.providerInfo}>
-        <Image 
-          source={{ uri: item.profileImage || item.image }} 
-          style={styles.providerImage} 
+        <ImageWithFallback
+          source={{ uri: item.profileImage || item.image || '' }}
+          style={styles.providerImage}
+          fallbackIcon="user"
         />
         <View style={styles.providerDetails}>
           <View style={styles.providerHeader}>

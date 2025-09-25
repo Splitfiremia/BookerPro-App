@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import ImageWithFallback from '@/components/ImageWithFallback';
 import { useRouter } from 'expo-router';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
@@ -112,15 +113,11 @@ export default function SummaryScreen() {
               </View>
               
               <View style={styles.profileSection}>
-                {profileImage && profileImage.trim() !== '' ? (
-                  <Image source={{ uri: profileImage }} style={styles.profileImage} />
-                ) : (
-                  <View style={styles.profileImagePlaceholder}>
-                    <Text style={styles.profileImagePlaceholderText}>
-                      {firstName.charAt(0)}{lastName.charAt(0)}
-                    </Text>
-                  </View>
-                )}
+                <ImageWithFallback
+                  source={{ uri: profileImage || '' }}
+                  style={styles.profileImage}
+                  fallbackIcon="user"
+                />
                 
                 <View style={styles.profileInfo}>
                   <Text style={styles.profileName}>{firstName} {lastName}</Text>

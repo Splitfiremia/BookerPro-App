@@ -5,9 +5,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  Image,
   TextInput,
 } from 'react-native';
+import ImageWithFallback from '@/components/ImageWithFallback';
 import { Search, ChevronRight, Clock } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -176,7 +176,7 @@ export default function ClientsScreen() {
       onPress={() => handleClientPress(item)}
       testID={`client-${item.id}`}
     >
-      <Image source={{ uri: item.image }} style={styles.clientImage} />
+      <ImageWithFallback source={{ uri: item.image || '' }} style={styles.clientImage} fallbackIcon="user" />
       <View style={styles.clientInfo}>
         <Text style={styles.clientName}>{item.name}</Text>
         <View style={styles.clientMeta}>

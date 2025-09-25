@@ -117,7 +117,7 @@ export default function ProviderHomeScreen() {
                 <View style={styles.requestHeader}>
                   <View style={styles.clientInfo}>
                     <ImageWithFallback
-                      source={{ uri: request.clientImage || 'https://i.pravatar.cc/150?img=1' }}
+                      source={{ uri: request.clientImage || '' }}
                       style={styles.clientImage}
                       fallbackIcon="user"
                     />
