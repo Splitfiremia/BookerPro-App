@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, useWindowDimensions, FlatList, Modal } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, FlatList, Modal } from "react-native";
+import ImageWithFallback from '@/components/ImageWithFallback';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Star, MapPin, Clock, Calendar, Heart, UserPlus, MessageCircle, Share2, Grid3X3, Award, Scissors, Palette, Camera, Play, Eye, TrendingUp, Users, Trophy, Bookmark, Filter, ChevronDown, Image as ImageIcon, Video } from "lucide-react-native";
 import { mockProviders } from "@/mocks/providers";
@@ -202,13 +203,11 @@ export default function ProviderDetailsScreen() {
             <View style={styles.featuredGrid}>
               {featuredWork.map((item) => (
                 <TouchableOpacity key={item.id} style={styles.enhancedFeaturedItem}>
-                  {item.image && item.image.trim() !== '' ? (
-                    <Image source={{ uri: item.image }} style={styles.featuredImage} />
-                  ) : (
-                    <View style={[styles.featuredImage, styles.placeholderImage]}>
-                      <Camera size={32} color="#ccc" />
-                    </View>
-                  )}
+                  <ImageWithFallback
+                    source={{ uri: item.image }}
+                    style={styles.featuredImage}
+                    fallbackIcon="camera"
+                  />
                   <View style={styles.enhancedFeaturedOverlay}>
                     <View style={styles.featuredHeader}>
                       <Text style={styles.featuredTitle}>{item.title}</Text>
@@ -245,13 +244,11 @@ export default function ProviderDetailsScreen() {
             <View style={styles.enhancedPortfolioGrid}>
               {filteredPortfolio.map((item) => (
                 <TouchableOpacity key={item.id} style={[styles.enhancedPortfolioItem, { width: (width - 60) / 2 }]}>
-                  {item.image && item.image.trim() !== '' ? (
-                    <Image source={{ uri: item.image }} style={styles.portfolioImage} />
-                  ) : (
-                    <View style={[styles.portfolioImage, styles.placeholderImage]}>
-                      <Grid3X3 size={32} color="#ccc" />
-                    </View>
-                  )}
+                  <ImageWithFallback
+                    source={{ uri: item.image }}
+                    style={styles.portfolioImage}
+                    fallbackIcon="image"
+                  />
                   <View style={styles.enhancedPortfolioOverlay}>
                     <View style={styles.portfolioHeader}>
                       <Text style={styles.portfolioTitle}>{item.title}</Text>
@@ -352,13 +349,11 @@ export default function ProviderDetailsScreen() {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity style={[styles.postItem, { width: (width - 60) / 3 }]}>
-              {item.imageUrl && item.imageUrl.trim() !== '' ? (
-                <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
-              ) : (
-                <View style={[styles.postImage, styles.placeholderImage]}>
-                  <Grid3X3 size={24} color="#ccc" />
-                </View>
-              )}
+              <ImageWithFallback
+                source={{ uri: item.imageUrl }}
+                style={styles.postImage}
+                fallbackIcon="image"
+              />
               <View style={styles.postOverlay}>
                 <Heart size={12} color="#fff" />
                 <Text style={styles.postLikes}>{item.likes}</Text>
@@ -395,16 +390,11 @@ export default function ProviderDetailsScreen() {
         {/* Header Section */}
         <View style={styles.headerSection}>
           <View style={styles.profileImageContainer}>
-            {(provider.profileImage && provider.profileImage.trim() !== '') || (provider.image && provider.image.trim() !== '') ? (
-              <Image 
-                source={{ uri: provider.profileImage || provider.image }} 
-                style={styles.profileImage} 
-              />
-            ) : (
-              <View style={[styles.profileImage, styles.placeholderAvatar]}>
-                <UserPlus size={32} color="#ccc" />
-              </View>
-            )}
+            <ImageWithFallback
+              source={{ uri: provider.profileImage || provider.image }}
+              style={styles.profileImage}
+              fallbackIcon="user"
+            />
             {provider.isVerified && (
               <View style={styles.verifiedBadge}>
                 <Star size={12} color="#fff" fill="#fff" />

@@ -5,12 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   TextInput,
   Alert,
   Platform,
   useWindowDimensions,
 } from 'react-native';
+import ImageWithFallback from '@/components/ImageWithFallback';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Plus, Trash2, Camera, Send } from 'lucide-react-native';
@@ -142,16 +142,11 @@ export default function ContentScreen() {
             <View style={styles.portfolioGrid}>
               {userPortfolio.map((item) => (
                 <View key={item.id} style={styles.portfolioItem}>
-                  {item.imageUri && item.imageUri.trim() !== '' ? (
-                    <Image
-                      source={{ uri: item.imageUri }}
-                      style={[styles.portfolioImage, { width: Math.floor((width - 48) / 3), height: Math.floor((width - 48) / 3) }]}
-                    />
-                  ) : (
-                    <View style={[styles.portfolioImage, styles.placeholderImage, { width: Math.floor((width - 48) / 3), height: Math.floor((width - 48) / 3) }]}>
-                      <Camera size={24} color={COLORS.lightGray} />
-                    </View>
-                  )}
+                  <ImageWithFallback
+                    source={{ uri: item.imageUri }}
+                    style={[styles.portfolioImage, { width: Math.floor((width - 48) / 3), height: Math.floor((width - 48) / 3) }]}
+                    fallbackIcon="camera"
+                  />
                   <TouchableOpacity
                     testID={`delete-portfolio-${item.id}`}
                     accessibilityRole="button"
@@ -185,7 +180,7 @@ export default function ContentScreen() {
             onPress={pickImageForPost}
           >
             {selectedPostImage && selectedPostImage.trim() !== '' ? (
-              <Image source={{ uri: selectedPostImage }} style={styles.selectedPostImage} />
+              <ImageWithFallback source={{ uri: selectedPostImage }} style={styles.selectedPostImage} fallbackIcon="camera" />
             ) : (
               <View style={styles.imagePickerPlaceholder}>
                 <Camera size={32} color={COLORS.lightGray} />

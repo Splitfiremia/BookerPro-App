@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import ImageWithFallback from '@/components/ImageWithFallback';
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
@@ -95,7 +96,7 @@ export default function ProfileScreen() {
           <View style={styles.profileImageContainer}>
             <View style={styles.imageContainer}>
               {imageUri && imageUri.trim() !== '' ? (
-                <Image source={{ uri: imageUri }} style={styles.profileImage} />
+                <ImageWithFallback source={{ uri: imageUri }} style={styles.profileImage} fallbackIcon="user" />
               ) : (
                 <View style={styles.placeholderImage}>
                   <Upload size={40} color="#666666" />

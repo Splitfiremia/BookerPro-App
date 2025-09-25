@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   FlatList,
   RefreshControl,
-  Image,
   Animated,
 } from "react-native";
+import ImageWithFallback from '@/components/ImageWithFallback';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, Clock, User, MapPin, Phone, Star, Filter, CheckCircle, XCircle, AlertCircle, Navigation, Zap, Timer } from "lucide-react-native";
 import { router } from "expo-router";
@@ -247,7 +247,7 @@ export default function AppointmentsScreen() {
         <View style={styles.appointmentHeader}>
           <View style={styles.providerInfo}>
             <View style={styles.providerImageContainer}>
-              <Image source={{ uri: item.providerImage }} style={styles.providerImage} />
+              <ImageWithFallback source={{ uri: item.providerImage }} style={styles.providerImage} fallbackIcon="user" />
               {item.status === 'completed' && (
                 <View style={styles.completedOverlay}>
                   <CheckCircle size={20} color="#4CAF50" />
