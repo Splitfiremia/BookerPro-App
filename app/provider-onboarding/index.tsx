@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 
 export default function ProviderOnboardingIntro() {
@@ -131,12 +132,12 @@ export default function ProviderOnboardingIntro() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.background,
   },
   content: {
     flex: 1,
     justifyContent: 'space-between',
-    padding: 20,
+    padding: SPACING.md,
   },
   imageContainer: {
     position: 'absolute',
@@ -151,38 +152,42 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: COLORS.overlay,
   },
   textContainer: {
     marginTop: 100,
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACING.md,
+    ...GLASS_STYLES.card,
+    padding: SPACING.lg,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 20,
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.md,
     textAlign: 'center',
+    fontFamily: FONTS.bold,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
     textAlign: 'center',
     lineHeight: 24,
+    fontFamily: FONTS.regular,
   },
   indicatorContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: SPACING.xxl,
   },
   indicator: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#D4AF37',
+    backgroundColor: COLORS.primary,
   },
   buttonContainer: {
-    marginBottom: 40,
-    paddingHorizontal: 20,
+    marginBottom: SPACING.xxl,
+    paddingHorizontal: SPACING.md,
   },
   navigationContainer: {
     // Empty style for animation container

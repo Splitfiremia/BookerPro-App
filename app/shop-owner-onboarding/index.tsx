@@ -1,10 +1,10 @@
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useShopOwnerOnboarding } from '@/providers/ShopOwnerOnboardingProvider';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronRight } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function ShopOwnerOnboardingStart() {
   const router = useRouter();
@@ -21,15 +21,17 @@ export default function ShopOwnerOnboardingStart() {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      <LinearGradient
-        colors={['#4c669f', '#3b5998', '#192f6a']}
+      <ImageBackground
+        source={{ uri: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=800&q=80' }}
         style={styles.background}
+        resizeMode="cover"
       >
+        <View style={styles.overlay} />
         <View style={[
           styles.content,
           {
-            paddingTop: 24 + insets.top,
-            paddingBottom: 24 + insets.bottom
+            paddingTop: SPACING.lg + insets.top,
+            paddingBottom: SPACING.lg + insets.bottom
           }
         ]}>
           <View style={styles.header}>
@@ -87,7 +89,7 @@ export default function ShopOwnerOnboardingStart() {
             <ChevronRight size={20} color="#fff" />
           </TouchableOpacity>
         </View>
-      </LinearGradient>
+      </ImageBackground>
     </View>
   );
 }
@@ -99,81 +101,89 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
   },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: COLORS.overlay,
+  },
   content: {
     flex: 1,
-    padding: 24,
+    padding: SPACING.lg,
     justifyContent: 'space-between',
   },
   header: {
-    marginTop: 40,
+    marginTop: SPACING.xxl,
     alignItems: 'center',
+    ...GLASS_STYLES.card,
+    padding: SPACING.lg,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: FONT_SIZES.xxxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   subtitle: {
-    fontSize: 18,
-    color: '#fff',
-    opacity: 0.9,
+    fontSize: FONT_SIZES.lg,
+    color: COLORS.lightGray,
     textAlign: 'center',
     maxWidth: '80%',
+    fontFamily: FONTS.regular,
   },
   infoContainer: {
-    marginVertical: 40,
+    marginVertical: SPACING.xxl,
   },
   infoItem: {
+    ...GLASS_STYLES.card,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    padding: 16,
+    marginBottom: SPACING.lg,
+    padding: SPACING.md,
   },
   infoIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: SPACING.md,
   },
   infoNumber: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#3b5998',
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.background,
+    fontFamily: FONTS.bold,
   },
   infoText: {
     flex: 1,
   },
   infoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 4,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    fontFamily: FONTS.bold,
   },
   infoDescription: {
-    fontSize: 14,
-    color: '#fff',
-    opacity: 0.9,
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   button: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    ...GLASS_STYLES.button.primary,
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20,
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    marginBottom: SPACING.md,
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginRight: 8,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.background,
+    marginRight: SPACING.xs,
+    fontFamily: FONTS.bold,
   },
 });

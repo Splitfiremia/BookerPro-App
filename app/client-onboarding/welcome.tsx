@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function WelcomeScreen() {
   const handleGetStarted = () => {
@@ -62,7 +63,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.background,
   },
   backgroundImage: {
     flex: 1,
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: COLORS.overlay,
   },
   safeArea: {
     flex: 1,
@@ -79,50 +80,47 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 40,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.xxl,
   },
   textContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACING.md,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: FONT_SIZES.xxxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
     textAlign: 'center',
     lineHeight: 40,
     letterSpacing: 1,
+    fontFamily: FONTS.bold,
   },
   buttonContainer: {
-    gap: 16,
+    gap: SPACING.md,
   },
   getStartedButton: {
-    backgroundColor: '#FFD700',
-    paddingVertical: 18,
-    borderRadius: 8,
-    alignItems: 'center',
+    ...GLASS_STYLES.button.primary,
+    paddingVertical: SPACING.lg,
   },
   getStartedButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.background,
     letterSpacing: 1,
+    fontFamily: FONTS.bold,
   },
   enterCodeButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: 18,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    ...GLASS_STYLES.button.secondary,
+    paddingVertical: SPACING.lg,
   },
   enterCodeButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
     letterSpacing: 1,
+    fontFamily: FONTS.bold,
   },
 });
