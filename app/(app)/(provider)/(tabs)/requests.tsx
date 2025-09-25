@@ -210,7 +210,7 @@ export default function BookingRequestsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#181611',
   },
   header: {
     paddingHorizontal: 20,
@@ -220,12 +220,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: '#FFFFFF',
     fontFamily: FONTS.bold,
   },
   subtitle: {
     fontSize: 16,
-    color: COLORS.text,
+    color: '#FFFFFF',
     opacity: 0.7,
     marginTop: 4,
   },
@@ -240,15 +240,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: COLORS.card,
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    backdropFilter: 'blur(15px)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     marginRight: 8,
   },
   activeFilterButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#f2a60d',
   },
   filterButtonText: {
     fontSize: 14,
-    color: COLORS.text,
+    color: '#FFFFFF',
   },
   activeFilterButtonText: {
     color: '#FFFFFF',
@@ -262,7 +265,10 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   requestCard: {
-    backgroundColor: COLORS.card,
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    backdropFilter: 'blur(15px)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -305,12 +311,12 @@ const styles = StyleSheet.create({
   clientName: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.text,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   requestService: {
     fontSize: 16,
-    color: COLORS.primary,
+    color: '#f2a60d',
   },
   requestPrice: {
     fontSize: 20,
@@ -327,18 +333,18 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 16,
-    color: COLORS.text,
+    color: '#FFFFFF',
     marginLeft: 8,
     fontWeight: '500',
   },
   durationText: {
     fontSize: 14,
-    color: COLORS.text,
+    color: '#FFFFFF',
     opacity: 0.6,
     marginLeft: 4,
   },
   notesContainer: {
-    backgroundColor: COLORS.background,
+    backgroundColor: 'rgba(24, 22, 17, 0.5)',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
@@ -346,12 +352,12 @@ const styles = StyleSheet.create({
   notesLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.text,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   notesText: {
     fontSize: 14,
-    color: COLORS.text,
+    color: '#FFFFFF',
     opacity: 0.8,
     lineHeight: 20,
   },
@@ -390,7 +396,7 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: 12,
-    color: COLORS.text,
+    color: '#FFFFFF',
     opacity: 0.5,
     textAlign: 'right',
   },
@@ -401,13 +407,13 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 18,
-    color: COLORS.text,
+    color: '#FFFFFF',
     marginTop: 16,
     fontWeight: '600',
   },
   emptySubtext: {
     fontSize: 14,
-    color: COLORS.text,
+    color: '#FFFFFF',
     opacity: 0.6,
     marginTop: 8,
     textAlign: 'center',

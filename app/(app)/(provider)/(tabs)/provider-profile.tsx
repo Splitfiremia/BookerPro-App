@@ -736,8 +736,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    backgroundColor: COLORS.card,
-    borderRadius: 10,
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    backdropFilter: 'blur(15px)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     padding: 20,
     width: '80%',
     maxWidth: 400,
@@ -751,12 +754,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: '#FFFFFF',
     marginBottom: 15,
   },
   modalText: {
     fontSize: 16,
-    color: COLORS.text,
+    color: '#FFFFFF',
     marginBottom: 20,
   },
   modalButtonsContainer: {
@@ -784,7 +787,7 @@ const styles = StyleSheet.create({
   modalButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: '#FFFFFF',
   },
   confirmButtonText: {
     fontSize: 16,
@@ -793,7 +796,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#181611',
   },
   scrollContent: {
     paddingBottom: 100, // Extra padding at bottom for safe scrolling
@@ -805,8 +808,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    backgroundColor: COLORS.background,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    backdropFilter: 'blur(15px)',
   },
   headerTop: {
     flexDirection: 'row',
@@ -828,7 +832,10 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.card,
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    backdropFilter: 'blur(15px)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
@@ -838,7 +845,7 @@ const styles = StyleSheet.create({
   profileInitial: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: '#FFFFFF',
   },
   editProfileBadge: {
     position: 'absolute',
@@ -854,7 +861,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: '#FFFFFF',
     marginBottom: 5,
   },
   title: {
@@ -877,8 +884,11 @@ const styles = StyleSheet.create({
   },
   menuItem: {
     flex: 1,
-    backgroundColor: COLORS.card,
-    borderRadius: 10,
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    backdropFilter: 'blur(15px)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     padding: 16,
     marginHorizontal: 5,
   },
@@ -889,7 +899,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuTitle: {
-    color: COLORS.text,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
@@ -921,7 +931,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   singleMenuText: {
-    color: COLORS.text,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '500',
   },
@@ -956,7 +966,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: '#FFFFFF',
   },
   addButton: {
     flexDirection: 'row',
@@ -1004,8 +1014,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: COLORS.card,
-    borderRadius: 8,
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    backdropFilter: 'blur(15px)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
     marginBottom: 8,
   },
   serviceInfo: {
@@ -1014,7 +1027,7 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.text,
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   serviceDetails: {
