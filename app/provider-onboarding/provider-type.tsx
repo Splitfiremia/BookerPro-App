@@ -5,6 +5,7 @@ import { OnboardingProgress } from '@/components/OnboardingProgress';
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, ProviderType } from '@/providers/ProviderOnboardingProvider';
 import { Scissors, Brush, Palette, Zap, HelpCircle } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function ProviderTypeScreen() {
   const router = useRouter();
@@ -81,27 +82,27 @@ export default function ProviderTypeScreen() {
   const providerTypes: { type: ProviderType; icon: React.ReactNode; description: string }[] = [
     { 
       type: 'Barber', 
-      icon: <Scissors size={24} color="#D4AF37" />, 
+      icon: <Scissors size={24} color={COLORS.primary} />, 
       description: 'Haircuts, beard trims, shaves, and styling'
     },
     { 
       type: 'Hair Stylist', 
-      icon: <Brush size={24} color="#D4AF37" />, 
+      icon: <Brush size={24} color={COLORS.primary} />, 
       description: 'Cuts, coloring, styling, and treatments'
     },
     { 
       type: 'Nail Technician', 
-      icon: <Palette size={24} color="#D4AF37" />, 
+      icon: <Palette size={24} color={COLORS.primary} />, 
       description: 'Manicures, pedicures, and nail art'
     },
     { 
       type: 'Tattoo Artist', 
-      icon: <Zap size={24} color="#D4AF37" />, 
+      icon: <Zap size={24} color={COLORS.primary} />, 
       description: 'Custom tattoos and body art'
     },
     { 
       type: 'Other', 
-      icon: <HelpCircle size={24} color="#D4AF37" />, 
+      icon: <HelpCircle size={24} color={COLORS.primary} />, 
       description: 'Other beauty or wellness services'
     },
   ];
@@ -196,78 +197,80 @@ export default function ProviderTypeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: SPACING.lg,
   },
   header: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   content: {
     flex: 1,
   },
   question: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   description: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    marginBottom: 30,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginBottom: SPACING.xl,
+    fontFamily: FONTS.regular,
   },
   optionsContainer: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    ...GLASS_STYLES.card,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
   },
   selectedCard: {
-    borderColor: '#D4AF37',
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    borderColor: COLORS.primary,
+    backgroundColor: `${COLORS.primary}20`,
   },
   iconContainer: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: COLORS.glass.background,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: SPACING.md,
   },
   optionTextContainer: {
     flex: 1,
   },
   optionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    fontFamily: FONTS.bold,
   },
   optionDescription: {
-    fontSize: 14,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   buttonContainer: {
     marginTop: 'auto',
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
   },
   animatedOptionContainer: {
     // Container for animated option cards

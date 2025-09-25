@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.glassBorder,
+    borderBottomColor: COLORS.border,
   },
   overviewLabel: {
     fontSize: 14,
