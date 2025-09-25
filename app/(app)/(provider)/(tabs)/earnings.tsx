@@ -11,7 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LineChart } from 'react-native-chart-kit';
 import { ChevronDown, DollarSign, TrendingUp, Calendar } from 'lucide-react-native';
-import { COLORS, FONTS } from '@/constants/theme';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 import { Payment } from '@/models/database';
 
 type DateFilter = 'today' | 'week' | 'month' | 'quarter' | 'custom';
@@ -432,7 +432,7 @@ export default function EarningsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#181611',
+    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
@@ -441,47 +441,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.md,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: FONT_SIZES.xxxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
     fontFamily: FONTS.bold,
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(31, 41, 55, 0.3)',
-    backdropFilter: 'blur(15px)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    ...GLASS_STYLES.card,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.sm,
     gap: 6,
   },
   filterText: {
-    fontSize: 14,
-    color: '#f2a60d',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.primary,
     fontFamily: FONTS.regular,
   },
   dropdown: {
     position: 'absolute',
     top: 80,
-    right: 20,
-    backgroundColor: 'rgba(31, 41, 55, 0.3)',
-    backdropFilter: 'blur(15px)',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    right: SPACING.md,
+    ...GLASS_STYLES.card,
     zIndex: 1000,
     minWidth: 150,
   },
@@ -502,18 +489,14 @@ const styles = StyleSheet.create({
   },
   kpiContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 12,
-    marginBottom: 24,
+    paddingHorizontal: SPACING.md,
+    gap: SPACING.sm,
+    marginBottom: SPACING.lg,
   },
   kpiCard: {
     flex: 1,
-    backgroundColor: 'rgba(31, 41, 55, 0.3)',
-    backdropFilter: 'blur(15px)',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    ...GLASS_STYLES.card,
+    padding: SPACING.md,
   },
   kpiHeader: {
     flexDirection: 'row',
@@ -528,9 +511,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   kpiValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
     fontFamily: FONTS.bold,
     marginBottom: 4,
   },
@@ -540,15 +523,15 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
   },
   chartContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
     fontFamily: FONTS.bold,
-    marginBottom: 16,
+    marginBottom: SPACING.md,
   },
   chart: {
     marginVertical: 8,
@@ -556,13 +539,9 @@ const styles = StyleSheet.create({
   },
   chartPlaceholder: {
     height: 220,
-    backgroundColor: 'rgba(31, 41, 55, 0.3)',
-    backdropFilter: 'blur(15px)',
-    borderRadius: 16,
+    ...GLASS_STYLES.card,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   chartPlaceholderText: {
     fontSize: 16,
@@ -570,8 +549,8 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
   },
   breakdownContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   breakdownItem: {
     flexDirection: 'row',
@@ -602,8 +581,8 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
   },
   transactionContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
+    paddingHorizontal: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   transactionItem: {
     flexDirection: 'row',
