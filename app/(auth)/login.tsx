@@ -8,21 +8,19 @@ import {
   Platform,
   ScrollView,
   Animated,
-  Image,
+  ImageBackground,
+  TextInput,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useLocalSearchParams, useRouter } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
-import { FormInput } from "@/components/FormInput";
-import { GradientButton } from "@/components/GradientButton";
 import { validateForm, ValidationRules, ValidationErrors, required, minLength } from "@/utils/validation";
 import { testUsers } from "@/mocks/users";
-import { COLORS, FONTS } from "@/constants/theme";
 
 export default function LoginScreen() {
   const params = useLocalSearchParams();
   const { login } = useAuth();
-  const routerInstance = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [animatedValue] = useState(new Animated.Value(0));
   
@@ -132,171 +130,226 @@ export default function LoginScreen() {
   }, [isSubmitting]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <ImageBackground
+        source={{ uri: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop' }}
+        style={styles.backgroundImage}
+        resizeMode="cover"
       >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <TouchableOpacity style={styles.backButton} onPress={() => {
-            if (routerInstance.canGoBack()) {
-              router.back();
-            } else {
-              router.replace("/");
-            }
-          }}>
-            <Text style={styles.backButtonText}>←</Text>
-          </TouchableOpacity>
-
-          <Animated.View style={[styles.animatedContainer, { opacity: animatedValue }]}>
-            <View style={styles.logoContainer}>
-              <Image
-                testID="login-logo"
-                source={{ uri: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/2r2wyb8cwd2xsx67p4v3d" }}
-                style={styles.logoImage}
-                resizeMode="contain"
-                accessible={true}
-                accessibilityLabel="BookerPro Logo"
-              />
+        <View style={styles.overlay} />
+        
+        <SafeAreaView style={styles.safeArea}>
+          {/* Status Bar */}
+          <View style={styles.statusBar}>
+            <Text style={styles.timeText}>10:51</Text>
+            <View style={styles.statusIcons}>
+              <Text style={styles.batteryText}>90</Text>
             </View>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to your account</Text>
-          </Animated.View>
+          </View>
 
-          <Animated.View style={[styles.animatedContainer, { 
-            opacity: animatedValue, 
-            transform: [{ translateY: animatedValue.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] 
-          }]}>
-            <FormInput
-              label="EMAIL"
-              value={formData.email}
-              onChangeText={(value) => handleChange("email", value)}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              error={errors.email}
-              testID="login-email-input"
-            />
-          </Animated.View>
-
-          <Animated.View style={[styles.animatedContainer, { 
-            opacity: animatedValue, 
-            transform: [{ translateY: animatedValue.interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }] 
-          }]}>
-            <FormInput
-              label="PASSWORD"
-              value={formData.password}
-              onChangeText={(value) => handleChange("password", value)}
-              placeholder="Enter your password"
-              secureTextEntry
-              error={errors.password}
-              testID="login-password-input"
-            />
-          </Animated.View>
-
-          <Animated.View 
-            style={[styles.animatedContainer, { 
-              opacity: animatedValue, 
-              transform: [{ translateY: animatedValue.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }] 
-            }]}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.keyboardView}
           >
-            <GradientButton
-              title="SIGN IN"
-              onPress={handleLogin}
-              loading={isSubmitting}
-              disabled={!formData.email || !formData.password}
-              testID="login-button"
-              style={styles.loginButton}
-            />
-          </Animated.View>
+            <ScrollView 
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.spacer} />
+              
+              {/* Glass Morphism Card */}
+              <Animated.View style={[styles.glassCard, { opacity: animatedValue }]}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Email</Text>
+                  <TextInput
+                    style={styles.glassInput}
+                    value={formData.email}
+                    onChangeText={(value) => handleChange("email", value)}
+                    placeholder="Enter your email to log in or sign up"
+                    placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    testID="login-email-input"
+                  />
+                  {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+                </View>
 
-          <Animated.View 
-            style={[styles.animatedContainer, { 
-              opacity: animatedValue, 
-              transform: [{ translateY: animatedValue.interpolate({ inputRange: [0, 1], outputRange: [50, 0] }) }] 
-            }]}
-          >
-            <View style={styles.signupContainer}>
-              <Text style={styles.signupText}>Don&apos;t have an account?{" "}</Text>
-              <TouchableOpacity onPress={handleSignup}>
-                <Text style={styles.signupLink}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+                <TouchableOpacity
+                  style={styles.continueButton}
+                  onPress={handleLogin}
+                  disabled={!formData.email || isSubmitting}
+                >
+                  <Text style={styles.continueButtonText}>
+                    {isSubmitting ? 'LOADING...' : 'CONTINUE'}
+                  </Text>
+                </TouchableOpacity>
+
+                <View style={styles.divider}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>OR</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.browseButton}
+                  onPress={handleSignup}
+                >
+                  <Text style={styles.browseButtonText}>BROWSE SERVICES</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  animatedContainer: {
-    opacity: 1,
-  },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  statusBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    paddingBottom: 8,
+  },
+  timeText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  statusIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  batteryText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 24,
+    paddingBottom: 32,
   },
-  backButton: {
-    marginBottom: 30,
+  spacer: {
+    flex: 1,
+    minHeight: 100,
   },
-  backButtonText: {
-    fontSize: 28,
-    color: COLORS.text,
-    fontFamily: FONTS.regular,
+  glassCard: {
+    backgroundColor: Platform.select({
+      ios: 'rgba(255, 255, 255, 0.1)',
+      android: 'rgba(31, 41, 55, 0.3)',
+      web: 'rgba(31, 41, 55, 0.3)',
+    }),
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    padding: 24,
+    marginBottom: 32,
+    ...(Platform.OS === 'ios' && {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.3,
+      shadowRadius: 20,
+    }),
+    ...(Platform.OS === 'android' && {
+      elevation: 10,
+    }),
   },
-  logoContainer: {
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 20,
+  inputContainer: {
+    marginBottom: 24,
   },
-  logoImage: {
-    width: 280,
-    height: 160,
-    resizeMode: 'contain',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: COLORS.text,
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 8,
-    textAlign: "center",
-    fontFamily: FONTS.bold,
+    letterSpacing: 0.5,
   },
-  subtitle: {
+  glassInput: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    borderBottomWidth: 2,
+    borderBottomColor: 'rgba(156, 163, 175, 0.5)',
+    paddingVertical: 12,
+    paddingHorizontal: 0,
     fontSize: 16,
-    color: "#999",
-    marginBottom: 30,
-    textAlign: "center",
+    color: '#FFFFFF',
+    fontWeight: '400',
   },
-  loginButton: {
-    marginBottom: 20,
+  errorText: {
+    color: '#EF4444',
+    fontSize: 12,
+    marginTop: 4,
   },
-  signupContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 40,
+  continueButton: {
+    backgroundColor: '#FBBF24',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 24,
+    shadowColor: '#FBBF24',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  signupText: {
+  continueButtonText: {
+    color: '#1F2937',
     fontSize: 16,
-    color: "#999",
+    fontWeight: '600',
+    letterSpacing: 1,
   },
-  signupLink: {
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(156, 163, 175, 0.4)',
+  },
+  dividerText: {
+    color: 'rgba(156, 163, 175, 0.8)',
+    fontSize: 14,
+    fontWeight: '500',
+    marginHorizontal: 16,
+  },
+  browseButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#FBBF24',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  browseButtonText: {
+    color: '#FBBF24',
     fontSize: 16,
-    color: COLORS.primary,
-    fontWeight: "bold",
-    fontFamily: FONTS.bold,
+    fontWeight: '600',
+    letterSpacing: 1,
   },
 });
