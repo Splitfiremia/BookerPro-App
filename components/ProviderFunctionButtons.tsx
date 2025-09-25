@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Share, Linking } from 'react-native';
 import { CreditCard, Calendar, UserPlus, Radio } from 'lucide-react-native';
-import { COLORS, FONTS } from '@/constants/theme';
+import { COLORS, FONTS, GLASS_STYLES } from '@/constants/theme';
 import { router } from 'expo-router';
 import * as Contacts from 'expo-contacts';
 
@@ -190,8 +190,8 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 48,
     height: 48,
+    ...GLASS_STYLES.card,
     borderRadius: 24,
-    backgroundColor: 'rgba(240, 121, 69, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,

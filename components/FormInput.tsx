@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "500",
-    color: COLORS.input.label,
+    color: 'rgba(209, 213, 219, 1)',
     marginBottom: 8,
     fontFamily: FONTS.regular,
   },

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
+import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS, GLASS_STYLES } from '@/constants/theme';
 import { Search, MapPin, Filter, Star, CreditCard, Heart, X, Clock, TrendingUp } from 'lucide-react-native';
 import { mockProviders } from '@/mocks/providers';
 import { useSocial } from '@/providers/SocialProvider';
@@ -548,8 +548,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.gray,
-    borderRadius: BORDER_RADIUS.md,
+    ...GLASS_STYLES.card,
     paddingHorizontal: SPACING.md,
     marginBottom: SPACING.md,
     height: 48,
@@ -577,8 +576,8 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: 40,
     height: 40,
+    ...GLASS_STYLES.card,
     borderRadius: 20,
-    backgroundColor: COLORS.card,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: SPACING.md,
@@ -658,9 +657,8 @@ const styles = StyleSheet.create({
   shopCard: {
     width: 200,
     marginRight: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
+    ...GLASS_STYLES.card,
     overflow: 'hidden',
-    backgroundColor: COLORS.card,
   },
   shopImage: {
     width: '100%',
@@ -687,10 +685,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
   },
   providerCard: {
-    backgroundColor: COLORS.card,
+    ...GLASS_STYLES.card,
     marginHorizontal: SPACING.md,
     marginBottom: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.md,
   },
   providerHeader: {
@@ -765,10 +762,9 @@ const styles = StyleSheet.create({
     marginLeft: SPACING.xs,
   },
   bookButton: {
-    backgroundColor: COLORS.accent,
+    ...GLASS_STYLES.button.primary,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
-    borderRadius: BORDER_RADIUS.md,
   },
   bookButtonText: {
     color: COLORS.background,
@@ -804,12 +800,11 @@ const styles = StyleSheet.create({
   quickBookContainer: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.lg,
-    backgroundColor: COLORS.card,
+    ...GLASS_STYLES.card,
     marginHorizontal: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: COLORS.accent,
+    borderColor: COLORS.primary,
   },
   quickBookTitle: {
     color: COLORS.white,
@@ -819,10 +814,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   quickBookButton: {
-    backgroundColor: COLORS.accent,
+    ...GLASS_STYLES.button.primary,
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
     minWidth: 200,
   },
   quickBookButtonText: {
@@ -843,15 +837,9 @@ const styles = StyleSheet.create({
     paddingTop: 120,
   },
   suggestionsContainer: {
-    backgroundColor: COLORS.card,
+    ...GLASS_STYLES.card,
     marginHorizontal: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
     maxHeight: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
   suggestionSection: {
     paddingVertical: SPACING.md,
@@ -881,10 +869,9 @@ const styles = StyleSheet.create({
   searchResultsHeader: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.card,
+    ...GLASS_STYLES.card,
     marginHorizontal: SPACING.md,
     marginBottom: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
   },
   searchResultsText: {
     fontSize: FONT_SIZES.sm,

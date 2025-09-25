@@ -5,7 +5,7 @@ import NotificationService from '@/services/NotificationService';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Bell, ChevronRight, Clock, CheckCircle, XCircle } from 'lucide-react-native';
-import { COLORS, FONTS } from '@/constants/theme';
+import { COLORS, FONTS, GLASS_STYLES } from '@/constants/theme';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProviderAppointments } from '@/providers/AppointmentProvider';
 import ProviderFunctionButtons from '@/components/ProviderFunctionButtons';
@@ -290,8 +290,8 @@ const styles = StyleSheet.create({
   notificationButton: {
     width: 48,
     height: 48,
+    ...GLASS_STYLES.card,
     borderRadius: 24,
-    backgroundColor: COLORS.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -322,8 +322,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
     marginBottom: 12,
   },
@@ -349,8 +348,7 @@ const styles = StyleSheet.create({
   },
   earningsCard: {
     flex: 1,
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
     marginHorizontal: 4,
     alignItems: 'center',
@@ -370,8 +368,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
     marginBottom: 12,
   },
@@ -381,8 +378,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   requestCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,

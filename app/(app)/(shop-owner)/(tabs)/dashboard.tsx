@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Calendar, BarChart2, Users, DollarSign, TrendingUp } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS } from '@/constants/theme';
+import { COLORS, GLASS_STYLES } from '@/constants/theme';
 
 export default function ShopOwnerDashboard() {
   const router = useRouter();
@@ -142,15 +142,9 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     width: "48%",
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   metricHeader: {
     flexDirection: "row",
@@ -194,15 +188,9 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     width: "48%",
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
     alignItems: "center",
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   actionTitle: {
     fontSize: 16,
@@ -218,14 +206,8 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
   },
   overviewCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   overviewRow: {
     flexDirection: "row",
