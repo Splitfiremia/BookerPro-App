@@ -5,30 +5,29 @@ import { useEffect } from "react";
 import { COLORS } from "@/constants/theme";
 
 export default function AppLayout() {
-  const { isLoading, isAuthenticated, user } = useAuth();
+  const { isLoading, isAuthenticated, user, isInitialized } = useAuth();
 
-  // Redirect to index if not authenticated
+  // Redirect to index if not authenticated, but only after initialization
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (isInitialized && !isLoading && !isAuthenticated) {
       console.log('AppLayout: User not authenticated, redirecting to index');
       console.log('AppLayout: Current user state:', user);
-      // Use a small delay to ensure state is properly updated
+      
+      // Use a small delay to prevent redirect loops
       const timeoutId = setTimeout(() => {
         try {
           router.replace("/");
           console.log('AppLayout: Successfully redirected to index');
         } catch (error) {
           console.error('AppLayout: Error redirecting to index:', error);
-          // Force a hard navigation if replace fails
-          router.push("/");
         }
       }, 100);
       return () => clearTimeout(timeoutId);
     }
-  }, [isLoading, isAuthenticated, user]);
+  }, [isInitialized, isLoading, isAuthenticated, user]);
 
-  // Show loading while auth is being determined
-  if (isLoading) {
+  // Show loading while auth is being determined or not initialized
+  if (!isInitialized || isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
@@ -39,7 +38,12 @@ export default function AppLayout() {
 
   // Don't render anything if not authenticated (will redirect)
   if (!isAuthenticated || !user) {
-    return null;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Redirecting...</Text>
+      </View>
+    );
   }
 
   return (

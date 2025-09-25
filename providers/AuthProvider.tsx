@@ -28,64 +28,74 @@ export interface User {
 
 // Using createContextHook with a default value to avoid 'undefined' errors
 export const [AuthProvider, useAuth] = createContextHook(() => {
+  console.log('AuthProvider: Initializing context');
+  
   // Always call hooks in the same order
   const [user, setUser] = useState<User | null>(null);
   const [isDeveloperMode, setIsDeveloperMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   
-  // Initialize immediately to prevent hydration timeout
+  // Initialize auth state - prevent hydration timeout by setting defaults immediately
   useEffect(() => {
     let isMounted = true;
     
-    // Set initialized immediately to prevent blocking
+    // Set initialized immediately with defaults to prevent hydration timeout
     setIsInitialized(true);
     
-    // Load data asynchronously in the background
-    const loadUserAndSettings = async () => {
+    // Load stored data asynchronously without blocking render
+    const loadStoredData = async () => {
       if (!isMounted) return;
       
       try {
-        // Use a very short timeout to prevent blocking
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 50)
+        // Load data with a reasonable timeout
+        const loadPromise = Promise.all([
+          AsyncStorage.getItem("user"),
+          AsyncStorage.getItem("developerMode")
+        ]);
+        
+        const timeoutPromise = new Promise<[string | null, string | null]>((_, reject) => 
+          setTimeout(() => reject(new Error('Storage timeout')), 1000)
         );
         
         const [storedUser, storedDevMode] = await Promise.race([
-          Promise.all([
-            AsyncStorage.getItem("user"),
-            AsyncStorage.getItem("developerMode")
-          ]),
+          loadPromise,
           timeoutPromise
         ]);
         
         if (!isMounted) return;
         
+        // Parse and set user data
         if (storedUser) {
           try {
             const userData = JSON.parse(storedUser);
+            console.log('AuthProvider: Loaded user from storage:', userData.email);
             setUser(userData);
           } catch (error) {
-            console.log('AuthProvider: Error parsing stored user data');
+            console.log('AuthProvider: Error parsing stored user data, clearing storage');
+            await AsyncStorage.removeItem("user");
           }
         }
         
+        // Parse and set developer mode
         if (storedDevMode) {
           try {
             const devMode = JSON.parse(storedDevMode);
+            console.log('AuthProvider: Loaded developer mode from storage:', devMode);
             setIsDeveloperMode(devMode);
           } catch (error) {
-            console.log('AuthProvider: Error parsing developer mode data');
+            console.log('AuthProvider: Error parsing developer mode, using default');
           }
         }
         
       } catch (error) {
-        console.log('AuthProvider: Using defaults due to timeout/error:', error);
+        console.log('AuthProvider: Storage load failed, using defaults:', error instanceof Error ? error.message : 'Unknown error');
+        // Continue with default values - app should still work
       }
     };
     
-    // Load in next tick to avoid blocking initial render
-    setTimeout(loadUserAndSettings, 0);
+    // Start loading after component mounts
+    loadStoredData();
     
     return () => {
       isMounted = false;

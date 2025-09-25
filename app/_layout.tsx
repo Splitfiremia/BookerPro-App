@@ -17,19 +17,20 @@ import { ModeIndicator } from "@/components/ModeIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { COLORS } from "@/constants/theme";
 
+// Create QueryClient with optimized settings to prevent hydration issues
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
       staleTime: 1000 * 60 * 5, // 5 minutes
-      networkMode: 'offlineFirst', // Prevent hanging on network issues
       refetchOnWindowFocus: false, // Prevent unnecessary refetches
       gcTime: 1000 * 60 * 10, // 10 minutes garbage collection
       refetchOnMount: false, // Prevent hydration issues
       refetchOnReconnect: false, // Prevent hydration issues
+      // Remove networkMode to prevent potential issues
     },
     mutations: {
-      networkMode: 'offlineFirst',
+      // Remove networkMode to prevent potential issues
     },
   },
 });
@@ -51,6 +52,8 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  console.log('RootLayout: Rendering');
+  
   return (
     <GestureHandlerRootView style={styles.gestureHandler}>
       <ErrorBoundary>

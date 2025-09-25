@@ -6,19 +6,17 @@ import { useAuth } from "@/providers/AuthProvider";
 export function ModeIndicator() {
   const { isDeveloperMode, isInitialized } = useAuth();
 
-  // Don't render anything until auth is initialized to prevent hydration mismatch
-  if (!isInitialized) {
-    return null;
-  }
-
-  // Always render a View, but conditionally set its contents
-  return isDeveloperMode ? (
+  // Always render a consistent structure to prevent hydration mismatch
+  // Only show content when both initialized and in developer mode
+  return (
     <View style={styles.container}>
-      <View style={styles.indicator}>
-        <Text style={styles.text}>DEVELOPER MODE</Text>
-      </View>
+      {isInitialized && isDeveloperMode && (
+        <View style={styles.indicator}>
+          <Text style={styles.text}>DEVELOPER MODE</Text>
+        </View>
+      )}
     </View>
-  ) : null;
+  );
 }
 
 const styles = StyleSheet.create({

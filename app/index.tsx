@@ -22,13 +22,27 @@ export default function LandingScreen() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   
+  // Add startup logging
+  console.log('LandingScreen: Component rendering, isInitialized:', isInitialized);
+  
   // Log auth state for debugging
   useEffect(() => {
     console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode, 'isInitialized:', isInitialized);
   }, [isAuthenticated, user, isDeveloperMode, isInitialized]);
 
-  // Remove loading state check to prevent hydration timeout
-  // The providers now initialize immediately with default values
+  // Wait for initialization to prevent hydration mismatch
+  if (!isInitialized) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#000000" />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.logoSection}>
+            <Text style={styles.logo}>BookerPro</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   const validateEmail = (email: string): boolean => {
     if (!email || typeof email !== 'string') return false;
