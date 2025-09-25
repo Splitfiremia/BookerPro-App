@@ -10,7 +10,7 @@ import {
   Animated,
 } from "react-native";
 import { Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react-native";
-import { COLORS, FONTS } from "@/constants/theme";
+import { COLORS, FONTS, GLASS_STYLES } from "@/constants/theme";
 
 interface FormInputProps extends TextInputProps {
   label: string;
@@ -63,7 +63,7 @@ export const FormInput: React.FC<FormInputProps> = ({
             secureTextEntry ? styles.passwordInput : null,
             !editable ? styles.inputDisabled : null,
           ]}
-          placeholderTextColor="rgba(255, 255, 255, 0.6)"
+          placeholderTextColor={COLORS.input.placeholder}
           secureTextEntry={secureTextEntry && !showPassword}
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
@@ -122,11 +122,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: COLORS.text,
+    fontSize: 14,
+    fontWeight: "500",
+    color: COLORS.input.label,
     marginBottom: 8,
-    letterSpacing: 1,
     fontFamily: FONTS.regular,
   },
   labelDisabled: {
@@ -139,32 +138,21 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
-    color: COLORS.text,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-    fontFamily: FONTS.regular,
+    ...GLASS_STYLES.input,
   },
   inputFocused: {
-    borderColor: COLORS.primary,
-    shadowColor: COLORS.primary,
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    borderBottomColor: COLORS.primary,
   },
   inputError: {
-    borderColor: "#EF4444",
+    borderBottomColor: COLORS.error,
   },
   inputValid: {
-    borderColor: "#10B981",
+    borderBottomColor: COLORS.success,
   },
   inputDisabled: {
-    backgroundColor: "#0f0f0f",
-    borderColor: "#222",
-    color: "#777",
+    backgroundColor: COLORS.input.background,
+    borderBottomColor: COLORS.disabled,
+    color: COLORS.disabled,
   },
   passwordInput: {
     paddingRight: 50,

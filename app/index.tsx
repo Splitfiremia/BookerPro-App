@@ -9,7 +9,7 @@ import {
   TextInput,
   StatusBar,
   ScrollView,
-  ImageBackground,
+
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -153,11 +153,7 @@ export default function LandingScreen() {
   };
 
   return (
-    <ImageBackground
-      source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/wq1viwd4zpq35fb12j801' }}
-      style={styles.container}
-      resizeMode="cover"
-    >
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <SafeAreaView style={styles.safeArea}>
         {/* Developer Mode Toggle */}
@@ -421,17 +417,18 @@ export default function LandingScreen() {
           </KeyboardAvoidingView>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#181611',
   },
   safeArea: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'transparent',
   },
   developerModeToggle: {
     position: "absolute",
@@ -565,22 +562,26 @@ const styles = StyleSheet.create({
     marginBottom: 60,
   },
   inputContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    borderRadius: 8,
-    padding: 20,
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 24,
     marginBottom: 20,
   },
   inputLabel: {
-    fontSize: 16,
-    color: "#FFFFFF",
-    fontWeight: "600",
-    marginBottom: 12,
+    fontSize: 14,
+    color: 'rgba(209, 213, 219, 1)',
+    fontWeight: "500",
+    marginBottom: 8,
   },
   emailInput: {
     backgroundColor: "transparent",
-    borderBottomWidth: 1,
-    borderBottomColor: '#666666',
-    paddingVertical: 8,
+    borderWidth: 0,
+    borderBottomWidth: 2,
+    borderBottomColor: 'rgba(107, 114, 128, 1)',
+    paddingVertical: 12,
+    paddingHorizontal: 0,
     fontSize: 16,
     color: "#FFFFFF",
   },
@@ -595,16 +596,21 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   continueButton: {
-    backgroundColor: "#FFD700",
+    backgroundColor: "#FBBF24",
     borderRadius: 8,
-    paddingVertical: 16,
+    paddingVertical: 12,
     alignItems: "center",
     marginTop: 16,
+    shadowColor: '#FBBF24',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   continueButtonText: {
-    color: "#000000",
+    color: "#1F2937",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
     letterSpacing: 1,
   },
   bottomSection: {
@@ -618,22 +624,21 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: 'rgba(107, 114, 128, 1)',
   },
   orText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-    marginHorizontal: 20,
-    letterSpacing: 2,
+    color: 'rgba(156, 163, 175, 1)',
+    fontSize: 14,
+    fontWeight: "500",
+    marginHorizontal: 16,
   },
   browseButton: {
     alignItems: "center",
   },
   browseButtonText: {
-    color: "#C8A574",
-    fontSize: 18,
-    fontWeight: "bold",
+    color: "#FBBF24",
+    fontSize: 16,
+    fontWeight: "600",
     letterSpacing: 1,
   },
   quickTestContainer: {
