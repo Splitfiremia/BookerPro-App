@@ -269,13 +269,14 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     paddingHorizontal: 24,
     paddingBottom: 32,
+    paddingTop: 60,
   },
   spacer: {
-    flex: 1,
-    minHeight: 100,
+    flex: 0.3,
+    minHeight: 40,
   },
   glassCard: {
     backgroundColor: 'rgba(31, 41, 55, 0.3)',
