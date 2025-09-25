@@ -213,11 +213,11 @@ const styles = StyleSheet.create({
   },
   backgroundContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#181611',
   },
   backgroundOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'transparent',
   },
   safeArea: {
     flex: 1,
