@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, Clock, User, MapPin, ChevronRight, Filter, Plus } from "lucide-react-native";
 import { router } from "expo-router";
-import { COLORS, FONTS } from "@/constants/theme";
+import { COLORS, FONTS, GLASS_STYLES } from "@/constants/theme";
 import { useAuth } from "@/providers/AuthProvider";
 import ProviderFunctionButtons from "@/components/ProviderFunctionButtons";
 import ManualAppointmentModal from "@/components/ManualAppointmentModal";
@@ -409,8 +409,8 @@ const styles = StyleSheet.create({
   filterButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+    ...GLASS_STYLES.card,
     borderRadius: 20,
-    backgroundColor: COLORS.card,
     marginRight: 8,
   },
   activeFilterButton: {
@@ -439,8 +439,7 @@ const styles = StyleSheet.create({
     marginTop: -10,
   },
   appointmentCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
+    ...GLASS_STYLES.card,
     padding: 16,
     marginBottom: 12,
     flexDirection: "column",
@@ -562,8 +561,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingVertical: 16,
+    ...GLASS_STYLES.card,
     borderRadius: 12,
-    backgroundColor: COLORS.card,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
@@ -596,15 +595,9 @@ const styles = StyleSheet.create({
   },
   fabOptionsContainer: {
     marginBottom: 12,
-    backgroundColor: COLORS.card,
-    borderRadius: 8,
+    ...GLASS_STYLES.card,
     paddingVertical: 8,
     paddingHorizontal: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   fabOption: {
     paddingVertical: 12,

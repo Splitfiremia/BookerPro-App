@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MapPin, Info, Camera, User, Clock, Share, Link } from 'lucide-react-native';
-import { COLORS, FONTS } from '@/constants/theme';
+import { COLORS, FONTS, GLASS_STYLES, SPACING, FONT_SIZES } from '@/constants/theme';
 import LocationEditor from '@/components/LocationEditor';
 import { useLocation, LocationData } from '@/providers/LocationProvider';
 import AlertModal from '@/components/AlertModal';
@@ -243,9 +243,9 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#f2a60d',
-    backgroundColor: 'rgba(31, 41, 55, 0.3)',
-    backdropFilter: 'blur(15px)',
+    borderBottomColor: COLORS.primary,
+    ...GLASS_STYLES.card,
+    borderRadius: 0,
   },
   tab: {
     flex: 1,
@@ -278,15 +278,11 @@ const styles = StyleSheet.create({
   infoCard: {
     width: '48%',
     aspectRatio: 1,
-    backgroundColor: 'rgba(31, 41, 55, 0.3)',
-    backdropFilter: 'blur(15px)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
-    padding: 10,
+    marginBottom: SPACING.md,
+    padding: SPACING.sm,
   },
   iconContainer: {
     width: 50,
@@ -341,13 +337,11 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f2a60d',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 25,
-    marginTop: 12,
-    gap: 8,
+    ...GLASS_STYLES.button.primary,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    marginTop: SPACING.md,
+    gap: SPACING.sm,
   },
   shareButtonText: {
     color: '#181611',

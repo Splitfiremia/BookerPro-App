@@ -464,9 +464,12 @@ const styles = StyleSheet.create({
     ...GLASS_STYLES.card,
     borderRadius: BORDER_RADIUS.round,
     marginRight: SPACING.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   activeFilterButton: {
     backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   filterButtonText: {
     fontSize: FONT_SIZES.sm,
@@ -474,7 +477,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
   },
   activeFilterButtonText: {
-    color: COLORS.white,
+    color: COLORS.background,
     fontFamily: FONTS.bold,
   },
   listContent: {
