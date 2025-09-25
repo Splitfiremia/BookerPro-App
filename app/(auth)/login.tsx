@@ -8,7 +8,6 @@ import {
   Platform,
   ScrollView,
   Animated,
-  ImageBackground,
   TextInput,
   StatusBar,
 } from "react-native";
@@ -132,11 +131,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <ImageBackground
-        source={{ uri: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop' }}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
+      <View style={styles.gradientBackground}>
         <View style={styles.overlay} />
         
         <SafeAreaView style={styles.safeArea}>
@@ -201,7 +196,7 @@ export default function LoginScreen() {
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
-      </ImageBackground>
+      </View>
     </View>
   );
 }
@@ -210,10 +205,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  backgroundImage: {
+  gradientBackground: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    backgroundColor: '#111827',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
