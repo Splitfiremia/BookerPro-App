@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,9 @@ import {
   Platform,
   ScrollView,
   TextInput,
-  Image,
+  ImageBackground,
+  StatusBar,
+  Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -21,6 +23,7 @@ export default function SignupScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [smsOptIn, setSmsOptIn] = useState(false);
   const [activeTab, setActiveTab] = useState<'signup' | 'login'>('signup');
+  const [animatedValue] = useState(new Animated.Value(0));
   
   const [formData, setFormData] = useState({
     email: (params.email as string) || '',
@@ -67,228 +70,319 @@ export default function SignupScreen() {
 
 
 
+  // Animation for smooth transitions
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: Platform.OS !== "web",
+    }).start();
+  }, [animatedValue]);
+
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <ImageBackground
+        source={{ uri: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop' }}
+        style={styles.backgroundImage}
+        resizeMode="cover"
       >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={() => router.back()}
-          >
-            <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
-          </TouchableOpacity>
-
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <Image 
-              source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/g3qm3ar0sgtd2932ma5m0' }}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Tabs */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity 
-              style={[styles.tab, activeTab === 'signup' && styles.activeTab]}
-              onPress={() => setActiveTab('signup')}
-            >
-              <Text style={[styles.tabText, activeTab === 'signup' && styles.activeTabText]}>SIGN UP</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.tab, activeTab === 'login' && styles.activeTab]}
-              onPress={() => {
-                setActiveTab('login');
-                router.replace({
-                  pathname: '/(auth)/login',
-                  params: { email: formData.email }
-                });
-              }}
-            >
-              <Text style={[styles.tabText, activeTab === 'login' && styles.activeTabText]}>LOG IN</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Form */}
-          <View style={styles.form}>
-            <Text style={styles.label}>EMAIL</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.email}
-              onChangeText={(text) => setFormData({...formData, email: text})}
-              placeholder="Enter your email"
-              placeholderTextColor="#666"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <View style={styles.nameRow}>
-              <View style={styles.nameField}>
-                <Text style={styles.label}>First Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.firstName}
-                  onChangeText={(text) => setFormData({...formData, firstName: text})}
-                  placeholder="First"
-                  placeholderTextColor="#666"
-                />
-              </View>
-              <View style={styles.nameField}>
-                <Text style={styles.label}>Last Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={formData.lastName}
-                  onChangeText={(text) => setFormData({...formData, lastName: text})}
-                  placeholder="Last"
-                  placeholderTextColor="#666"
-                />
-              </View>
+        <View style={styles.overlay} />
+        
+        <SafeAreaView style={styles.safeArea}>
+          {/* Status Bar */}
+          <View style={styles.statusBar}>
+            <Text style={styles.timeText}>10:51</Text>
+            <View style={styles.statusIcons}>
+              <Text style={styles.batteryText}>90</Text>
             </View>
-
-            <Text style={styles.label}>Phone Number</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.phone}
-              onChangeText={(text) => setFormData({...formData, phone: text})}
-              placeholder="(555) 123-4567"
-              placeholderTextColor="#666"
-              keyboardType="phone-pad"
-            />
-
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.password}
-              onChangeText={(text) => setFormData({...formData, password: text})}
-              placeholder="••••••••"
-              placeholderTextColor="#666"
-              secureTextEntry
-            />
-
-            <Text style={styles.label}>Confirm Password</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.confirmPassword}
-              onChangeText={(text) => setFormData({...formData, confirmPassword: text})}
-              placeholder="••••••••"
-              placeholderTextColor="#666"
-              secureTextEntry
-            />
-
-            {/* SMS Opt-in */}
-            <TouchableOpacity 
-              style={styles.checkboxRow}
-              onPress={() => setSmsOptIn(!smsOptIn)}
-            >
-              <View style={[styles.checkbox, smsOptIn && styles.checkboxChecked]}>
-                {smsOptIn && <Ionicons name="checkmark" size={16} color="#000" />}
-              </View>
-              <Text style={styles.checkboxText}>
-                By checking this box, you agree to receive SMS appointment updates from theCut. 
-                Message & data rates may apply. Message frequency varies. Email support@thecut.co 
-                for help, STOP to cancel.
-              </Text>
-            </TouchableOpacity>
-
-            {/* Terms */}
-            <Text style={styles.termsText}>
-              By signing up, I agree to the{' '}
-              <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
-              <Text style={styles.termsLink}>Privacy Policy</Text>
-            </Text>
-
-            {/* Sign Up Button */}
-            <TouchableOpacity 
-              style={styles.signupButton}
-              onPress={handleSignup}
-              disabled={isSubmitting}
-            >
-              <Text style={styles.signupButtonText}>
-                {isSubmitting ? 'CREATING...' : 'SIGN UP'}
-              </Text>
-            </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardView}
+          >
+            <ScrollView 
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Header */}
+              <TouchableOpacity 
+                style={styles.backButton} 
+                onPress={() => router.back()}
+              >
+                <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
+              </TouchableOpacity>
+
+              <View style={styles.spacer} />
+
+              {/* Glass Morphism Card */}
+              <Animated.View style={[styles.glassCard, { opacity: animatedValue }]}>
+                {/* Tabs */}
+                <View style={styles.tabContainer}>
+                  <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'signup' && styles.activeTab]}
+                    onPress={() => setActiveTab('signup')}
+                  >
+                    <Text style={[styles.tabText, activeTab === 'signup' && styles.activeTabText]}>SIGN UP</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'login' && styles.activeTab]}
+                    onPress={() => {
+                      setActiveTab('login');
+                      router.replace({
+                        pathname: '/(auth)/login',
+                        params: { email: formData.email }
+                      });
+                    }}
+                  >
+                    <Text style={[styles.tabText, activeTab === 'login' && styles.activeTabText]}>LOG IN</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Form */}
+                <View style={styles.form}>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>EMAIL</Text>
+                    <TextInput
+                      style={styles.glassInput}
+                      value={formData.email}
+                      onChangeText={(text) => setFormData({...formData, email: text})}
+                      placeholder="Enter your email"
+                      placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  <View style={styles.nameRow}>
+                    <View style={styles.nameField}>
+                      <Text style={styles.inputLabel}>First Name</Text>
+                      <TextInput
+                        style={styles.glassInput}
+                        value={formData.firstName}
+                        onChangeText={(text) => setFormData({...formData, firstName: text})}
+                        placeholder="First"
+                        placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                      />
+                    </View>
+                    <View style={styles.nameField}>
+                      <Text style={styles.inputLabel}>Last Name</Text>
+                      <TextInput
+                        style={styles.glassInput}
+                        value={formData.lastName}
+                        onChangeText={(text) => setFormData({...formData, lastName: text})}
+                        placeholder="Last"
+                        placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Phone Number</Text>
+                    <TextInput
+                      style={styles.glassInput}
+                      value={formData.phone}
+                      onChangeText={(text) => setFormData({...formData, phone: text})}
+                      placeholder="(555) 123-4567"
+                      placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Password</Text>
+                    <TextInput
+                      style={styles.glassInput}
+                      value={formData.password}
+                      onChangeText={(text) => setFormData({...formData, password: text})}
+                      placeholder="••••••••"
+                      placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                      secureTextEntry
+                    />
+                  </View>
+
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Confirm Password</Text>
+                    <TextInput
+                      style={styles.glassInput}
+                      value={formData.confirmPassword}
+                      onChangeText={(text) => setFormData({...formData, confirmPassword: text})}
+                      placeholder="••••••••"
+                      placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                      secureTextEntry
+                    />
+                  </View>
+
+                  {/* SMS Opt-in */}
+                  <TouchableOpacity 
+                    style={styles.checkboxRow}
+                    onPress={() => setSmsOptIn(!smsOptIn)}
+                  >
+                    <View style={[styles.checkbox, smsOptIn && styles.checkboxChecked]}>
+                      {smsOptIn && <Ionicons name="checkmark" size={16} color="#1F2937" />}
+                    </View>
+                    <Text style={styles.checkboxText}>
+                      By checking this box, you agree to receive SMS appointment updates from theCut. 
+                      Message & data rates may apply. Message frequency varies. Email support@thecut.co 
+                      for help, STOP to cancel.
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Terms */}
+                  <Text style={styles.termsText}>
+                    By signing up, I agree to the{' '}
+                    <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
+                    <Text style={styles.termsLink}>Privacy Policy</Text>
+                  </Text>
+
+                  {/* Sign Up Button */}
+                  <TouchableOpacity 
+                    style={styles.signupButton}
+                    onPress={handleSignup}
+                    disabled={isSubmitting}
+                  >
+                    <Text style={styles.signupButtonText}>
+                      {isSubmitting ? 'CREATING...' : 'SIGN UP'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </Animated.View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  statusBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    paddingBottom: 8,
+  },
+  timeText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  statusIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  batteryText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
+    justifyContent: 'flex-end',
     paddingHorizontal: 24,
-    paddingTop: 10,
+    paddingBottom: 32,
   },
   backButton: {
     padding: 10,
     marginBottom: 20,
+    alignSelf: 'flex-start',
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
+  spacer: {
+    flex: 1,
+    minHeight: 50,
   },
-  logo: {
-    width: 280,
-    height: 160,
+  glassCard: {
+    backgroundColor: Platform.select({
+      ios: 'rgba(255, 255, 255, 0.1)',
+      android: 'rgba(31, 41, 55, 0.3)',
+      web: 'rgba(31, 41, 55, 0.3)',
+    }),
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    padding: 24,
+    marginBottom: 32,
+    ...(Platform.OS === 'ios' && {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.3,
+      shadowRadius: 20,
+    }),
+    ...(Platform.OS === 'android' && {
+      elevation: 10,
+    }),
   },
   tabContainer: {
     flexDirection: 'row',
-    marginBottom: 30,
+    marginBottom: 24,
   },
   tab: {
     flex: 1,
-    paddingBottom: 10,
+    paddingBottom: 12,
     alignItems: 'center',
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: '#FFFFFF',
+    borderBottomColor: '#FBBF24',
   },
   tabText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666666',
+    color: 'rgba(255, 255, 255, 0.6)',
     letterSpacing: 1,
   },
   activeTabText: {
-    color: '#FFFFFF',
+    color: '#FBBF24',
   },
   form: {
-    marginBottom: 40,
+    marginBottom: 0,
   },
-  label: {
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
     fontSize: 14,
-    color: '#666666',
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 8,
     letterSpacing: 0.5,
   },
-  input: {
+  glassInput: {
     backgroundColor: 'transparent',
-    borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    borderWidth: 0,
+    borderBottomWidth: 2,
+    borderBottomColor: 'rgba(156, 163, 175, 0.5)',
     paddingVertical: 12,
+    paddingHorizontal: 0,
     fontSize: 16,
     color: '#FFFFFF',
-    marginBottom: 24,
+    fontWeight: '400',
   },
   nameRow: {
     flexDirection: 'row',
     gap: 16,
+    marginBottom: 20,
   },
   nameField: {
     flex: 1,
@@ -302,43 +396,49 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 1,
-    borderColor: '#666666',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 4,
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
   },
   checkboxChecked: {
-    backgroundColor: '#FFD700',
-    borderColor: '#FFD700',
+    backgroundColor: '#FBBF24',
+    borderColor: '#FBBF24',
   },
   checkboxText: {
     flex: 1,
     fontSize: 12,
-    color: '#666666',
+    color: 'rgba(255, 255, 255, 0.7)',
     lineHeight: 18,
   },
   termsText: {
     fontSize: 14,
-    color: '#666666',
+    color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 24,
     lineHeight: 20,
   },
   termsLink: {
-    color: '#FFD700',
+    color: '#FBBF24',
     textDecorationLine: 'underline',
   },
   signupButton: {
-    backgroundColor: '#FFD700',
+    backgroundColor: '#FBBF24',
     paddingVertical: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#FBBF24',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   signupButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
+    color: '#1F2937',
+    fontSize: 16,
+    fontWeight: '600',
     letterSpacing: 1,
   },
 });
