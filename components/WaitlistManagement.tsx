@@ -9,7 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Clock, Users, CheckCircle, X, Bell } from 'lucide-react-native';
-import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
+import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS, GLASS_STYLES } from '@/constants/theme';
 import { useWaitlist, WaitlistEntry } from '@/providers/WaitlistProvider';
 
 interface WaitlistManagementProps {
@@ -248,9 +248,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: SPACING.md,
-    backgroundColor: COLORS.card,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray,
+    ...GLASS_STYLES.card,
+    marginBottom: 16,
   },
   title: {
     color: COLORS.white,
@@ -275,8 +274,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
   },
   entryCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: BORDER_RADIUS.lg,
+    ...GLASS_STYLES.card,
     padding: SPACING.md,
     marginHorizontal: SPACING.md,
     marginVertical: SPACING.xs,
@@ -329,10 +327,9 @@ const styles = StyleSheet.create({
   waitTimeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    ...GLASS_STYLES.button,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
-    borderRadius: BORDER_RADIUS.sm,
     alignSelf: 'flex-start',
   },
   waitTimeText: {
@@ -368,10 +365,9 @@ const styles = StyleSheet.create({
   readyNotification: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    ...GLASS_STYLES.button,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
-    borderRadius: BORDER_RADIUS.sm,
     gap: SPACING.xs,
   },
   readyNotificationText: {

@@ -122,6 +122,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
+    ...GLASS_STYLES.card,
+    padding: 20,
     marginBottom: 24,
   },
   headerTitle: {
@@ -222,7 +224,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: COLORS.glassBorder,
   },
   overviewLabel: {
     fontSize: 14,
@@ -236,9 +238,11 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
   },
   activityItem: {
+    ...GLASS_STYLES.card,
     flexDirection: "row",
     alignItems: "flex-start",
     marginBottom: 16,
+    padding: 12,
   },
   activityDot: {
     width: 8,

@@ -8,6 +8,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useShopManagement } from '@/providers/ShopManagementProvider';
 import ServiceEditModal from '@/components/ServiceEditModal';
 import { Service } from '@/models/database';
+import { COLORS, FONTS, GLASS_STYLES } from '@/constants/theme';
 
 
 interface SettingItem {
@@ -417,7 +418,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
@@ -427,17 +428,17 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    textTransform: 'uppercase',
+    fontWeight: '600' as const,
+    color: COLORS.text,
+    textTransform: 'uppercase' as const,
     marginLeft: 20,
     marginBottom: 8,
+    fontFamily: FONTS.bold,
   },
   sectionContent: {
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#e0e0e0',
+    ...GLASS_STYLES.card,
+    marginHorizontal: 16,
+    marginBottom: 8,
   },
   settingItem: {
     flexDirection: 'row',
@@ -446,7 +447,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: COLORS.border,
   },
   settingItemLeft: {
     flexDirection: 'row',
@@ -459,12 +460,14 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.text,
+    fontFamily: FONTS.regular,
   },
   settingSubtitle: {
     fontSize: 12,
-    color: '#666',
+    color: COLORS.secondary,
     marginTop: 2,
+    fontFamily: FONTS.regular,
   },
   signOutText: {
     color: '#FF3B30',
@@ -501,10 +504,8 @@ const styles = StyleSheet.create({
     color: '#007AFF',
   },
   servicesContent: {
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#e0e0e0',
+    ...GLASS_STYLES.card,
+    marginHorizontal: 16,
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
@@ -536,8 +537,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
+    ...GLASS_STYLES.card,
     marginBottom: 8,
   },
   serviceInfo: {
@@ -545,28 +545,30 @@ const styles = StyleSheet.create({
   },
   serviceName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '600' as const,
+    color: COLORS.text,
     marginBottom: 4,
+    fontFamily: FONTS.bold,
   },
   serviceDetails: {
     fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '500',
+    color: COLORS.primary,
+    fontWeight: '500' as const,
     marginBottom: 2,
+    fontFamily: FONTS.regular,
   },
   serviceDescription: {
     fontSize: 12,
-    color: '#666',
+    color: COLORS.secondary,
     marginTop: 2,
+    fontFamily: FONTS.regular,
   },
   serviceActions: {
     flexDirection: 'row',
     gap: 8,
   },
   actionButton: {
+    ...GLASS_STYLES.button,
     padding: 8,
-    borderRadius: 6,
-    backgroundColor: '#fff',
   },
 });

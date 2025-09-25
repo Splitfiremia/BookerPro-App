@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { TrendingUp, TrendingDown, DollarSign, Users, Clock, Eye } from 'lucide-react-native';
-import { COLORS } from '@/constants/theme';
+import { COLORS, FONTS, GLASS_STYLES } from '@/constants/theme';
 
 interface AnalyticsCard {
   title: string;
@@ -217,18 +217,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   header: {
-    backgroundColor: COLORS.card,
+    ...GLASS_STYLES.card,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 16,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: COLORS.text,
+    fontFamily: FONTS.bold,
   },
   subtitle: {
     fontSize: 14,
@@ -237,15 +234,16 @@ const styles = StyleSheet.create({
   },
   periodSelector: {
     flexDirection: 'row',
+    ...GLASS_STYLES.card,
     padding: 16,
-    backgroundColor: COLORS.card,
+    marginHorizontal: 16,
+    marginBottom: 16,
     gap: 8,
   },
   periodButton: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: COLORS.background,
+    ...GLASS_STYLES.button,
     alignItems: 'center',
   },
   periodButtonActive: {
@@ -271,14 +269,8 @@ const styles = StyleSheet.create({
   analyticsCard: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -334,8 +326,7 @@ const styles = StyleSheet.create({
   peakHourCard: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: COLORS.card,
-    borderRadius: 8,
+    ...GLASS_STYLES.card,
     padding: 12,
     alignItems: 'center',
   },
@@ -359,8 +350,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   providerCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -392,8 +382,7 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
   },
   revenueCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
   },
   revenueRow: {
@@ -426,8 +415,7 @@ const styles = StyleSheet.create({
     color: COLORS.success,
   },
   appointmentItem: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
     marginBottom: 8,
     flexDirection: 'row',

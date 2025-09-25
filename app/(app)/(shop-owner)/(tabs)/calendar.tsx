@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Filter, ChevronLeft, ChevronRight, Eye, Clock, User, Users } from 'lucide-react-native';
-import { COLORS } from '@/constants/theme';
+import { COLORS, FONTS, GLASS_STYLES } from '@/constants/theme';
 import WaitlistManagement from '@/components/WaitlistManagement';
 
 interface Appointment {
@@ -275,13 +275,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   header: {
-    backgroundColor: COLORS.card,
+    ...GLASS_STYLES.card,
     paddingBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 16,
   },
   headerTop: {
     flexDirection: 'row',
@@ -291,13 +287,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: COLORS.text,
+    fontFamily: FONTS.bold,
   },
   filterButton: {
+    ...GLASS_STYLES.button,
     padding: 8,
-    borderRadius: 8,
-    backgroundColor: COLORS.background,
   },
   dateSelector: {
     flexDirection: 'row',
@@ -311,14 +307,18 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: COLORS.text,
     marginHorizontal: 16,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     flex: 1,
+    fontFamily: FONTS.bold,
   },
   filtersContainer: {
+    ...GLASS_STYLES.card,
     paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginHorizontal: 16,
     marginBottom: 16,
   },
   filtersTitle: {
@@ -328,10 +328,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   filterChip: {
+    ...GLASS_STYLES.button,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: COLORS.background,
     marginRight: 8,
   },
   filterChipActive: {
@@ -382,15 +381,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   appointmentCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   appointmentHeader: {
     flexDirection: 'row',
@@ -482,8 +475,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   summaryCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
   },
   summaryRow: {
@@ -505,8 +497,7 @@ const styles = StyleSheet.create({
   },
   viewToggle: {
     flexDirection: 'row',
-    backgroundColor: COLORS.background,
-    borderRadius: 8,
+    ...GLASS_STYLES.card,
     padding: 4,
     marginHorizontal: 20,
     marginBottom: 16,

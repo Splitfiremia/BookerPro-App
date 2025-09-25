@@ -20,7 +20,7 @@ import {
   Calendar,
   Users,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/theme';
+import { COLORS, FONTS, GLASS_STYLES } from '@/constants/theme';
 import EditProviderModal, { Provider } from '@/components/EditProviderModal';
 import { useTeamManagement } from '@/providers/TeamManagementProvider';
 
@@ -310,18 +310,19 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   header: {
+    ...GLASS_STYLES.card,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    marginBottom: 16,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: COLORS.text,
+    fontFamily: FONTS.bold,
   },
   inviteButton: {
     flexDirection: 'row',
@@ -347,12 +348,9 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
-    borderRadius: 8,
+    ...GLASS_STYLES.input,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
   },
   searchInput: {
     flex: 1,
@@ -361,18 +359,15 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
   filterButton: {
+    ...GLASS_STYLES.button,
     padding: 8,
-    backgroundColor: COLORS.card,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
   },
   filtersContainer: {
+    ...GLASS_STYLES.card,
     paddingHorizontal: 16,
-    paddingBottom: 16,
-    backgroundColor: COLORS.card,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    paddingVertical: 16,
+    marginHorizontal: 16,
+    marginBottom: 16,
   },
   filterGroup: {
     marginBottom: 16,
@@ -388,12 +383,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterOption: {
+    ...GLASS_STYLES.button,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: COLORS.background,
-    borderWidth: 1,
-    borderColor: COLORS.border,
   },
   filterOptionActive: {
     backgroundColor: COLORS.primary,
@@ -414,12 +406,9 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.card,
+    ...GLASS_STYLES.card,
     padding: 12,
-    borderRadius: 8,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
   },
   statNumber: {
     fontSize: 18,
@@ -439,17 +428,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   providerCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   providerHeader: {
     flexDirection: 'row',
