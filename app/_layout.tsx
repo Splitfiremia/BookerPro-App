@@ -25,6 +25,8 @@ const queryClient = new QueryClient({
       networkMode: 'offlineFirst', // Prevent hanging on network issues
       refetchOnWindowFocus: false, // Prevent unnecessary refetches
       gcTime: 1000 * 60 * 10, // 10 minutes garbage collection
+      refetchOnMount: false, // Prevent hydration issues
+      refetchOnReconnect: false, // Prevent hydration issues
     },
     mutations: {
       networkMode: 'offlineFirst',

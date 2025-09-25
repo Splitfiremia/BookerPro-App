@@ -27,12 +27,17 @@ export const [OnboardingProvider, useOnboarding] = createContextHook(() => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false); // Use useState for consistency
 
-  // Load onboarding state synchronously to prevent timeout
+  // Load onboarding state asynchronously to prevent hydration timeout
   useEffect(() => {
+    let isMounted = true;
+    
     const loadOnboardingState = async () => {
+      if (!isMounted) return;
+      
       try {
+        // Very short timeout to prevent blocking
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 100)
+          setTimeout(() => reject(new Error('Timeout')), 20)
         );
         
         const storedState = await Promise.race([
@@ -40,19 +45,31 @@ export const [OnboardingProvider, useOnboarding] = createContextHook(() => {
           timeoutPromise
         ]);
         
+        if (!isMounted) return;
+        
         if (storedState && typeof storedState === 'string') {
-          const parsedState = JSON.parse(storedState);
-          setState(prevState => ({
-            ...prevState,
-            ...parsedState
-          }));
+          try {
+            const parsedState = JSON.parse(storedState);
+            setState(prevState => ({
+              ...prevState,
+              ...parsedState
+            }));
+          } catch (error) {
+            console.log('Error parsing onboarding state');
+          }
         }
       } catch (error) {
         // Use default state on timeout/error
+        console.log('OnboardingProvider: Using default state due to timeout/error');
       }
     };
 
-    loadOnboardingState();
+    // Load in next tick to avoid blocking initial render
+    setTimeout(loadOnboardingState, 0);
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Save onboarding state when needed

@@ -123,68 +123,67 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
-  // Load appointments and notifications on mount with timeout
+  // Initialize immediately to prevent hydration timeout
   useEffect(() => {
-    const loadData = async () => {
+    let isMounted = true;
+    
+    // Set initialized immediately with mock data to prevent blocking
+    setAppointments(mockAppointmentsData);
+    setIsLoading(false);
+    setIsInitialized(true);
+    
+    // Load stored data asynchronously in the background
+    const loadStoredData = async () => {
+      if (!isMounted) return;
+      
       try {
-        console.log('Loading appointments and notifications...');
+        // Very short timeout to prevent blocking
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 30)
+        );
         
-        // Quick timeout to prevent hanging
-        const loadWithTimeout = (promise: Promise<any>, timeout: number = 300) => {
-          return Promise.race([
-            promise,
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Timeout')), timeout)
-            )
-          ]);
-        };
+        const result = await Promise.race([
+          Promise.all([
+            AsyncStorage.getItem("appointments"),
+            AsyncStorage.getItem("notifications")
+          ]),
+          timeoutPromise
+        ]) as [string | null, string | null];
         
-        // Try to load appointments quickly
-        try {
-          const storedAppointments = await loadWithTimeout(AsyncStorage.getItem("appointments"));
-          if (storedAppointments) {
+        const [storedAppointments, storedNotifications] = result;
+        
+        if (!isMounted) return;
+        
+        if (storedAppointments) {
+          try {
             const parsedAppointments = JSON.parse(storedAppointments);
             console.log('Loaded stored appointments:', parsedAppointments.length);
             setAppointments(parsedAppointments);
-          } else {
-            console.log('Using mock appointments:', mockAppointmentsData.length);
-            setAppointments(mockAppointmentsData);
+          } catch (error) {
+            console.log('Error parsing stored appointments, using mock data');
           }
-        } catch {
-          console.log('Using mock appointments due to timeout/error');
-          setAppointments(mockAppointmentsData);
         }
-
-        // Try to load notifications quickly
-        try {
-          const storedNotifications = await loadWithTimeout(AsyncStorage.getItem("notifications"));
-          if (storedNotifications) {
+        
+        if (storedNotifications) {
+          try {
             const parsedNotifications = JSON.parse(storedNotifications);
             setNotifications(parsedNotifications);
+          } catch (error) {
+            console.log('Error parsing stored notifications');
           }
-        } catch {
-          console.log('No stored notifications or timeout');
         }
+        
       } catch (error) {
-        console.error("Error loading data:", error);
-        setAppointments(mockAppointmentsData);
-      } finally {
-        setIsLoading(false);
-        setIsInitialized(true);
+        console.log('AppointmentProvider: Using mock data due to timeout/error');
       }
     };
     
-    loadData();
+    // Load in next tick to avoid blocking initial render
+    setTimeout(loadStoredData, 0);
     
-    // Fallback timeout
-    const fallbackTimeout = setTimeout(() => {
-      console.warn('AppointmentProvider: Fallback timeout triggered');
-      setAppointments(mockAppointmentsData);
-      setIsLoading(false);
-      setIsInitialized(true);
-    }, 800);
-    
-    return () => clearTimeout(fallbackTimeout);
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Save data to storage

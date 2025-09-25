@@ -34,64 +34,58 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   
-  // Initialize asynchronously but don't block rendering
+  // Initialize immediately to prevent hydration timeout
   useEffect(() => {
     let isMounted = true;
     
+    // Set initialized immediately to prevent blocking
+    setIsInitialized(true);
+    
+    // Load data asynchronously in the background
     const loadUserAndSettings = async () => {
       if (!isMounted) return;
       
       try {
-        // Use setTimeout to ensure this runs after initial render
-        setTimeout(async () => {
-          if (!isMounted) return;
-          
+        // Use a very short timeout to prevent blocking
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 50)
+        );
+        
+        const [storedUser, storedDevMode] = await Promise.race([
+          Promise.all([
+            AsyncStorage.getItem("user"),
+            AsyncStorage.getItem("developerMode")
+          ]),
+          timeoutPromise
+        ]);
+        
+        if (!isMounted) return;
+        
+        if (storedUser) {
           try {
-            // Load user data and developer mode in parallel
-            const [storedUser, storedDevMode] = await Promise.all([
-              AsyncStorage.getItem("user"),
-              AsyncStorage.getItem("developerMode")
-            ]);
-            
-            if (!isMounted) return;
-            
-            if (storedUser) {
-              try {
-                const userData = JSON.parse(storedUser);
-                setUser(userData);
-              } catch (error) {
-                console.log('AuthProvider: Error parsing stored user data');
-              }
-            }
-            
-            if (storedDevMode) {
-              try {
-                const devMode = JSON.parse(storedDevMode);
-                setIsDeveloperMode(devMode);
-              } catch (error) {
-                console.log('AuthProvider: Error parsing developer mode data');
-              }
-            }
-            
+            const userData = JSON.parse(storedUser);
+            setUser(userData);
           } catch (error) {
-            console.log('AuthProvider: Using defaults due to error:', error);
-          } finally {
-            if (isMounted) {
-              setIsInitialized(true);
-            }
+            console.log('AuthProvider: Error parsing stored user data');
           }
-        }, 0);
+        }
+        
+        if (storedDevMode) {
+          try {
+            const devMode = JSON.parse(storedDevMode);
+            setIsDeveloperMode(devMode);
+          } catch (error) {
+            console.log('AuthProvider: Error parsing developer mode data');
+          }
+        }
         
       } catch (error) {
-        console.log('AuthProvider: Using defaults due to error:', error);
-        if (isMounted) {
-          setIsInitialized(true);
-        }
+        console.log('AuthProvider: Using defaults due to timeout/error:', error);
       }
     };
     
-    // Load asynchronously without blocking
-    loadUserAndSettings();
+    // Load in next tick to avoid blocking initial render
+    setTimeout(loadUserAndSettings, 0);
     
     return () => {
       isMounted = false;

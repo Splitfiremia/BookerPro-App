@@ -27,19 +27,8 @@ export default function LandingScreen() {
     console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode, 'isInitialized:', isInitialized);
   }, [isAuthenticated, user, isDeveloperMode, isInitialized]);
 
-  // Show loading state until auth is initialized to prevent hydration mismatch
-  if (!isInitialized) {
-    return (
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#000000" />
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.logoSection}>
-            <Text style={styles.logo}>BookerPro</Text>
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
+  // Remove loading state check to prevent hydration timeout
+  // The providers now initialize immediately with default values
 
   const validateEmail = (email: string): boolean => {
     if (!email || typeof email !== 'string') return false;
