@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS, GLASS_STYLES } from '@/constants/theme';
 
 export default function SelectDateScreen() {
   const router = useRouter();
@@ -133,37 +134,33 @@ export default function SelectDateScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
   },
   header: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: COLORS.border,
   },
   title: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.white,
     marginBottom: 8,
+    fontFamily: FONTS.bold,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   calendarContainer: {
-    backgroundColor: '#fff',
+    ...GLASS_STYLES.card,
     margin: 16,
-    borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   monthHeader: {
     flexDirection: 'row',
@@ -174,7 +171,8 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: COLORS.white,
+    fontFamily: FONTS.bold,
   },
   weekDaysRow: {
     flexDirection: 'row',
@@ -185,8 +183,9 @@ const styles = StyleSheet.create({
     width: 40,
     textAlign: 'center',
     fontSize: 14,
-    color: '#666',
+    color: COLORS.lightGray,
     fontWeight: '500',
+    fontFamily: FONTS.regular,
   },
   daysGrid: {
     flexDirection: 'row',
@@ -206,40 +205,43 @@ const styles = StyleSheet.create({
   },
   dayText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.white,
+    fontFamily: FONTS.regular,
   },
   selectedDay: {
-    backgroundColor: '#007AFF',
+    backgroundColor: COLORS.primary,
     borderRadius: 20,
   },
   selectedDayText: {
-    color: '#fff',
+    color: COLORS.background,
     fontWeight: '600',
+    fontFamily: FONTS.bold,
   },
   disabledDay: {
     opacity: 0.3,
   },
   disabledDayText: {
-    color: '#999',
+    color: COLORS.disabled,
+    fontFamily: FONTS.regular,
   },
   footer: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: COLORS.border,
   },
   continueButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 12,
+    ...GLASS_STYLES.button.primary,
     padding: 16,
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: '#ccc',
+    backgroundColor: COLORS.disabled,
   },
   continueButtonText: {
-    color: '#fff',
+    color: COLORS.background,
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: FONTS.bold,
   },
 });

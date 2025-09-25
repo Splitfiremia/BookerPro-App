@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Clock } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS, GLASS_STYLES } from '@/constants/theme';
 
 const timeSlots = [
   '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM',
@@ -109,26 +110,28 @@ export default function SelectTimeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
   },
   header: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: COLORS.border,
   },
   title: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.white,
     marginBottom: 8,
+    fontFamily: FONTS.bold,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   timeSlotsContainer: {
     padding: 16,
@@ -139,8 +142,7 @@ const styles = StyleSheet.create({
     gap: 20,
     marginBottom: 20,
     padding: 12,
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    ...GLASS_STYLES.card,
   },
   legendItem: {
     flexDirection: 'row',
@@ -154,7 +156,8 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 12,
-    color: '#666',
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   slotsGrid: {
     flexDirection: 'row',
@@ -162,54 +165,56 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   timeSlot: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    ...GLASS_STYLES.card,
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     minWidth: '47%',
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: COLORS.success,
   },
   selectedSlot: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   unavailableSlot: {
-    backgroundColor: '#f5f5f5',
-    borderColor: '#e0e0e0',
+    backgroundColor: COLORS.disabled,
+    borderColor: COLORS.border,
     opacity: 0.6,
   },
   timeText: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.white,
     fontWeight: '500',
+    fontFamily: FONTS.regular,
   },
   selectedTimeText: {
-    color: '#fff',
+    color: COLORS.background,
+    fontFamily: FONTS.bold,
   },
   unavailableTimeText: {
-    color: '#999',
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   footer: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: COLORS.border,
   },
   continueButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 12,
+    ...GLASS_STYLES.button.primary,
     padding: 16,
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: '#ccc',
+    backgroundColor: COLORS.disabled,
   },
   continueButtonText: {
-    color: '#fff',
+    color: COLORS.background,
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: FONTS.bold,
   },
 });

@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
+import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS, GLASS_STYLES } from '@/constants/theme';
 import {
   Share2,
   UserPlus,
@@ -219,10 +219,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   developerModeIndicator: {
+    ...GLASS_STYLES.card,
     backgroundColor: COLORS.primary,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
-    borderRadius: BORDER_RADIUS.sm,
   },
   developerModeText: {
     color: COLORS.white,
@@ -272,10 +272,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   editProfileButton: {
-    backgroundColor: COLORS.accent,
+    ...GLASS_STYLES.button.primary,
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
   },
   editProfileButtonText: {
     color: COLORS.background,

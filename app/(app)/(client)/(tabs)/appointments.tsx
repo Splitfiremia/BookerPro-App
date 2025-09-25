@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, Clock, User, MapPin, Phone, Star, Filter, CheckCircle, XCircle, AlertCircle, Navigation, Zap, Timer } from "lucide-react-native";
 import { router } from "expo-router";
-import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from "@/constants/theme";
+import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS, GLASS_STYLES } from "@/constants/theme";
 import { useAuth } from "@/providers/AuthProvider";
 
 interface Appointment {
@@ -461,8 +461,8 @@ const styles = StyleSheet.create({
   filterButton: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
+    ...GLASS_STYLES.card,
     borderRadius: BORDER_RADIUS.round,
-    backgroundColor: COLORS.card,
     marginRight: SPACING.sm,
   },
   activeFilterButton: {
@@ -482,17 +482,11 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xl,
   },
   appointmentCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: BORDER_RADIUS.lg,
+    ...GLASS_STYLES.card,
     padding: SPACING.lg,
     marginBottom: SPACING.md,
     position: 'relative',
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   todayCard: {
     borderWidth: 2,
@@ -762,10 +756,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
   },
   bookButton: {
-    backgroundColor: COLORS.primary,
+    ...GLASS_STYLES.button.primary,
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.lg,
     marginTop: SPACING.lg,
   },
   bookButtonText: {

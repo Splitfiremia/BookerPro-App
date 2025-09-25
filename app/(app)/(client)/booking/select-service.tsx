@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronRight, Clock, DollarSign } from 'lucide-react-native';
-import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from '@/constants/theme';
+import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS, GLASS_STYLES } from '@/constants/theme';
 
 interface Service {
   id: string;
@@ -125,8 +125,7 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
   },
   serviceCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: BORDER_RADIUS.lg,
+    ...GLASS_STYLES.card,
     padding: SPACING.lg,
     marginBottom: SPACING.md,
     flexDirection: 'row',

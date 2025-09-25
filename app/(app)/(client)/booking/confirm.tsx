@@ -5,6 +5,7 @@ import { Calendar, Clock, DollarSign, User, MapPin, CheckCircle, CreditCard, Tim
 import { usePayments } from '@/providers/PaymentProvider';
 import { useReservationTimer } from '@/utils/reservationHooks';
 import { getReservation } from '@/utils/bookingService';
+import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS, GLASS_STYLES } from '@/constants/theme';
 
 export default function ConfirmBookingScreen() {
   const router = useRouter();
@@ -400,7 +401,7 @@ export default function ConfirmBookingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: COLORS.background,
   },
   timerContainer: {
     flexDirection: 'row',
@@ -546,32 +547,28 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: COLORS.border,
   },
   title: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.white,
     marginTop: 12,
     marginBottom: 8,
+    fontFamily: FONTS.bold,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   detailsContainer: {
     margin: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    ...GLASS_STYLES.card,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   section: {
     marginVertical: 12,
@@ -579,8 +576,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: COLORS.white,
     marginBottom: 12,
+    fontFamily: FONTS.bold,
   },
   detailRow: {
     flexDirection: 'row',
@@ -595,8 +593,9 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.lightGray,
     flex: 1,
+    fontFamily: FONTS.regular,
   },
   divider: {
     height: 1,
@@ -651,9 +650,9 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: COLORS.border,
   },
   cancelButton: {
     flex: 1,
@@ -669,14 +668,14 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     flex: 2,
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
+    ...GLASS_STYLES.button.primary,
     padding: 16,
     alignItems: 'center',
   },
   confirmButtonText: {
-    color: '#fff',
+    color: COLORS.background,
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: FONTS.bold,
   },
 });

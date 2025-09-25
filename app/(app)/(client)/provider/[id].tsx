@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Star, MapPin, Clock, Calendar, Heart, UserPlus, MessageCircle, Share2, Grid3X3, Award, Scissors, Palette, Camera, Play, Eye, TrendingUp, Users, Trophy, Bookmark, Filter, ChevronDown, Image as ImageIcon, Video } from "lucide-react-native";
 import { mockProviders } from "@/mocks/providers";
 import { useSocial } from "@/providers/SocialProvider";
+import { COLORS } from "@/constants/theme";
 
 type TabType = 'services' | 'portfolio' | 'posts';
 
@@ -558,7 +559,7 @@ export default function ProviderDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
   },
   errorContainer: {
     flex: 1,
@@ -579,7 +580,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
   },
   profileImageContainer: {
     position: 'relative',
@@ -641,12 +642,12 @@ const styles = StyleSheet.create({
   infoSection: {
     paddingHorizontal: 20,
     paddingBottom: 20,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
   },
   providerName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.white,
     marginBottom: 4,
   },
   providerCategory: {
@@ -662,7 +663,7 @@ const styles = StyleSheet.create({
   },
   bioText: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.lightGray,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -681,9 +682,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingVertical: 20,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: COLORS.border,
   },
   statItemMain: {
     alignItems: 'center',
@@ -691,7 +692,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.white,
     marginBottom: 2,
   },
   statLabelMain: {
@@ -710,9 +711,9 @@ const styles = StyleSheet.create({
   },
   tabNavigation: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: COLORS.border,
   },
   tabButton: {
     flex: 1,
@@ -736,7 +737,7 @@ const styles = StyleSheet.create({
     color: '#007AFF',
   },
   tabContent: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     minHeight: 400,
   },
   serviceItem: {
@@ -754,7 +755,7 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: COLORS.white,
     marginBottom: 4,
   },
   serviceDetails: {
@@ -1004,9 +1005,9 @@ const styles = StyleSheet.create({
   },
   bookButtonContainer: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: COLORS.border,
   },
   bookButton: {
     flexDirection: 'row',
