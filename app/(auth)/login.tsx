@@ -16,6 +16,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
 import { validateForm, ValidationRules, ValidationErrors, required, minLength } from "@/utils/validation";
 import { testUsers } from "@/mocks/users";
+import { COLORS } from "@/constants/theme";
 
 export default function LoginScreen() {
   const params = useLocalSearchParams();
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
   },
   gradientBackground: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: COLORS.background,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -299,12 +300,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   continueButton: {
-    backgroundColor: '#FBBF24',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#FBBF24',
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -335,13 +336,13 @@ const styles = StyleSheet.create({
   browseButton: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#FBBF24',
+    borderColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
   browseButtonText: {
-    color: '#FBBF24',
+    color: COLORS.primary,
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 1,

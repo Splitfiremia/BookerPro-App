@@ -1,7 +1,8 @@
 export const COLORS = {
-  primary: '#f07945',
+  primary: '#FBBF24', // Amber-400
   secondary: '#909099',
-  background: '#000000',
+  background: '#111827', // Gray-900 (background-dark)
+  backgroundLight: '#F3F4F6', // Gray-100 (background-light)
   text: '#ffffff',
   white: '#ffffff',
   gray: '#333333',
