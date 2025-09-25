@@ -132,15 +132,20 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <View style={styles.gradientBackground}>
-        <View style={styles.overlay} />
+      <View style={styles.backgroundContainer}>
+        <View style={styles.backgroundOverlay} />
         
         <SafeAreaView style={styles.safeArea}>
           {/* Status Bar */}
           <View style={styles.statusBar}>
             <Text style={styles.timeText}>10:51</Text>
             <View style={styles.statusIcons}>
-              <Text style={styles.batteryText}>90</Text>
+              <Text style={styles.signalText}>●●●●</Text>
+              <Text style={styles.wifiText}>📶</Text>
+              <View style={styles.batteryContainer}>
+                <Text style={styles.batteryText}>90</Text>
+                <Text style={styles.batteryIcon}>🔋</Text>
+              </View>
             </View>
           </View>
 
@@ -163,7 +168,7 @@ export default function LoginScreen() {
                     value={formData.email}
                     onChangeText={(value) => handleChange("email", value)}
                     placeholder="Enter your email to log in or sign up"
-                    placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                    placeholderTextColor="rgba(156, 163, 175, 0.7)"
                     keyboardType="email-address"
                     autoCapitalize="none"
                     testID="login-email-input"
@@ -172,7 +177,7 @@ export default function LoginScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={styles.continueButton}
+                  style={[styles.continueButton, (!formData.email || isSubmitting) && styles.continueButtonDisabled]}
                   onPress={handleLogin}
                   disabled={!formData.email || isSubmitting}
                 >
@@ -206,11 +211,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  gradientBackground: {
+  backgroundContainer: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  overlay: {
+  backgroundOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
@@ -222,22 +227,42 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
     paddingBottom: 8,
+    zIndex: 10,
   },
   timeText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '500',
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto', web: 'Poppins' }),
   },
   statusIcons: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+  },
+  signalText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+  },
+  wifiText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  batteryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
   },
   batteryText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
+  },
+  batteryIcon: {
+    color: '#FFFFFF',
+    fontSize: 16,
   },
   keyboardView: {
     flex: 1,
@@ -253,24 +278,20 @@ const styles = StyleSheet.create({
     minHeight: 100,
   },
   glassCard: {
-    backgroundColor: Platform.select({
-      ios: 'rgba(255, 255, 255, 0.1)',
-      android: 'rgba(31, 41, 55, 0.3)',
-      web: 'rgba(31, 41, 55, 0.3)',
-    }),
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     padding: 24,
     marginBottom: 32,
-    ...(Platform.OS === 'ios' && {
+    ...(Platform.OS !== 'web' && {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.3,
-      shadowRadius: 20,
+      shadowOpacity: 0.25,
+      shadowRadius: 25,
     }),
     ...(Platform.OS === 'android' && {
-      elevation: 10,
+      elevation: 15,
     }),
   },
   inputContainer: {
@@ -279,43 +300,53 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(209, 213, 219, 1)',
     marginBottom: 8,
-    letterSpacing: 0.5,
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto', web: 'Poppins' }),
   },
   glassInput: {
     backgroundColor: 'transparent',
     borderWidth: 0,
     borderBottomWidth: 2,
-    borderBottomColor: 'rgba(156, 163, 175, 0.5)',
+    borderBottomColor: 'rgba(107, 114, 128, 1)',
     paddingVertical: 12,
     paddingHorizontal: 0,
     fontSize: 16,
     color: '#FFFFFF',
     fontWeight: '400',
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto', web: 'Poppins' }),
   },
   errorText: {
     color: '#EF4444',
     fontSize: 12,
     marginTop: 4,
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto', web: 'Poppins' }),
   },
   continueButton: {
     backgroundColor: COLORS.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 12,
+    borderRadius: 8,
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    ...(Platform.OS !== 'web' && {
+      shadowColor: COLORS.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+    }),
+    ...(Platform.OS === 'android' && {
+      elevation: 8,
+    }),
+  },
+  continueButtonDisabled: {
+    backgroundColor: 'rgba(251, 191, 36, 0.5)',
   },
   continueButtonText: {
     color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 1,
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto', web: 'Poppins' }),
   },
   divider: {
     flexDirection: 'row',
@@ -325,20 +356,21 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(156, 163, 175, 0.4)',
+    backgroundColor: 'rgba(107, 114, 128, 1)',
   },
   dividerText: {
-    color: 'rgba(156, 163, 175, 0.8)',
+    color: 'rgba(156, 163, 175, 1)',
     fontSize: 14,
     fontWeight: '500',
     marginHorizontal: 16,
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto', web: 'Poppins' }),
   },
   browseButton: {
     backgroundColor: 'transparent',
     borderWidth: 2,
     borderColor: COLORS.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 12,
+    borderRadius: 8,
     alignItems: 'center',
   },
   browseButtonText: {
@@ -346,5 +378,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 1,
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto', web: 'Poppins' }),
   },
 });
