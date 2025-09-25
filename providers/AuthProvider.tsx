@@ -32,6 +32,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const [user, setUser] = useState<User | null>(null);
   const [isDeveloperMode, setIsDeveloperMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  
   // Initialize asynchronously but don't block rendering
   useEffect(() => {
     let isMounted = true;
@@ -40,34 +42,51 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       if (!isMounted) return;
       
       try {
-        // Load user data and developer mode in parallel
-        const [storedUser, storedDevMode] = await Promise.all([
-          AsyncStorage.getItem("user"),
-          AsyncStorage.getItem("developerMode")
-        ]);
-        
-        if (!isMounted) return;
-        
-        if (storedUser) {
+        // Use setTimeout to ensure this runs after initial render
+        setTimeout(async () => {
+          if (!isMounted) return;
+          
           try {
-            const userData = JSON.parse(storedUser);
-            setUser(userData);
+            // Load user data and developer mode in parallel
+            const [storedUser, storedDevMode] = await Promise.all([
+              AsyncStorage.getItem("user"),
+              AsyncStorage.getItem("developerMode")
+            ]);
+            
+            if (!isMounted) return;
+            
+            if (storedUser) {
+              try {
+                const userData = JSON.parse(storedUser);
+                setUser(userData);
+              } catch (error) {
+                console.log('AuthProvider: Error parsing stored user data');
+              }
+            }
+            
+            if (storedDevMode) {
+              try {
+                const devMode = JSON.parse(storedDevMode);
+                setIsDeveloperMode(devMode);
+              } catch (error) {
+                console.log('AuthProvider: Error parsing developer mode data');
+              }
+            }
+            
           } catch (error) {
-            console.log('AuthProvider: Error parsing stored user data');
+            console.log('AuthProvider: Using defaults due to error:', error);
+          } finally {
+            if (isMounted) {
+              setIsInitialized(true);
+            }
           }
-        }
-        
-        if (storedDevMode) {
-          try {
-            const devMode = JSON.parse(storedDevMode);
-            setIsDeveloperMode(devMode);
-          } catch (error) {
-            console.log('AuthProvider: Error parsing developer mode data');
-          }
-        }
+        }, 0);
         
       } catch (error) {
         console.log('AuthProvider: Using defaults due to error:', error);
+        if (isMounted) {
+          setIsInitialized(true);
+        }
       }
     };
     
@@ -262,11 +281,12 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     isAuthenticated: !!user,
     isDeveloperMode,
     isLoading,
+    isInitialized,
     setDeveloperMode,
     login,
     logout,
     register,
-  }), [user, isDeveloperMode, isLoading, setDeveloperMode, login, logout, register]);
+  }), [user, isDeveloperMode, isLoading, isInitialized, setDeveloperMode, login, logout, register]);
 
   return contextValue;
 });

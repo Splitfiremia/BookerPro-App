@@ -17,14 +17,29 @@ import { useAuth } from "@/providers/AuthProvider";
 import { testUsers } from "@/mocks/users";
 
 export default function LandingScreen() {
-  const { isDeveloperMode, setDeveloperMode, login, logout, isAuthenticated, user } = useAuth();
+  const { isDeveloperMode, setDeveloperMode, login, logout, isAuthenticated, user, isInitialized } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  
   // Log auth state for debugging
   useEffect(() => {
-    console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode);
-  }, [isAuthenticated, user, isDeveloperMode]);
+    console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode, 'isInitialized:', isInitialized);
+  }, [isAuthenticated, user, isDeveloperMode, isInitialized]);
+
+  // Show loading state until auth is initialized to prevent hydration mismatch
+  if (!isInitialized) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#000000" />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.logoSection}>
+            <Text style={styles.logo}>BookerPro</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   const validateEmail = (email: string): boolean => {
     if (!email || typeof email !== 'string') return false;

@@ -4,7 +4,12 @@ import { COLORS, FONTS } from "@/constants/theme";
 import { useAuth } from "@/providers/AuthProvider";
 
 export function ModeIndicator() {
-  const { isDeveloperMode } = useAuth();
+  const { isDeveloperMode, isInitialized } = useAuth();
+
+  // Don't render anything until auth is initialized to prevent hydration mismatch
+  if (!isInitialized) {
+    return null;
+  }
 
   // Always render a View, but conditionally set its contents
   return isDeveloperMode ? (
@@ -13,7 +18,7 @@ export function ModeIndicator() {
         <Text style={styles.text}>DEVELOPER MODE</Text>
       </View>
     </View>
-  ) : null; // Still return null when not in developer mode, but after all hooks are called
+  ) : null;
 }
 
 const styles = StyleSheet.create({
