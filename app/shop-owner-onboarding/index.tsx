@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useShopOwnerOnboarding } from '@/providers/ShopOwnerOnboardingProvider';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight, ChevronLeft } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function ShopOwnerOnboardingStart() {
@@ -34,14 +34,7 @@ export default function ShopOwnerOnboardingStart() {
             paddingBottom: SPACING.lg + insets.bottom
           } as const
         ]}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-            testID="shop-onboarding-back-button"
-          >
-            <ChevronLeft size={20} color={COLORS.lightGray} />
-            <Text style={styles.backText}>Back</Text>
-          </TouchableOpacity>
+
           <View style={styles.header}>
             <Text style={styles.title}>Set Up Your Shop</Text>
             <Text style={styles.subtitle}>
@@ -194,17 +187,5 @@ const styles = StyleSheet.create({
     marginRight: SPACING.xs,
     fontFamily: FONTS.bold,
   },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    paddingVertical: SPACING.md,
-    marginBottom: SPACING.lg,
-  },
-  backText: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.lightGray,
-    marginLeft: SPACING.sm,
-    fontFamily: FONTS.regular,
-  },
+
 });
