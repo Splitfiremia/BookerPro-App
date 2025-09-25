@@ -265,13 +265,13 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: COLORS.text,
     fontFamily: FONTS.bold,
   },
   subtitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: COLORS.text,
     marginTop: 8,
   },
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   learnMoreText: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     marginTop: 8,
   },
   notificationButton: {
@@ -309,14 +309,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: COLORS.text,
     fontFamily: FONTS.bold,
   },
   seeAllText: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   appointmentCard: {
     flexDirection: 'row',
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   },
   appointmentClient: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: COLORS.text,
     marginBottom: 4,
   },
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   },
   earningsAmount: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: COLORS.success,
   },
   actionCard: {
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 16,
     color: COLORS.text,
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   requestCard: {
     ...GLASS_STYLES.card,
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   },
   clientName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: COLORS.text,
     marginBottom: 2,
   },
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   },
   requestPrice: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: COLORS.success,
   },
   requestDetails: {
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
   requestDetailText: {
     fontSize: 14,
     color: COLORS.text,
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   requestDate: {
     fontSize: 14,
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   declineButtonText: {
     color: COLORS.error,

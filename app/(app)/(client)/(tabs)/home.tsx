@@ -366,7 +366,7 @@ export default function HomeScreen() {
               {IconComponent && (
                 <IconComponent 
                   size={14} 
-                  color="#333333" 
+                  color={selectedFilter === filter.id ? COLORS.background : COLORS.lightGray} 
                 />
               )}
               <Text style={[
@@ -621,21 +621,21 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#d1d1d1',
-    backgroundColor: '#ffffff',
+    borderColor: COLORS.border,
+    backgroundColor: 'rgba(31, 41, 55, 0.2)',
   },
   filterButtonActive: {
-    backgroundColor: '#ffffff',
-    borderColor: '#d1d1d1',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   filterText: {
-    color: '#333333',
+    color: COLORS.lightGray,
     fontSize: 14,
     fontFamily: FONTS.regular,
     marginLeft: 4,
   },
   filterTextActive: {
-    color: '#333333',
+    color: COLORS.background,
   },
   content: {
     flex: 1,

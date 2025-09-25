@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Calendar, BarChart2, Users, DollarSign, TrendingUp } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, GLASS_STYLES } from '@/constants/theme';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function ShopOwnerDashboard() {
   const router = useRouter();
@@ -128,11 +128,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold' as const,
     color: COLORS.text,
+    fontFamily: FONTS.bold,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: COLORS.secondary,
+    color: COLORS.lightGray,
     marginTop: 4,
+    fontFamily: FONTS.regular,
   },
   metricsGrid: {
     flexDirection: "row",
@@ -168,10 +170,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold' as const,
     color: COLORS.text,
     marginBottom: 4,
+    fontFamily: FONTS.bold,
   },
   metricLabel: {
     fontSize: 14,
-    color: COLORS.secondary,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   section: {
     marginBottom: 24,
@@ -181,6 +185,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold' as const,
     color: COLORS.text,
     marginBottom: 16,
+    fontFamily: FONTS.bold,
   },
   actionGrid: {
     flexDirection: "row",
@@ -198,12 +203,14 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginTop: 8,
     textAlign: 'center' as const,
+    fontFamily: FONTS.bold,
   },
   actionSubtitle: {
     fontSize: 12,
-    color: COLORS.secondary,
+    color: COLORS.lightGray,
     marginTop: 4,
     textAlign: 'center' as const,
+    fontFamily: FONTS.regular,
   },
   overviewCard: {
     ...GLASS_STYLES.card,
@@ -219,12 +226,14 @@ const styles = StyleSheet.create({
   },
   overviewLabel: {
     fontSize: 14,
-    color: COLORS.secondary,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   overviewValue: {
     fontSize: 14,
     fontWeight: '600' as const,
     color: COLORS.text,
+    fontFamily: FONTS.bold,
   },
   activityItem: {
     flexDirection: "row",
@@ -246,10 +255,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.text,
     lineHeight: 20,
+    fontFamily: FONTS.regular,
   },
   activityTime: {
     fontSize: 12,
-    color: COLORS.secondary,
+    color: COLORS.lightGray,
     marginTop: 2,
+    fontFamily: FONTS.regular,
   },
 });

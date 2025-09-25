@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: FONT_SIZES.xxl,
-    fontWeight: "bold",
+    fontWeight: "bold" as const,
     color: COLORS.white,
     fontFamily: FONTS.bold,
   },
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   },
   providerName: {
     fontSize: FONT_SIZES.md,
-    fontWeight: "600",
+    fontWeight: "600" as const,
     color: COLORS.white,
     fontFamily: FONTS.bold,
   },
@@ -622,7 +622,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 10,
-    fontWeight: "600",
+    fontWeight: "600" as const,
     color: COLORS.white,
     fontFamily: FONTS.bold,
     marginLeft: 4,
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: "bold",
+    fontWeight: "bold" as const,
     color: COLORS.accent,
     fontFamily: FONTS.bold,
   },
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.lg,
     color: COLORS.white,
     marginTop: SPACING.lg,
-    fontWeight: "600",
+    fontWeight: "600" as const,
     fontFamily: FONTS.bold,
   },
   emptySubtext: {
@@ -762,9 +762,9 @@ const styles = StyleSheet.create({
     marginTop: SPACING.lg,
   },
   bookButtonText: {
-    color: COLORS.white,
+    color: COLORS.background,
     fontSize: FONT_SIZES.md,
-    fontWeight: "bold",
+    fontWeight: "bold" as const,
     fontFamily: FONTS.bold,
     letterSpacing: 0.5,
   },
