@@ -4,9 +4,11 @@ import ImageWithFallback from '@/components/ImageWithFallback';
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
+import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, Upload } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -99,7 +101,7 @@ export default function ProfileScreen() {
                 <ImageWithFallback source={{ uri: imageUri }} style={styles.profileImage} fallbackIcon="user" />
               ) : (
                 <View style={styles.placeholderImage}>
-                  <Upload size={40} color="#666666" />
+                  <Upload size={40} color={COLORS.lightGray} />
                 </View>
               )}
             </View>
@@ -110,7 +112,7 @@ export default function ProfileScreen() {
                 onPress={pickImage}
                 testID="pick-image-button"
               >
-                <Upload size={20} color="#D4AF37" />
+                <Upload size={20} color={COLORS.primary} />
                 <Text style={styles.imageButtonText}>Upload Photo</Text>
               </TouchableOpacity>
 
@@ -119,7 +121,7 @@ export default function ProfileScreen() {
                 onPress={takePhoto}
                 testID="take-photo-button"
               >
-                <Camera size={20} color="#D4AF37" />
+                <Camera size={20} color={COLORS.primary} />
                 <Text style={styles.imageButtonText}>Take Photo</Text>
               </TouchableOpacity>
             </View>
@@ -145,13 +147,11 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View style={styles.buttonContainer}>
-          <GradientButton
-            title="CONTINUE"
-            onPress={handleContinue}
-            testID="continue-button"
-          />
-        </View>
+        <OnboardingNavigation
+          onBack={() => router.back()}
+          onNext={handleContinue}
+          testID="profile-navigation"
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -160,47 +160,50 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: SPACING.lg,
   },
   header: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
+    color: COLORS.text,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   content: {
     flex: 1,
   },
   question: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
-    marginBottom: 10,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   description: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    marginBottom: 30,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginBottom: SPACING.xl,
+    fontFamily: FONTS.regular,
   },
   profileImageContainer: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   imageContainer: {
     width: 150,
     height: 150,
     borderRadius: 75,
     overflow: 'hidden',
-    marginBottom: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: SPACING.lg,
+    backgroundColor: COLORS.glass.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -213,7 +216,7 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: COLORS.glass.background,
   },
   imageButtonsContainer: {
     flexDirection: 'row',
@@ -223,54 +226,59 @@ const styles = StyleSheet.create({
   imageButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    backgroundColor: `${COLORS.primary}20`,
     borderWidth: 1,
-    borderColor: '#D4AF37',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginHorizontal: 5,
+    borderColor: COLORS.primary,
+    borderRadius: SPACING.sm,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    marginHorizontal: SPACING.xs,
   },
   imageButtonText: {
-    color: '#D4AF37',
-    fontSize: 14,
+    color: COLORS.primary,
+    fontSize: FONT_SIZES.sm,
     fontWeight: 'bold' as const,
-    marginLeft: 8,
+    marginLeft: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   errorText: {
-    color: '#FF6B6B',
-    fontSize: 14,
-    marginTop: 10,
+    color: COLORS.error,
+    fontSize: FONT_SIZES.sm,
+    marginTop: SPACING.sm,
     textAlign: 'center',
+    fontFamily: FONTS.regular,
   },
   bioContainer: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   inputLabel: {
-    fontSize: 12,
+    fontSize: FONT_SIZES.xs,
     fontWeight: 'bold' as const,
-    color: '#CCCCCC',
-    marginBottom: 8,
+    color: COLORS.input.label,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   bioInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: COLORS.glass.background,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
-    padding: 12,
-    color: '#FFFFFF',
-    fontSize: 16,
+    borderColor: COLORS.glass.border,
+    borderRadius: SPACING.sm,
+    padding: SPACING.sm,
+    color: COLORS.text,
+    fontSize: FONT_SIZES.md,
     minHeight: 150,
     textAlignVertical: 'top',
+    fontFamily: FONTS.regular,
   },
   charCount: {
-    fontSize: 12,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.lightGray,
     textAlign: 'right',
-    marginTop: 4,
+    marginTop: SPACING.xs,
+    fontFamily: FONTS.regular,
   },
   buttonContainer: {
     marginTop: 'auto',
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
   },
 });

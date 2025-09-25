@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableO
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
+import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, ShopInfo } from '@/providers/ProviderOnboardingProvider';
 import { Search, Store, Send } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function ShopSearchScreen() {
   const router = useRouter();
@@ -93,7 +95,7 @@ export default function ShopSearchScreen() {
 
               <View style={styles.searchContainer}>
                 <View style={styles.searchInputContainer}>
-                  <Search size={20} color="#CCCCCC" style={styles.searchIcon} />
+                  <Search size={20} color={COLORS.lightGray} style={styles.searchIcon} />
                   <TextInput
                     style={styles.searchInput}
                     placeholder="Enter shop name or address"
@@ -107,7 +109,7 @@ export default function ShopSearchScreen() {
 
                 {isSearching && (
                   <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color="#D4AF37" />
+                    <ActivityIndicator size="small" color={COLORS.primary} />
                     <Text style={styles.loadingText}>Searching...</Text>
                   </View>
                 )}
@@ -125,7 +127,7 @@ export default function ShopSearchScreen() {
                         testID={`shop-item-${shop.id}`}
                       >
                         <View style={styles.shopIconContainer}>
-                          <Store size={24} color="#D4AF37" />
+                          <Store size={24} color={COLORS.primary} />
                         </View>
                         <View style={styles.shopInfoContainer}>
                           <Text style={styles.shopName}>{shop.name}</Text>
@@ -147,7 +149,7 @@ export default function ShopSearchScreen() {
                         onPress={handleInviteOwner}
                         testID="invite-owner-button"
                       >
-                        <Send size={20} color="#D4AF37" />
+                        <Send size={20} color={COLORS.primary} />
                         <Text style={styles.notFoundActionText}>Invite Shop Owner</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
@@ -155,7 +157,7 @@ export default function ShopSearchScreen() {
                         onPress={handleContinueAsIndependent}
                         testID="continue-independent-button"
                       >
-                        <Store size={20} color="#D4AF37" />
+                        <Store size={20} color={COLORS.primary} />
                         <Text style={styles.notFoundActionText}>Continue as Independent</Text>
                       </TouchableOpacity>
                     </View>
@@ -209,33 +211,31 @@ export default function ShopSearchScreen() {
           )}
         </View>
 
-        <View style={styles.buttonContainer}>
-          {!showInviteForm ? (
+        {!showInviteForm ? (
+          <OnboardingNavigation
+            onBack={() => router.back()}
+            onNext={handleContinueWithShop}
+            nextDisabled={!selectedShop}
+            testID="shop-search-navigation"
+          />
+        ) : (
+          <View style={styles.inviteButtonsContainer}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowInviteForm(false)}
+              testID="cancel-invite-button"
+            >
+              <Text style={styles.cancelButtonText}>CANCEL</Text>
+            </TouchableOpacity>
             <GradientButton
-              title="CONTINUE"
-              onPress={handleContinueWithShop}
-              disabled={!selectedShop}
-              testID="continue-button"
+              title="SEND INVITE"
+              onPress={handleSendInvite}
+              disabled={!ownerName || !ownerPhone}
+              testID="send-invite-button"
+              style={styles.sendInviteButton}
             />
-          ) : (
-            <View style={styles.inviteButtonsContainer}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowInviteForm(false)}
-                testID="cancel-invite-button"
-              >
-                <Text style={styles.cancelButtonText}>CANCEL</Text>
-              </TouchableOpacity>
-              <GradientButton
-                title="SEND INVITE"
-                onPress={handleSendInvite}
-                disabled={!ownerName || !ownerPhone}
-                testID="send-invite-button"
-                style={styles.sendInviteButton}
-              />
-            </View>
-          )}
-        </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -244,120 +244,124 @@ export default function ShopSearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: SPACING.lg,
   },
   header: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
+    color: COLORS.text,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   content: {
     flex: 1,
   },
   question: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
-    marginBottom: 10,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   description: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    marginBottom: 30,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginBottom: SPACING.xl,
+    fontFamily: FONTS.regular,
   },
   searchContainer: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: COLORS.glass.background,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginBottom: 16,
+    borderColor: COLORS.glass.border,
+    borderRadius: SPACING.sm,
+    paddingHorizontal: SPACING.sm,
+    marginBottom: SPACING.md,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: SPACING.sm,
   },
   searchInput: {
     flex: 1,
     height: 50,
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: COLORS.text,
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.regular,
   },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    padding: SPACING.md,
   },
   loadingText: {
-    color: '#CCCCCC',
-    marginLeft: 10,
-    fontSize: 14,
+    color: COLORS.lightGray,
+    marginLeft: SPACING.sm,
+    fontSize: FONT_SIZES.sm,
+    fontFamily: FONTS.regular,
   },
   resultsContainer: {
-    marginTop: 10,
+    marginTop: SPACING.sm,
   },
   shopItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    ...GLASS_STYLES.card,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   selectedShopItem: {
-    borderColor: '#D4AF37',
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    borderColor: COLORS.primary,
+    backgroundColor: `${COLORS.primary}20`,
   },
   shopIconContainer: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: COLORS.glass.background,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: SPACING.md,
   },
   shopInfoContainer: {
     flex: 1,
   },
   shopName: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.md,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
-    marginBottom: 4,
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    fontFamily: FONTS.bold,
   },
   shopAddress: {
-    fontSize: 14,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   notFoundContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
-    padding: 20,
+    ...GLASS_STYLES.card,
+    padding: SPACING.lg,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: SPACING.lg,
   },
   notFoundText: {
-    fontSize: 16,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
+    fontFamily: FONTS.regular,
   },
   notFoundActions: {
     width: '100%',
@@ -366,81 +370,89 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    backgroundColor: `${COLORS.primary}20`,
     borderWidth: 1,
-    borderColor: '#D4AF37',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
+    borderColor: COLORS.primary,
+    borderRadius: SPACING.sm,
+    padding: SPACING.sm,
+    marginBottom: SPACING.sm,
   },
   notFoundActionText: {
-    color: '#D4AF37',
-    fontSize: 16,
+    color: COLORS.primary,
+    fontSize: FONT_SIZES.md,
     fontWeight: 'bold' as const,
-    marginLeft: 10,
+    marginLeft: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   formContainer: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: SPACING.md,
   },
   inputLabel: {
-    fontSize: 12,
+    fontSize: FONT_SIZES.xs,
     fontWeight: 'bold' as const,
-    color: '#CCCCCC',
-    marginBottom: 8,
+    color: COLORS.input.label,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: COLORS.glass.background,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
-    padding: 12,
-    color: '#FFFFFF',
-    fontSize: 16,
+    borderColor: COLORS.glass.border,
+    borderRadius: SPACING.sm,
+    padding: SPACING.sm,
+    color: COLORS.text,
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.regular,
   },
   messageContainer: {
-    marginTop: 10,
+    marginTop: SPACING.sm,
   },
   messageLabel: {
-    fontSize: 12,
+    fontSize: FONT_SIZES.xs,
     fontWeight: 'bold' as const,
-    color: '#CCCCCC',
-    marginBottom: 8,
+    color: COLORS.input.label,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   messagePreview: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: COLORS.glass.background,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
-    padding: 16,
+    borderColor: COLORS.glass.border,
+    borderRadius: SPACING.sm,
+    padding: SPACING.md,
   },
   messageText: {
-    color: '#CCCCCC',
-    fontSize: 14,
+    color: COLORS.lightGray,
+    fontSize: FONT_SIZES.sm,
     lineHeight: 20,
+    fontFamily: FONTS.regular,
   },
   buttonContainer: {
     marginTop: 'auto',
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
   },
   inviteButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 'auto',
+    marginBottom: SPACING.lg,
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: COLORS.glass.background,
+    borderRadius: SPACING.sm,
+    padding: SPACING.md,
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: SPACING.sm,
   },
   cancelButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: COLORS.text,
+    fontSize: FONT_SIZES.md,
     fontWeight: 'bold' as const,
+    fontFamily: FONTS.bold,
   },
   sendInviteButton: {
     flex: 2,

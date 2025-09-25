@@ -5,6 +5,7 @@ import { OnboardingProgress } from '@/components/OnboardingProgress';
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, WorkSituation } from '@/providers/ProviderOnboardingProvider';
 import { Building2, Store, Car, Home } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function WorkSituationScreen() {
   const router = useRouter();
@@ -113,25 +114,25 @@ export default function WorkSituationScreen() {
       id: 'own_shop',
       title: 'I have my own shop / studio',
       description: 'You own or rent a commercial space for your services',
-      icon: <Building2 size={24} color="#D4AF37" />
+      icon: <Building2 size={24} color={COLORS.primary} />
     },
     {
       id: 'work_at_shop',
       title: 'I work at a shop',
       description: 'You work at an established business owned by someone else',
-      icon: <Store size={24} color="#D4AF37" />
+      icon: <Store size={24} color={COLORS.primary} />
     },
     {
       id: 'mobile',
       title: 'I am mobile / I travel to clients',
       description: "You travel to provide services at clients' locations",
-      icon: <Car size={24} color="#D4AF37" />
+      icon: <Car size={24} color={COLORS.primary} />
     },
     {
       id: 'home_studio',
       title: 'I work from a home studio',
       description: 'You provide services from your home or private space',
-      icon: <Home size={24} color="#D4AF37" />
+      icon: <Home size={24} color={COLORS.primary} />
     }
   ];
 
@@ -227,78 +228,80 @@ export default function WorkSituationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: SPACING.lg,
   },
   header: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   content: {
     flex: 1,
   },
   question: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   description: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    marginBottom: 30,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginBottom: SPACING.xl,
+    fontFamily: FONTS.regular,
   },
   optionsContainer: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    ...GLASS_STYLES.card,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
   },
   selectedCard: {
-    borderColor: '#D4AF37',
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    borderColor: COLORS.primary,
+    backgroundColor: `${COLORS.primary}20`,
   },
   iconContainer: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: COLORS.glass.background,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: SPACING.md,
   },
   optionTextContainer: {
     flex: 1,
   },
   optionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    fontFamily: FONTS.bold,
   },
   optionDescription: {
-    fontSize: 14,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   buttonContainer: {
     marginTop: 'auto',
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
   },
   animatedOptionContainer: {
     // Container for animated option cards

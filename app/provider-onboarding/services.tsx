@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Tex
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
+import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
 import { Plus, Trash2 } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 // Using the existing import for useProviderOnboarding
 
@@ -238,7 +240,7 @@ export default function ServicesScreen() {
                         style={styles.removeButton}
                         testID={`remove-service-${index}`}
                       >
-                        <Trash2 size={20} color="#FF6B6B" />
+                        <Trash2 size={20} color={COLORS.error} />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -308,23 +310,23 @@ export default function ServicesScreen() {
                 onPress={handleAddService}
                 testID="add-service-button"
               >
-                <Plus size={20} color="#D4AF37" />
+                <Plus size={20} color={COLORS.primary} />
                 <Text style={styles.addServiceText}>Add Another Service</Text>
               </TouchableOpacity>
             </Animated.View>
           </Animated.View>
 
           <Animated.View style={[
-            styles.buttonContainer,
+            styles.animatedNavigationContainer,
             {
               opacity: fadeAnim,
               transform: [{ translateY: navigationSlideAnim }]
             }
           ]}>
-            <GradientButton
-              title="CONTINUE"
-              onPress={handleContinue}
-              testID="continue-button"
+            <OnboardingNavigation
+              onBack={() => router.back()}
+              onNext={handleContinue}
+              testID="services-navigation"
             />
           </Animated.View>
         </ScrollView>
@@ -336,64 +338,67 @@ export default function ServicesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.background,
   },
   keyboardAvoidingView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: SPACING.lg,
   },
   header: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
+    color: COLORS.text,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   content: {
     flex: 1,
   },
   question: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
-    marginBottom: 10,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   description: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    marginBottom: 30,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginBottom: SPACING.xl,
+    fontFamily: FONTS.regular,
   },
   servicesContainer: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   serviceCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    ...GLASS_STYLES.card,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
   },
   serviceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: SPACING.md,
   },
   serviceNumber: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     fontWeight: 'bold' as const,
-    color: '#D4AF37',
+    color: COLORS.primary,
+    fontFamily: FONTS.bold,
   },
   removeButton: {
-    padding: 5,
+    padding: SPACING.xs,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: SPACING.md,
   },
   rowContainer: {
     flexDirection: 'row',
@@ -403,47 +408,55 @@ const styles = StyleSheet.create({
     width: '48%',
   },
   inputLabel: {
-    fontSize: 12,
+    fontSize: FONT_SIZES.xs,
     fontWeight: 'bold' as const,
-    color: '#CCCCCC',
-    marginBottom: 8,
+    color: COLORS.input.label,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    ...GLASS_STYLES.input,
+    backgroundColor: COLORS.glass.background,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
-    padding: 12,
-    color: '#FFFFFF',
-    fontSize: 16,
+    borderColor: COLORS.glass.border,
+    borderRadius: SPACING.sm,
+    padding: SPACING.sm,
+    color: COLORS.text,
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.regular,
   },
   inputError: {
-    borderColor: '#FF6B6B',
+    borderColor: COLORS.error,
   },
   errorText: {
-    color: '#FF6B6B',
-    fontSize: 12,
-    marginTop: 4,
+    color: COLORS.error,
+    fontSize: FONT_SIZES.xs,
+    marginTop: SPACING.xs,
+    fontFamily: FONTS.regular,
   },
   addServiceButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    backgroundColor: `${COLORS.primary}20`,
     borderWidth: 1,
-    borderColor: '#D4AF37',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 8,
+    borderColor: COLORS.primary,
+    borderRadius: SPACING.sm,
+    padding: SPACING.md,
+    marginTop: SPACING.sm,
   },
   addServiceText: {
-    color: '#D4AF37',
-    fontSize: 16,
+    color: COLORS.primary,
+    fontSize: FONT_SIZES.md,
     fontWeight: 'bold' as const,
-    marginLeft: 8,
+    marginLeft: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   buttonContainer: {
     marginTop: 'auto',
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
+  },
+  animatedNavigationContainer: {
+    // Container for animated navigation
   },
 });

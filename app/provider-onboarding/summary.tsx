@@ -6,6 +6,7 @@ import { OnboardingProgress } from '@/components/OnboardingProgress';
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, ProviderService, TimeSlot } from '@/providers/ProviderOnboardingProvider';
 import { Clock, DollarSign, User, Briefcase } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function SummaryScreen() {
   const router = useRouter();
@@ -108,7 +109,7 @@ export default function SummaryScreen() {
             {/* Profile Section */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <User size={20} color="#D4AF37" />
+                <User size={20} color={COLORS.primary} />
                 <Text style={styles.sectionTitle}>Personal Information</Text>
               </View>
               
@@ -134,7 +135,7 @@ export default function SummaryScreen() {
             {/* Work Situation Section */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Briefcase size={20} color="#D4AF37" />
+                <Briefcase size={20} color={COLORS.primary} />
                 <Text style={styles.sectionTitle}>Work Information</Text>
               </View>
               
@@ -153,7 +154,7 @@ export default function SummaryScreen() {
             {services.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <DollarSign size={20} color="#D4AF37" />
+                  <DollarSign size={20} color={COLORS.primary} />
                   <Text style={styles.sectionTitle}>Services</Text>
                 </View>
                 
@@ -172,7 +173,7 @@ export default function SummaryScreen() {
             {/* Availability Section */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Clock size={20} color="#D4AF37" />
+                <Clock size={20} color={COLORS.primary} />
                 <Text style={styles.sectionTitle}>Availability</Text>
               </View>
               
@@ -211,58 +212,61 @@ export default function SummaryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: SPACING.lg,
   },
   header: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
+    color: COLORS.text,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   content: {
     flex: 1,
   },
   question: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
-    marginBottom: 10,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   description: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    marginBottom: 30,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginBottom: SPACING.xl,
+    fontFamily: FONTS.regular,
   },
   summaryContainer: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   section: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    ...GLASS_STYLES.card,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-    paddingBottom: 12,
+    borderBottomColor: COLORS.glass.border,
+    paddingBottom: SPACING.sm,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     fontWeight: 'bold' as const,
-    color: '#D4AF37',
-    marginLeft: 10,
+    color: COLORS.primary,
+    marginLeft: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   profileSection: {
     flexDirection: 'row',
@@ -272,120 +276,133 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    marginRight: 16,
+    marginRight: SPACING.md,
   },
   profileImagePlaceholder: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: 'rgba(212, 175, 55, 0.2)',
+    backgroundColor: `${COLORS.primary}20`,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: SPACING.md,
   },
   profileImagePlaceholderText: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold' as const,
-    color: '#D4AF37',
+    color: COLORS.primary,
+    fontFamily: FONTS.bold,
   },
   profileInfo: {
     flex: 1,
   },
   profileName: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
-    marginBottom: 4,
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    fontFamily: FONTS.bold,
   },
   profileType: {
-    fontSize: 14,
-    color: '#D4AF37',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.primary,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.regular,
   },
   profileBio: {
-    fontSize: 14,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   infoRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: SPACING.sm,
   },
   infoLabel: {
     width: 120,
-    fontSize: 14,
+    fontSize: FONT_SIZES.sm,
     fontWeight: 'bold' as const,
-    color: '#CCCCCC',
+    color: COLORS.lightGray,
+    fontFamily: FONTS.bold,
   },
   infoValue: {
     flex: 1,
-    fontSize: 14,
-    color: '#FFFFFF',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.text,
+    fontFamily: FONTS.regular,
   },
   serviceItem: {
-    marginBottom: 12,
-    paddingBottom: 12,
+    marginBottom: SPACING.sm,
+    paddingBottom: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: COLORS.glass.border,
   },
   serviceNamePrice: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   serviceName: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.md,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
+    color: COLORS.text,
+    fontFamily: FONTS.bold,
   },
   servicePrice: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.md,
     fontWeight: 'bold' as const,
-    color: '#D4AF37',
+    color: COLORS.primary,
+    fontFamily: FONTS.bold,
   },
   serviceDuration: {
-    fontSize: 14,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   availabilityItem: {
-    marginBottom: 12,
+    marginBottom: SPACING.sm,
   },
   availabilityDay: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.md,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
-    marginBottom: 6,
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    fontFamily: FONTS.bold,
   },
   availabilitySlots: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   availabilitySlot: {
-    fontSize: 14,
-    color: '#CCCCCC',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    marginRight: 8,
-    marginBottom: 8,
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    backgroundColor: COLORS.glass.background,
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: SPACING.xs,
+    marginRight: SPACING.sm,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.regular,
   },
   noAvailability: {
-    fontSize: 14,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
     fontStyle: 'italic' as const,
+    fontFamily: FONTS.regular,
   },
   buttonContainer: {
     marginTop: 'auto',
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
   },
   editButton: {
     alignItems: 'center',
-    paddingVertical: 12,
-    marginTop: 12,
+    paddingVertical: SPACING.sm,
+    marginTop: SPACING.sm,
   },
   editButtonText: {
-    fontSize: 16,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
     textDecorationLine: 'underline' as const,
+    fontFamily: FONTS.regular,
   },
 });

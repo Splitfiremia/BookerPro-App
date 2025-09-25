@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Swi
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
+import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, WeeklyAvailability, TimeSlot } from '@/providers/ProviderOnboardingProvider';
 import { Clock } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 // Days of the week
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
@@ -219,8 +221,8 @@ export default function AvailabilityScreen() {
                   <Switch
                     value={enabledDays[day]}
                     onValueChange={() => toggleDay(day)}
-                    trackColor={{ false: '#333333', true: 'rgba(212, 175, 55, 0.3)' }}
-                    thumbColor={enabledDays[day] ? '#D4AF37' : '#f4f3f4'}
+                    trackColor={{ false: COLORS.gray, true: `${COLORS.primary}30` }}
+                    thumbColor={enabledDays[day] ? COLORS.primary : COLORS.lightGray}
                     testID={`day-switch-${day}`}
                   />
                 </View>
@@ -239,7 +241,7 @@ export default function AvailabilityScreen() {
                       >
                         <Clock 
                           size={16} 
-                          color={selectedTimes[day].includes(slot.value) ? '#000000' : '#CCCCCC'} 
+                          color={selectedTimes[day].includes(slot.value) ? COLORS.background : COLORS.lightGray} 
                         />
                         <Text 
                           style={[
@@ -258,13 +260,11 @@ export default function AvailabilityScreen() {
           </View>
         </View>
 
-        <View style={styles.buttonContainer}>
-          <GradientButton
-            title="CONTINUE"
-            onPress={handleContinue}
-            testID="complete-button"
-          />
-        </View>
+        <OnboardingNavigation
+          onBack={() => router.back()}
+          onNext={handleContinue}
+          testID="availability-navigation"
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -273,91 +273,96 @@ export default function AvailabilityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: SPACING.lg,
   },
   header: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.lg,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
+    color: COLORS.text,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   content: {
     flex: 1,
   },
   question: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
-    marginBottom: 10,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   description: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    marginBottom: 30,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginBottom: SPACING.xl,
+    fontFamily: FONTS.regular,
   },
   availabilityContainer: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   dayContainer: {
-    marginBottom: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 12,
+    marginBottom: SPACING.lg,
+    ...GLASS_STYLES.card,
     overflow: 'hidden',
   },
   dayHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: COLORS.glass.border,
   },
   dayTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dayTitle: {
-    fontSize: 16,
+    fontSize: FONT_SIZES.md,
     fontWeight: 'bold' as const,
-    color: '#FFFFFF',
+    color: COLORS.text,
+    fontFamily: FONTS.bold,
   },
   timeSlots: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: 12,
+    padding: SPACING.sm,
   },
   timeSlot: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginRight: 8,
-    marginBottom: 8,
+    backgroundColor: COLORS.glass.background,
+    borderRadius: SPACING.sm,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.sm,
+    marginRight: SPACING.sm,
+    marginBottom: SPACING.sm,
   },
   selectedTimeSlot: {
-    backgroundColor: '#D4AF37',
+    backgroundColor: COLORS.primary,
   },
   timeText: {
-    fontSize: 14,
-    color: '#CCCCCC',
-    marginLeft: 6,
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    marginLeft: SPACING.xs,
+    fontFamily: FONTS.regular,
   },
   selectedTimeText: {
-    color: '#000000',
+    color: COLORS.background,
     fontWeight: 'bold' as const,
+    fontFamily: FONTS.bold,
   },
   buttonContainer: {
     marginTop: 'auto',
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
   },
 });

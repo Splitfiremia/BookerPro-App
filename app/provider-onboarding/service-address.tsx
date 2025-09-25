@@ -5,7 +5,9 @@ import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
 import { FormInput } from '@/components/FormInput';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
+import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function ServiceAddressScreen() {
   const router = useRouter();
@@ -245,9 +247,9 @@ export default function ServiceAddressScreen() {
                   step={1}
                   value={radius}
                   onValueChange={setRadius}
-                  minimumTrackTintColor="#D4AF37"
-                  maximumTrackTintColor="#333333"
-                  thumbTintColor="#D4AF37"
+                  minimumTrackTintColor={COLORS.primary}
+                  maximumTrackTintColor={COLORS.gray}
+                  thumbTintColor={COLORS.primary}
                   testID="radius-slider"
                 />
                 
@@ -259,13 +261,11 @@ export default function ServiceAddressScreen() {
             )}
           </View>
 
-          <View style={styles.buttonContainer}>
-            <GradientButton
-              title="CONTINUE"
-              onPress={handleContinue}
-              testID="continue-button"
-            />
-          </View>
+          <OnboardingNavigation
+            onBack={() => router.back()}
+            onNext={handleContinue}
+            testID="service-address-navigation"
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -275,41 +275,44 @@ export default function ServiceAddressScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.background,
   },
   keyboardAvoidingView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: SPACING.lg,
   },
   header: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   content: {
     flex: 1,
   },
   question: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   description: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    marginBottom: 30,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginBottom: SPACING.xl,
+    fontFamily: FONTS.regular,
   },
   formContainer: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   rowContainer: {
     flexDirection: 'row',
@@ -317,26 +320,28 @@ const styles = StyleSheet.create({
   },
   stateContainer: {
     flex: 1,
-    marginRight: 10,
+    marginRight: SPACING.sm,
   },
   zipContainer: {
     flex: 1.5,
   },
   radiusContainer: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   radiusLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
+    fontSize: FONT_SIZES.md,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   radiusValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#D4AF37',
-    marginBottom: 20,
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.primary,
+    marginBottom: SPACING.lg,
     textAlign: 'center',
+    fontFamily: FONTS.bold,
   },
   slider: {
     width: '100%',
@@ -345,14 +350,15 @@ const styles = StyleSheet.create({
   sliderLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
+    paddingHorizontal: SPACING.sm,
   },
   sliderLabel: {
-    fontSize: 12,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   buttonContainer: {
     marginTop: 'auto',
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
   },
 });

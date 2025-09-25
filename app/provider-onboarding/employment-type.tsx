@@ -5,6 +5,7 @@ import { OnboardingProgress } from '@/components/OnboardingProgress';
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
 import { User, Store } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function EmploymentTypeScreen() {
   const router = useRouter();
@@ -210,85 +211,89 @@ export default function EmploymentTypeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: SPACING.lg,
   },
   header: {
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   content: {
     flex: 1,
   },
   question: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 16,
+    fontSize: FONT_SIZES.xxxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.md,
     textAlign: 'center',
     lineHeight: 36,
+    fontFamily: FONTS.bold,
   },
   description: {
-    fontSize: 16,
-    color: '#CCCCCC',
-    marginBottom: 48,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginBottom: SPACING.xxl,
     textAlign: 'center',
     lineHeight: 24,
+    fontFamily: FONTS.regular,
   },
   optionsContainer: {
-    marginBottom: 30,
-    gap: 20,
+    marginBottom: SPACING.xl,
+    gap: SPACING.lg,
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 24,
-    borderRadius: 12,
-    borderWidth: 2,
+    ...GLASS_STYLES.card,
+    padding: SPACING.lg,
   },
   shopOption: {
-    backgroundColor: '#FFD700',
-    borderColor: '#FFD700',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   independentOption: {
     backgroundColor: 'transparent',
-    borderColor: '#333333',
+    borderColor: COLORS.border,
   },
   selectedCard: {
-    borderColor: '#D4AF37',
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    borderColor: COLORS.primary,
+    backgroundColor: `${COLORS.primary}20`,
   },
   iconContainer: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: COLORS.glass.background,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 20,
+    marginRight: SPACING.lg,
   },
   optionTextContainer: {
     flex: 1,
   },
   optionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    fontFamily: FONTS.bold,
   },
   optionDescription: {
-    fontSize: 14,
-    color: '#CCCCCC',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
     lineHeight: 20,
+    fontFamily: FONTS.regular,
   },
   animatedOptionContainer: {
     // Container for animated option cards
