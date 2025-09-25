@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
-import { OnboardingProgress } from '@/components/OnboardingProgress';
+
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, WeeklyAvailability, TimeSlot } from '@/providers/ProviderOnboardingProvider';
 import { Clock } from 'lucide-react-native';
@@ -202,7 +202,7 @@ export default function AvailabilityScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>GET STARTED</Text>
-          <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
+
         </View>
 
         <View style={styles.content}>

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableO
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
-import { OnboardingProgress } from '@/components/OnboardingProgress';
+
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
 import * as ImagePicker from 'expo-image-picker';
@@ -86,7 +86,7 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>GET STARTED</Text>
-          <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
+
         </View>
 
         <View style={styles.content}>

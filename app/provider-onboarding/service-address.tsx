@@ -4,7 +4,7 @@ import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
 import { FormInput } from '@/components/FormInput';
-import { OnboardingProgress } from '@/components/OnboardingProgress';
+
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
 import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
@@ -170,7 +170,7 @@ export default function ServiceAddressScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <Text style={styles.title}>GET STARTED</Text>
-            <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
+
           </View>
 
           <View style={styles.content}>

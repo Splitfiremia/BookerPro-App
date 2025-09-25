@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { useRouter } from 'expo-router';
-import { OnboardingProgress } from '@/components/OnboardingProgress';
+
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, ProviderService, TimeSlot } from '@/providers/ProviderOnboardingProvider';
 import { Clock, DollarSign, User, Briefcase } from 'lucide-react-native';
@@ -96,7 +96,7 @@ export default function SummaryScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>GET STARTED</Text>
-          <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
+
         </View>
 
         <View style={styles.content}>

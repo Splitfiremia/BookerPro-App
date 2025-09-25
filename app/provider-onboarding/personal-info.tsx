@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FormInput } from '@/components/FormInput';
-import { OnboardingProgress } from '@/components/OnboardingProgress';
+
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
 import { validateEmail, validatePhone } from '@/utils/validation';
@@ -190,7 +190,7 @@ export default function PersonalInfoScreen() {
             }
           ]}>
             <Text style={styles.title}>GET STARTED</Text>
-            <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
+
           </Animated.View>
 
           <Animated.View style={[

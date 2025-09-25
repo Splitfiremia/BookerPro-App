@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
-import { OnboardingProgress } from '@/components/OnboardingProgress';
+
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, ProviderType } from '@/providers/ProviderOnboardingProvider';
 import { Scissors, Brush, Palette, Zap, HelpCircle } from 'lucide-react-native';
@@ -118,7 +118,7 @@ export default function ProviderTypeScreen() {
           }
         ]}>
           <Text style={styles.title}>GET STARTED</Text>
-          <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
+
         </Animated.View>
 
         <Animated.View style={[

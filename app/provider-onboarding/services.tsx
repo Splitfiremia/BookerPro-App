@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
-import { OnboardingProgress } from '@/components/OnboardingProgress';
+
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
 import { Plus, Trash2 } from 'lucide-react-native';
@@ -192,7 +192,7 @@ export default function ServicesScreen() {
             }
           ]}>
             <Text style={styles.title}>GET STARTED</Text>
-            <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
+
           </Animated.View>
 
           <Animated.View style={[

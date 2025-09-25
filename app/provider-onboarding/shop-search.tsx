@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
-import { OnboardingProgress } from '@/components/OnboardingProgress';
+
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, ShopInfo } from '@/providers/ProviderOnboardingProvider';
 import { Search, Store, Send } from 'lucide-react-native';
@@ -82,7 +82,7 @@ export default function ShopSearchScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>GET STARTED</Text>
-          <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
+
         </View>
 
         <View style={styles.content}>

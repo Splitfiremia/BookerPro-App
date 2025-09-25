@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
-import { OnboardingProgress } from '@/components/OnboardingProgress';
+
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding, WorkSituation } from '@/providers/ProviderOnboardingProvider';
 import { Building2, Store, Car, Home } from 'lucide-react-native';
@@ -147,7 +147,7 @@ export default function WorkSituationScreen() {
           }
         ]}>
           <Text style={styles.title}>GET STARTED</Text>
-          <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
+
         </Animated.View>
 
         <Animated.View style={[
