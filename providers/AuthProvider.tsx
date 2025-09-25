@@ -32,8 +32,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const [user, setUser] = useState<User | null>(null);
   const [isDeveloperMode, setIsDeveloperMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isInitialized, setIsInitialized] = useState<boolean>(true); // Start initialized to prevent timeout
-
   // Initialize asynchronously but don't block rendering
   useEffect(() => {
     let isMounted = true;
@@ -42,9 +40,15 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       if (!isMounted) return;
       
       try {
-        // Load user data
-        const storedUser = await AsyncStorage.getItem("user");
-        if (storedUser && isMounted) {
+        // Load user data and developer mode in parallel
+        const [storedUser, storedDevMode] = await Promise.all([
+          AsyncStorage.getItem("user"),
+          AsyncStorage.getItem("developerMode")
+        ]);
+        
+        if (!isMounted) return;
+        
+        if (storedUser) {
           try {
             const userData = JSON.parse(storedUser);
             setUser(userData);
@@ -53,9 +57,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           }
         }
         
-        // Load developer mode
-        const storedDevMode = await AsyncStorage.getItem("developerMode");
-        if (storedDevMode && isMounted) {
+        if (storedDevMode) {
           try {
             const devMode = JSON.parse(storedDevMode);
             setIsDeveloperMode(devMode);

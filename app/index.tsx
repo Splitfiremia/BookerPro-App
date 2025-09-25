@@ -21,36 +21,10 @@ export default function LandingScreen() {
   const [email, setEmail] = useState<string>("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
-  const [isInitializing, setIsInitializing] = useState<boolean>(true);
-
   // Log auth state for debugging
   useEffect(() => {
     console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode);
   }, [isAuthenticated, user, isDeveloperMode]);
-
-  // Handle initialization timeout - reduced to prevent hydration issues
-  useEffect(() => {
-    const initTimeout = setTimeout(() => {
-      setIsInitializing(false);
-    }, 200); // Reduced to 200ms to prevent hydration timeout
-    
-    return () => clearTimeout(initTimeout);
-  }, []);
-
-  // Show loading screen during initialization - simplified to prevent hydration timeout
-  if (isInitializing) {
-    return (
-      <View style={[styles.container, { backgroundColor: '#000000' }]}>
-        <StatusBar barStyle="light-content" backgroundColor="#000000" />
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.loadingContainer}>
-            <Text style={styles.logo}>BookerPro</Text>
-            <Text style={styles.loadingText}>Loading...</Text>
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
 
   const validateEmail = (email: string): boolean => {
     if (!email || typeof email !== 'string') return false;
@@ -671,20 +645,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  loadingSubtext: {
-    color: "#CCCCCC",
-    fontSize: 14,
-  },
+
   disabledButton: {
     opacity: 0.5,
   },
