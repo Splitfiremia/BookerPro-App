@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useShopOwnerOnboarding, ShopService } from '@/providers/ShopOwnerOnboardingProvider';
-import { ChevronRight, Plus, Trash2, Edit2 } from 'lucide-react-native';
+import { ChevronRight, Plus, Trash2, Edit2, ChevronLeft } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ServiceList() {
   const router = useRouter();
@@ -124,18 +126,28 @@ export default function ServiceList() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={100}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Set your shop's service menu</Text>
-          <Text style={styles.subtitle}>
-            Define the services and prices your providers will use. They cannot change these prices.
-          </Text>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={100}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+            testID="service-list-back-button"
+          >
+            <ChevronLeft size={20} color={COLORS.lightGray} />
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.header}>
+            <Text style={styles.title}>Set your shop&apos;s service menu</Text>
+            <Text style={styles.subtitle}>
+              Define the services and prices your providers will use. They cannot change these prices.
+            </Text>
+          </View>
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
@@ -145,7 +157,7 @@ export default function ServiceList() {
               value={serviceName}
               onChangeText={setServiceName}
               placeholder="e.g. Haircut, Styling, Manicure"
-              placeholderTextColor="#A0A0A0"
+              placeholderTextColor={COLORS.input.placeholder}
               testID="service-name-input"
             />
             {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
@@ -159,7 +171,7 @@ export default function ServiceList() {
                 value={price}
                 onChangeText={(value) => setPrice(formatCurrency(value))}
                 placeholder="0.00"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={COLORS.input.placeholder}
                 keyboardType="decimal-pad"
                 testID="service-price-input"
               />
@@ -173,7 +185,7 @@ export default function ServiceList() {
                 value={duration}
                 onChangeText={setDuration}
                 placeholder="30"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={COLORS.input.placeholder}
                 keyboardType="number-pad"
                 testID="service-duration-input"
               />
@@ -228,75 +240,96 @@ export default function ServiceList() {
           </View>
         )}
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleNext}
-          activeOpacity={0.8}
-          testID="service-list-next-button"
-        >
-          <Text style={styles.buttonText}>Continue</Text>
-          <ChevronRight size={20} color="#fff" />
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleNext}
+            activeOpacity={0.8}
+            testID="service-list-next-button"
+          >
+            <Text style={styles.buttonText}>Continue</Text>
+            <ChevronRight size={20} color="#fff" />
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollContent: {
-    padding: 24,
-    paddingBottom: 40,
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xl,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  backText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginLeft: SPACING.sm,
+    fontFamily: FONTS.regular,
   },
   header: {
-    marginBottom: 32,
+    ...GLASS_STYLES.card,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.xxxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
     lineHeight: 22,
+    fontFamily: FONTS.regular,
   },
   form: {
-    marginBottom: 24,
-    backgroundColor: '#F9F9F9',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    ...GLASS_STYLES.card,
+    marginBottom: SPACING.lg,
+    padding: SPACING.md,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: SPACING.md,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.md,
+    fontWeight: '500' as const,
+    color: COLORS.input.label,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.regular,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    ...GLASS_STYLES.input,
+    backgroundColor: COLORS.input.background,
     borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
+    padding: SPACING.md,
+    fontSize: FONT_SIZES.md,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.input.border,
   },
   inputError: {
-    borderColor: '#FF3B30',
+    borderColor: COLORS.error,
   },
   errorText: {
-    color: '#FF3B30',
-    fontSize: 14,
-    marginTop: 4,
+    color: COLORS.error,
+    fontSize: FONT_SIZES.sm,
+    marginTop: SPACING.xs,
+    fontFamily: FONTS.regular,
   },
   row: {
     flexDirection: 'row',
@@ -310,86 +343,87 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   addButton: {
-    backgroundColor: '#3b5998',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
+    ...GLASS_STYLES.button.secondary,
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 8,
+    alignItems: 'center',
+    paddingVertical: SPACING.sm,
+    marginTop: SPACING.sm,
   },
   addButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginLeft: 8,
+    fontSize: FONT_SIZES.md,
+    fontWeight: 'bold' as const,
+    color: COLORS.background,
+    marginLeft: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   servicesList: {
-    marginBottom: 24,
+    marginBottom: SPACING.lg,
   },
   servicesTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
+    fontSize: FONT_SIZES.xl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.md,
+    fontFamily: FONTS.bold,
   },
   serviceCard: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    ...GLASS_STYLES.card,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   serviceInfo: {
     flex: 1,
   },
   serviceName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '600' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    fontFamily: FONTS.bold,
   },
   serviceDetails: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   servicePrice: {
-    fontSize: 16,
-    color: '#3b5998',
-    fontWeight: '500',
-    marginRight: 12,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.primary,
+    fontWeight: '500' as const,
+    marginRight: SPACING.sm,
+    fontFamily: FONTS.regular,
   },
   serviceDuration: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   serviceActions: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   editButton: {
-    padding: 8,
-    marginRight: 8,
+    padding: SPACING.sm,
+    marginRight: SPACING.sm,
   },
   deleteButton: {
-    padding: 8,
+    padding: SPACING.sm,
   },
   button: {
-    backgroundColor: '#3b5998',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    ...GLASS_STYLES.button.primary,
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginRight: 8,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.background,
+    marginRight: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
 });

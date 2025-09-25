@@ -3,6 +3,8 @@ import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-nati
 import { useRouter } from 'expo-router';
 import { useShopOwnerOnboarding, ShopServiceCategory } from '@/providers/ShopOwnerOnboardingProvider';
 import { ChevronRight, Check, ChevronLeft } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ShopType() {
   const router = useRouter();
@@ -34,14 +36,14 @@ export default function ShopType() {
   const categories: ShopServiceCategory[] = ['Haircuts', 'Hair Styling', 'Nails', 'Tattoos', 'Other'];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
           testID="shop-type-back-button"
         >
-          <ChevronLeft size={20} color="#666" />
+          <ChevronLeft size={20} color={COLORS.lightGray} />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
         
@@ -91,98 +93,105 @@ export default function ShopType() {
           <ChevronRight size={20} color="#fff" />
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
-    padding: 24,
-    paddingBottom: 40,
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xl,
   },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingVertical: 12,
-    marginBottom: 20,
+    paddingVertical: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   backText: {
-    fontSize: 16,
-    color: '#666',
-    marginLeft: 8,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginLeft: SPACING.sm,
+    fontFamily: FONTS.regular,
   },
   header: {
-    marginBottom: 32,
+    ...GLASS_STYLES.card,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.xxxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
     lineHeight: 22,
+    fontFamily: FONTS.regular,
   },
   categoriesContainer: {
-    marginBottom: 32,
+    marginBottom: SPACING.xl,
   },
   categoryCard: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
+    ...GLASS_STYLES.card,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
     borderWidth: 2,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.input.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   selectedCard: {
-    borderColor: '#3b5998',
-    backgroundColor: '#EBF0F9',
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.backgroundLight,
   },
   categoryText: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#333',
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '500' as const,
+    color: COLORS.text,
+    fontFamily: FONTS.regular,
   },
   selectedText: {
-    color: '#3b5998',
-    fontWeight: 'bold',
+    color: COLORS.primary,
+    fontWeight: 'bold' as const,
+    fontFamily: FONTS.bold,
   },
   checkIcon: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#3b5998',
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   errorText: {
-    color: '#FF3B30',
-    fontSize: 16,
-    marginBottom: 16,
+    color: COLORS.error,
+    fontSize: FONT_SIZES.md,
+    marginBottom: SPACING.md,
     textAlign: 'center',
+    fontFamily: FONTS.regular,
   },
   button: {
-    backgroundColor: '#3b5998',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    ...GLASS_STYLES.button.primary,
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginRight: 8,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.background,
+    marginRight: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
 });

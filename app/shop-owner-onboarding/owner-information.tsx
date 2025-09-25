@@ -3,6 +3,8 @@ import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Keyboa
 import { useRouter } from 'expo-router';
 import { useShopOwnerOnboarding } from '@/providers/ShopOwnerOnboardingProvider';
 import { ChevronRight, ChevronLeft } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OwnerInformation() {
   const router = useRouter();
@@ -35,159 +37,172 @@ export default function OwnerInformation() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={100}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          testID="owner-info-back-button"
-        >
-          <ChevronLeft size={20} color="#666" />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
-        
-        <View style={styles.header}>
-          <Text style={styles.title}>And who are you?</Text>
-          <Text style={styles.subtitle}>
-            This information is for your account and billing
-          </Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Your First Name</Text>
-            <TextInput
-              style={[styles.input, errors.firstName ? styles.inputError : null]}
-              value={firstName}
-              onChangeText={setFirstName}
-              placeholder="Enter your first name"
-              placeholderTextColor="#A0A0A0"
-              testID="owner-first-name-input"
-            />
-            {errors.firstName ? <Text style={styles.errorText}>{errors.firstName}</Text> : null}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={100}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+            testID="owner-info-back-button"
+          >
+            <ChevronLeft size={20} color={COLORS.lightGray} />
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.header}>
+            <Text style={styles.title}>And who are you?</Text>
+            <Text style={styles.subtitle}>
+              This information is for your account and billing
+            </Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Your Last Name</Text>
-            <TextInput
-              style={[styles.input, errors.lastName ? styles.inputError : null]}
-              value={lastName}
-              onChangeText={setLastName}
-              placeholder="Enter your last name"
-              placeholderTextColor="#A0A0A0"
-              testID="owner-last-name-input"
-            />
-            {errors.lastName ? <Text style={styles.errorText}>{errors.lastName}</Text> : null}
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Your First Name</Text>
+              <TextInput
+                style={[styles.input, errors.firstName ? styles.inputError : null]}
+                value={firstName}
+                onChangeText={setFirstName}
+                placeholder="Enter your first name"
+                placeholderTextColor={COLORS.input.placeholder}
+                testID="owner-first-name-input"
+              />
+              {errors.firstName ? <Text style={styles.errorText}>{errors.firstName}</Text> : null}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Your Last Name</Text>
+              <TextInput
+                style={[styles.input, errors.lastName ? styles.inputError : null]}
+                value={lastName}
+                onChangeText={setLastName}
+                placeholder="Enter your last name"
+                placeholderTextColor={COLORS.input.placeholder}
+                testID="owner-last-name-input"
+              />
+              {errors.lastName ? <Text style={styles.errorText}>{errors.lastName}</Text> : null}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Your Phone Number</Text>
+              <TextInput
+                style={[styles.input, errors.phone ? styles.inputError : null]}
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="(123) 456-7890"
+                placeholderTextColor={COLORS.input.placeholder}
+                keyboardType="phone-pad"
+                testID="owner-phone-input"
+              />
+              {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
+            </View>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Your Phone Number</Text>
-            <TextInput
-              style={[styles.input, errors.phone ? styles.inputError : null]}
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="(123) 456-7890"
-              placeholderTextColor="#A0A0A0"
-              keyboardType="phone-pad"
-              testID="owner-phone-input"
-            />
-            {errors.phone ? <Text style={styles.errorText}>{errors.phone}</Text> : null}
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleNext}
-          activeOpacity={0.8}
-          testID="owner-info-next-button"
-        >
-          <Text style={styles.buttonText}>Continue</Text>
-          <ChevronRight size={20} color="#fff" />
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleNext}
+            activeOpacity={0.8}
+            testID="owner-info-next-button"
+          >
+            <Text style={styles.buttonText}>Continue</Text>
+            <ChevronRight size={20} color="#fff" />
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollContent: {
-    padding: 24,
+    padding: SPACING.lg,
   },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingVertical: 12,
-    marginBottom: 20,
+    paddingVertical: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   backText: {
-    fontSize: 16,
-    color: '#666',
-    marginLeft: 8,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginLeft: SPACING.sm,
+    fontFamily: FONTS.regular,
   },
   header: {
-    marginBottom: 32,
+    ...GLASS_STYLES.card,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.xxxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
     lineHeight: 22,
+    fontFamily: FONTS.regular,
   },
   form: {
-    marginBottom: 24,
+    marginBottom: SPACING.lg,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.md,
+    fontWeight: '500' as const,
+    color: COLORS.input.label,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.regular,
   },
   input: {
-    backgroundColor: '#F5F5F5',
+    ...GLASS_STYLES.input,
+    backgroundColor: COLORS.input.background,
     borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
+    padding: SPACING.md,
+    fontSize: FONT_SIZES.md,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.input.border,
   },
   inputError: {
-    borderColor: '#FF3B30',
+    borderColor: COLORS.error,
   },
   errorText: {
-    color: '#FF3B30',
-    fontSize: 14,
-    marginTop: 4,
+    color: COLORS.error,
+    fontSize: FONT_SIZES.sm,
+    marginTop: SPACING.xs,
+    fontFamily: FONTS.regular,
   },
   button: {
-    backgroundColor: '#3b5998',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    ...GLASS_STYLES.button.primary,
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    marginTop: SPACING.md,
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginRight: 8,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.background,
+    marginRight: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
 });

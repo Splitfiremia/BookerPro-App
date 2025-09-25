@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useShopOwnerOnboarding, PaymentMethod } from '@/providers/ShopOwnerOnboardingProvider';
-import { ChevronRight, CreditCard, Lock } from 'lucide-react-native';
+import { ChevronRight, CreditCard, Lock, ChevronLeft } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PaymentInformation() {
   const router = useRouter();
@@ -104,31 +106,41 @@ export default function PaymentInformation() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={100}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Enter payment details</Text>
-          <Text style={styles.subtitle}>
-            Your subscription will begin after completing setup
-          </Text>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={100}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+            testID="payment-back-button"
+          >
+            <ChevronLeft size={20} color={COLORS.lightGray} />
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.header}>
+            <Text style={styles.title}>Enter payment details</Text>
+            <Text style={styles.subtitle}>
+              Your subscription will begin after completing setup
+            </Text>
+          </View>
 
-        <View style={styles.securityNote}>
-          <Lock size={20} color="#3b5998" />
-          <Text style={styles.securityText}>
-            Your payment information is securely processed and encrypted
-          </Text>
-        </View>
+          <View style={styles.securityNote}>
+            <Lock size={20} color={COLORS.primary} />
+            <Text style={styles.securityText}>
+              Your payment information is securely processed and encrypted
+            </Text>
+          </View>
 
         <View style={styles.cardContainer}>
-          <View style={styles.cardHeader}>
-            <CreditCard size={24} color="#3b5998" />
-            <Text style={styles.cardHeaderText}>Credit Card</Text>
-          </View>
+            <View style={styles.cardHeader}>
+              <CreditCard size={24} color={COLORS.primary} />
+              <Text style={styles.cardHeaderText}>Credit Card</Text>
+            </View>
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
@@ -138,7 +150,7 @@ export default function PaymentInformation() {
                 value={cardNumber}
                 onChangeText={(value) => setCardNumber(formatCardNumber(value))}
                 placeholder="1234 5678 9012 3456"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={COLORS.input.placeholder}
                 keyboardType="number-pad"
                 maxLength={19}
                 testID="card-number-input"
@@ -154,7 +166,7 @@ export default function PaymentInformation() {
                   value={expiryDate}
                   onChangeText={(value) => setExpiryDate(formatExpiryDate(value))}
                   placeholder="MM/YY"
-                  placeholderTextColor="#A0A0A0"
+                  placeholderTextColor={COLORS.input.placeholder}
                   keyboardType="number-pad"
                   maxLength={5}
                   testID="expiry-date-input"
@@ -169,7 +181,7 @@ export default function PaymentInformation() {
                   value={cvv}
                   onChangeText={setCvv}
                   placeholder="123"
-                  placeholderTextColor="#A0A0A0"
+                  placeholderTextColor={COLORS.input.placeholder}
                   keyboardType="number-pad"
                   maxLength={4}
                   secureTextEntry
@@ -186,7 +198,7 @@ export default function PaymentInformation() {
                 value={cardholderName}
                 onChangeText={setCardholderName}
                 placeholder="John Doe"
-                placeholderTextColor="#A0A0A0"
+                placeholderTextColor={COLORS.input.placeholder}
                 testID="cardholder-name-input"
               />
               {errors.cardholderName ? <Text style={styles.errorText}>{errors.cardholderName}</Text> : null}
@@ -194,106 +206,128 @@ export default function PaymentInformation() {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleNext}
-          activeOpacity={0.8}
-          testID="payment-next-button"
-        >
-          <Text style={styles.buttonText}>Continue</Text>
-          <ChevronRight size={20} color="#fff" />
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleNext}
+            activeOpacity={0.8}
+            testID="payment-next-button"
+          >
+            <Text style={styles.buttonText}>Continue</Text>
+            <ChevronRight size={20} color="#fff" />
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
   },
-  scrollContent: {
-    padding: 24,
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    lineHeight: 22,
-  },
-  securityNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EBF0F9',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 24,
-  },
-  securityText: {
-    fontSize: 14,
-    color: '#333',
-    marginLeft: 8,
+  keyboardView: {
     flex: 1,
   },
+  scrollContent: {
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xl,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  backText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginLeft: SPACING.sm,
+    fontFamily: FONTS.regular,
+  },
+  header: {
+    ...GLASS_STYLES.card,
+    padding: SPACING.lg,
+    marginBottom: SPACING.lg,
+  },
+  title: {
+    fontSize: FONT_SIZES.xxxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
+  },
+  subtitle: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    lineHeight: 22,
+    fontFamily: FONTS.regular,
+  },
+  securityNote: {
+    ...GLASS_STYLES.card,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.sm,
+    marginBottom: SPACING.lg,
+  },
+  securityText: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.text,
+    marginLeft: SPACING.sm,
+    flex: 1,
+    fontFamily: FONTS.regular,
+  },
   cardContainer: {
-    backgroundColor: '#F9F9F9',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    marginBottom: 24,
+    ...GLASS_STYLES.card,
+    marginBottom: SPACING.lg,
     overflow: 'hidden',
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0F0F0',
-    padding: 16,
+    backgroundColor: COLORS.backgroundLight,
+    padding: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: COLORS.input.border,
   },
   cardHeaderText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: 12,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '600' as const,
+    color: COLORS.text,
+    marginLeft: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   form: {
-    padding: 16,
+    padding: SPACING.md,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: SPACING.lg,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.md,
+    fontWeight: '500' as const,
+    color: COLORS.input.label,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.regular,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    ...GLASS_STYLES.input,
+    backgroundColor: COLORS.input.background,
     borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
+    padding: SPACING.md,
+    fontSize: FONT_SIZES.md,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.input.border,
   },
   inputError: {
-    borderColor: '#FF3B30',
+    borderColor: COLORS.error,
   },
   errorText: {
-    color: '#FF3B30',
-    fontSize: 14,
-    marginTop: 4,
+    color: COLORS.error,
+    fontSize: FONT_SIZES.sm,
+    marginTop: SPACING.xs,
+    fontFamily: FONTS.regular,
   },
   row: {
     flexDirection: 'row',
@@ -301,23 +335,23 @@ const styles = StyleSheet.create({
   },
   expiryInput: {
     flex: 1,
-    marginRight: 12,
+    marginRight: SPACING.sm,
   },
   cvvInput: {
     flex: 1,
   },
   button: {
-    backgroundColor: '#3b5998',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    ...GLASS_STYLES.button.primary,
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginRight: 8,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.background,
+    marginRight: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
 });

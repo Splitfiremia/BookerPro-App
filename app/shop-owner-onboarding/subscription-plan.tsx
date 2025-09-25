@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useShopOwnerOnboarding, SubscriptionPlan } from '@/providers/ShopOwnerOnboardingProvider';
-import { ChevronRight, Check } from 'lucide-react-native';
+import { ChevronRight, Check, ChevronLeft } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SubscriptionPlanSelection() {
   const router = useRouter();
@@ -26,8 +28,17 @@ export default function SubscriptionPlanSelection() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          testID="subscription-back-button"
+        >
+          <ChevronLeft size={20} color={COLORS.lightGray} />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+        
         <View style={styles.header}>
           <Text style={styles.title}>Professional Plan</Text>
           <Text style={styles.subtitle}>
@@ -62,7 +73,7 @@ export default function SubscriptionPlanSelection() {
               <View style={styles.planFeatures}>
                 {plan.features.map((feature, index) => (
                   <View key={index} style={styles.featureItem}>
-                    <Check size={16} color="#3b5998" style={styles.featureIcon} />
+                    <Check size={16} color={COLORS.primary} style={styles.featureIcon} />
                     <Text style={styles.featureText}>{feature}</Text>
                   </View>
                 ))}
@@ -89,119 +100,141 @@ export default function SubscriptionPlanSelection() {
           <ChevronRight size={20} color="#fff" />
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
-    padding: 24,
-    paddingBottom: 40,
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xl,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+  backText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
+    marginLeft: SPACING.sm,
+    fontFamily: FONTS.regular,
   },
   header: {
-    marginBottom: 32,
+    ...GLASS_STYLES.card,
+    padding: SPACING.lg,
+    marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.xxxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.lightGray,
     lineHeight: 22,
+    fontFamily: FONTS.regular,
   },
   plansContainer: {
-    marginBottom: 32,
+    marginBottom: SPACING.xl,
   },
   planCard: {
-    backgroundColor: '#F9F9F9',
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 20,
+    ...GLASS_STYLES.card,
+    padding: SPACING.lg,
+    marginBottom: SPACING.lg,
     borderWidth: 2,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.input.border,
     position: 'relative',
     overflow: 'hidden',
   },
   selectedPlan: {
-    borderColor: '#3b5998',
-    backgroundColor: '#EBF0F9',
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.backgroundLight,
   },
   planHeader: {
-    marginBottom: 16,
+    marginBottom: SPACING.md,
   },
   planName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.xl,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
   selectedText: {
-    color: '#3b5998',
+    color: COLORS.primary,
   },
   planPrice: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#3b5998',
+    fontSize: FONT_SIZES.xxxl,
+    fontWeight: 'bold' as const,
+    color: COLORS.primary,
+    fontFamily: FONTS.bold,
   },
   planPeriod: {
-    fontSize: 16,
-    fontWeight: 'normal',
-    color: '#666',
+    fontSize: FONT_SIZES.md,
+    fontWeight: 'normal' as const,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
   },
   planFeatures: {
-    marginTop: 16,
+    marginTop: SPACING.md,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: SPACING.sm,
   },
   featureIcon: {
-    marginRight: 8,
+    marginRight: SPACING.sm,
   },
   featureText: {
-    fontSize: 16,
-    color: '#333',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.text,
+    fontFamily: FONTS.regular,
   },
   selectedBadge: {
     position: 'absolute',
-    top: 16,
-    right: 16,
-    backgroundColor: '#3b5998',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    top: SPACING.md,
+    right: SPACING.md,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
     borderRadius: 16,
   },
   selectedBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: COLORS.background,
+    fontSize: FONT_SIZES.xs,
+    fontWeight: 'bold' as const,
+    fontFamily: FONTS.bold,
   },
   errorText: {
-    color: '#FF3B30',
-    fontSize: 16,
-    marginBottom: 16,
+    color: COLORS.error,
+    fontSize: FONT_SIZES.md,
+    marginBottom: SPACING.md,
     textAlign: 'center',
+    fontFamily: FONTS.regular,
   },
   button: {
-    backgroundColor: '#3b5998',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    ...GLASS_STYLES.button.primary,
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginRight: 8,
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.background,
+    marginRight: SPACING.sm,
+    fontFamily: FONTS.bold,
   },
 });
