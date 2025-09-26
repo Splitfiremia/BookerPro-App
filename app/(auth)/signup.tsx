@@ -94,26 +94,26 @@ export default function SignupScreen() {
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
             >
-              {/* Header */}
-              <TouchableOpacity 
-                style={styles.backButton} 
-                onPress={() => router.back()}
-              >
-                <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
-              </TouchableOpacity>
-
               <View style={styles.spacer} />
 
               {/* Glass Morphism Card */}
               <Animated.View style={[styles.glassCard, { opacity: animatedValue }]}>
                 {/* Tabs */}
                 <View style={styles.tabContainer}>
-                  <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'signup' && styles.activeTab]}
-                    onPress={() => setActiveTab('signup')}
-                  >
-                    <Text style={[styles.tabText, activeTab === 'signup' && styles.activeTabText]}>SIGN UP</Text>
-                  </TouchableOpacity>
+                  <View style={styles.tabWithBack}>
+                    <TouchableOpacity 
+                      style={styles.backButtonInline} 
+                      onPress={() => router.back()}
+                    >
+                      <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.tab, activeTab === 'signup' && styles.activeTab]}
+                      onPress={() => setActiveTab('signup')}
+                    >
+                      <Text style={[styles.tabText, activeTab === 'signup' && styles.activeTabText]}>SIGN UP</Text>
+                    </TouchableOpacity>
+                  </View>
                   <TouchableOpacity 
                     style={[styles.tab, activeTab === 'login' && styles.activeTab]}
                     onPress={() => {
@@ -269,10 +269,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 20,
   },
-  backButton: {
-    padding: 10,
-    marginBottom: 20,
-    alignSelf: 'flex-start',
+  tabWithBack: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButtonInline: {
+    padding: 8,
+    marginRight: 8,
   },
   spacer: {
     minHeight: 20,
