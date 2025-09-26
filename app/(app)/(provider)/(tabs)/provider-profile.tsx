@@ -7,6 +7,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useServices } from '@/providers/ServicesProvider';
 import { router } from 'expo-router';
 import ServiceEditModal from '@/components/ServiceEditModal';
+import EditProviderModal from '@/components/EditProviderModal';
 import { Service } from '@/models/database';
 
 export default function ProviderProfileScreen() {
@@ -32,6 +33,8 @@ export default function ProviderProfileScreen() {
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [showPortfolioModal, setShowPortfolioModal] = useState(false);
+  const [showEditProviderModal, setShowEditProviderModal] = useState(false);
+  const [editingProvider, setEditingProvider] = useState<any>(null);
   const [activePortfolioTab, setActivePortfolioTab] = useState<'gallery' | 'stats' | 'achievements'>('gallery');
 
   const handleSignOut = () => {
@@ -303,7 +306,7 @@ export default function ProviderProfileScreen() {
           
           <View style={styles.profileInfo}>
             <Text style={styles.name}>{user?.name || 'Luis Martinez'}</Text>
-            <Text style={styles.title}>Barber</Text>
+            <Text style={styles.title}>Provider</Text>
           </View>
           
           <View style={styles.profileImageContainer}>
@@ -313,8 +316,34 @@ export default function ProviderProfileScreen() {
             </View>
           </View>
           
-          <TouchableOpacity style={styles.editProfileButton}>
-            <Text style={styles.editProfileText}>EDIT BARBER PROFILE</Text>
+          <TouchableOpacity 
+            style={styles.editProfileButton}
+            onPress={() => {
+              // Create a mock provider object for the EditProviderModal
+              const mockProvider = {
+                id: user?.id || 'temp-id',
+                name: user?.name || 'Provider Name',
+                email: user?.email || '',
+                phone: user?.phone || '',
+                profileImage: '',
+                role: 'standard' as const,
+                compensationModel: 'commission' as const,
+                commissionRate: 60,
+                boothRentFee: 200,
+                isActive: true,
+                shopId: '',
+                joinedDate: new Date().toISOString(),
+                totalEarnings: 0,
+                clientCount: 0,
+                occupancyRate: 0
+              };
+              
+              // Show edit modal with provider data
+              setEditingProvider(mockProvider);
+              setShowEditProviderModal(true);
+            }}
+          >
+            <Text style={styles.editProfileText}>EDIT PROFILE</Text>
           </TouchableOpacity>
         </View>
 
@@ -379,7 +408,7 @@ export default function ProviderProfileScreen() {
           <View style={styles.singleMenuIconContainer}>
             <Users size={24} color={COLORS.text} />
           </View>
-          <Text style={styles.singleMenuText}>Refer a Barber</Text>
+          <Text style={styles.singleMenuText}>Refer a Provider</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.singleMenuItem} onPress={() => navigateTo('/invite')}>
@@ -723,6 +752,23 @@ export default function ProviderProfileScreen() {
           onSave={handleSaveService}
           title={editingService ? 'Edit Service' : 'Add New Service'}
         />
+        
+        {/* Provider Edit Modal */}
+        {editingProvider && (
+          <EditProviderModal
+            visible={showEditProviderModal}
+            provider={editingProvider}
+            onClose={() => {
+              setShowEditProviderModal(false);
+              setEditingProvider(null);
+            }}
+            onSave={(updatedProvider) => {
+              console.log('Provider updated:', updatedProvider);
+              // Here you would typically update the provider data in your state/backend
+              setShowEditProviderModal(false);
+            }}
+          />
+        )}
       </ScrollView>
     </View>
   );
