@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { GradientButton } from './GradientButton';
@@ -26,8 +26,24 @@ export function OnboardingNavigation({
   testID = 'onboarding-navigation'
 }: OnboardingNavigationProps) {
   const router = useRouter();
+  const backButtonScale = useRef(new Animated.Value(1)).current;
+  const nextButtonScale = useRef(new Animated.Value(1)).current;
 
   const handleBack = () => {
+    // Animate button press
+    Animated.sequence([
+      Animated.timing(backButtonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backButtonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
     if (onBack) {
       onBack();
     } else {
@@ -35,30 +51,55 @@ export function OnboardingNavigation({
     }
   };
 
+  const handleNext = () => {
+    if (nextDisabled || loading) return;
+    
+    // Animate button press
+    Animated.sequence([
+      Animated.timing(nextButtonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(nextButtonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    if (onNext) {
+      onNext();
+    }
+  };
+
   return (
     <View style={styles.container} testID={testID}>
       {showBack && (
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={handleBack}
-          testID={`${testID}-back`}
-        >
-          <ChevronLeft size={20} color="#CCCCCC" />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
+        <Animated.View style={[styles.animatedBackButton, { transform: [{ scale: backButtonScale }] }]}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleBack}
+            testID={`${testID}-back`}
+            activeOpacity={0.7}
+          >
+            <ChevronLeft size={20} color="#CCCCCC" />
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+        </Animated.View>
       )}
       
       {showNext && (
-        <View style={styles.nextContainer}>
+        <Animated.View style={[styles.nextContainer, { transform: [{ scale: nextButtonScale }] }]}>
           <GradientButton
             title={nextTitle}
-            onPress={onNext}
+            onPress={handleNext}
             disabled={nextDisabled}
             loading={loading}
             testID={`${testID}-next`}
             icon={nextTitle === 'CONTINUE' ? <ChevronRight size={20} color="#000" /> : undefined}
           />
-        </View>
+        </Animated.View>
       )}
     </View>
   );
@@ -84,5 +125,8 @@ const styles = StyleSheet.create({
   },
   nextContainer: {
     // GradientButton will handle its own styling
+  },
+  animatedBackButton: {
+    // Container for animated back button
   },
 });

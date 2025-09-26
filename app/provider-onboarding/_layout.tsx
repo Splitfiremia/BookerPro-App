@@ -8,7 +8,10 @@ export default function ProviderOnboardingLayout() {
       <Stack screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
-        contentStyle: { backgroundColor: '#000000' }
+        animationDuration: 300,
+        contentStyle: { backgroundColor: '#000000' },
+        gestureEnabled: true,
+        gestureDirection: 'horizontal'
       }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="provider-type" />

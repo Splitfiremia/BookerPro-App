@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { useRouter } from 'expo-router';
 
@@ -32,6 +32,56 @@ export default function SummaryScreen() {
     previousStep,
     isLoading
   } = useProviderOnboarding();
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const headerSlideAnim = useRef(new Animated.Value(-20)).current;
+  const summarySlideAnim = useRef(new Animated.Value(50)).current;
+  const navigationSlideAnim = useRef(new Animated.Value(30)).current;
+  
+  useEffect(() => {
+    // Staggered animation sequence
+    const animations = Animated.stagger(100, [
+      // Header animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(headerSlideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Content animation
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 700,
+        useNativeDriver: true,
+      }),
+      // Summary animation
+      Animated.timing(summarySlideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      // Navigation animation
+      Animated.timing(navigationSlideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]);
+    
+    animations.start();
+    
+    return () => {
+      animations.stop();
+    };
+  }, [fadeAnim, slideAnim, headerSlideAnim, summarySlideAnim, navigationSlideAnim]);
 
   const handleComplete = async () => {
     try {
@@ -94,20 +144,52 @@ export default function SummaryScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
+        <Animated.View style={[
+          styles.header,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: headerSlideAnim }]
+          }
+        ]}>
           <Text style={styles.title}>GET STARTED</Text>
+        </Animated.View>
 
-        </View>
-
-        <View style={styles.content}>
+        <Animated.View style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}>
           <Text style={styles.question}>Review your profile</Text>
           <Text style={styles.description}>
             Please review your information before completing your profile setup.
           </Text>
 
-          <View style={styles.summaryContainer}>
+          <Animated.View style={[
+            styles.summaryContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: summarySlideAnim }]
+            }
+          ]}>
             {/* Profile Section */}
-            <View style={styles.section}>
+            <Animated.View 
+              style={[
+                styles.section,
+                {
+                  opacity: fadeAnim,
+                  transform: [
+                    {
+                      translateY: Animated.add(
+                        summarySlideAnim,
+                        new Animated.Value(0)
+                      )
+                    }
+                  ]
+                }
+              ]}
+            >
               <View style={styles.sectionHeader}>
                 <User size={20} color={COLORS.primary} />
                 <Text style={styles.sectionTitle}>Personal Information</Text>
@@ -130,10 +212,25 @@ export default function SummaryScreen() {
                   ) : null}
                 </View>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Work Situation Section */}
-            <View style={styles.section}>
+            <Animated.View 
+              style={[
+                styles.section,
+                {
+                  opacity: fadeAnim,
+                  transform: [
+                    {
+                      translateY: Animated.add(
+                        summarySlideAnim,
+                        new Animated.Value(10)
+                      )
+                    }
+                  ]
+                }
+              ]}
+            >
               <View style={styles.sectionHeader}>
                 <Briefcase size={20} color={COLORS.primary} />
                 <Text style={styles.sectionTitle}>Work Information</Text>
@@ -148,11 +245,26 @@ export default function SummaryScreen() {
                 <Text style={styles.infoLabel}>Location:</Text>
                 <Text style={styles.infoValue}>{formatAddress()}</Text>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Services Section */}
             {services.length > 0 && (
-              <View style={styles.section}>
+              <Animated.View 
+                style={[
+                  styles.section,
+                  {
+                    opacity: fadeAnim,
+                    transform: [
+                      {
+                        translateY: Animated.add(
+                          summarySlideAnim,
+                          new Animated.Value(20)
+                        )
+                      }
+                    ]
+                  }
+                ]}
+              >
                 <View style={styles.sectionHeader}>
                   <DollarSign size={20} color={COLORS.primary} />
                   <Text style={styles.sectionTitle}>Services</Text>
@@ -167,11 +279,26 @@ export default function SummaryScreen() {
                     <Text style={styles.serviceDuration}>{service.duration} min</Text>
                   </View>
                 ))}
-              </View>
+              </Animated.View>
             )}
 
             {/* Availability Section */}
-            <View style={styles.section}>
+            <Animated.View 
+              style={[
+                styles.section,
+                {
+                  opacity: fadeAnim,
+                  transform: [
+                    {
+                      translateY: Animated.add(
+                        summarySlideAnim,
+                        new Animated.Value(30)
+                      )
+                    }
+                  ]
+                }
+              ]}
+            >
               <View style={styles.sectionHeader}>
                 <Clock size={20} color={COLORS.primary} />
                 <Text style={styles.sectionTitle}>Availability</Text>
@@ -193,17 +320,25 @@ export default function SummaryScreen() {
               ) : (
                 <Text style={styles.noAvailability}>No availability set</Text>
               )}
-            </View>
-          </View>
-        </View>
+            </Animated.View>
+          </Animated.View>
+        </Animated.View>
 
-        <OnboardingNavigation
-          onBack={handleBack}
-          onNext={handleComplete}
-          nextTitle="COMPLETE PROFILE"
-          loading={isLoading}
-          testID="summary-navigation"
-        />
+        <Animated.View style={[
+          styles.animatedNavigationContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: navigationSlideAnim }]
+          }
+        ]}>
+          <OnboardingNavigation
+            onBack={handleBack}
+            onNext={handleComplete}
+            nextTitle="COMPLETE PROFILE"
+            loading={isLoading}
+            testID="summary-navigation"
+          />
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -404,5 +539,8 @@ const styles = StyleSheet.create({
     color: COLORS.lightGray,
     textDecorationLine: 'underline' as const,
     fontFamily: FONTS.regular,
+  },
+  animatedNavigationContainer: {
+    // Container for animated navigation
   },
 });

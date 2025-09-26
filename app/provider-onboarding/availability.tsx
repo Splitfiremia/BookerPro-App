@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Switch, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
 
@@ -83,6 +83,56 @@ export default function AvailabilityScreen() {
       return acc;
     }, {} as Record<Day, string[]>)
   );
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const headerSlideAnim = useRef(new Animated.Value(-20)).current;
+  const availabilitySlideAnim = useRef(new Animated.Value(50)).current;
+  const navigationSlideAnim = useRef(new Animated.Value(30)).current;
+  
+  useEffect(() => {
+    // Staggered animation sequence
+    const animations = Animated.stagger(120, [
+      // Header animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(headerSlideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Content animation
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 700,
+        useNativeDriver: true,
+      }),
+      // Availability animation
+      Animated.timing(availabilitySlideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      // Navigation animation
+      Animated.timing(navigationSlideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]);
+    
+    animations.start();
+    
+    return () => {
+      animations.stop();
+    };
+  }, [fadeAnim, slideAnim, headerSlideAnim, availabilitySlideAnim, navigationSlideAnim]);
 
   const toggleDay = (day: Day) => {
     setEnabledDays(prev => ({
@@ -200,20 +250,53 @@ export default function AvailabilityScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
+        <Animated.View style={[
+          styles.header,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: headerSlideAnim }]
+          }
+        ]}>
           <Text style={styles.title}>GET STARTED</Text>
+        </Animated.View>
 
-        </View>
-
-        <View style={styles.content}>
+        <Animated.View style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}>
           <Text style={styles.question}>Set your availability</Text>
           <Text style={styles.description}>
             Select the days and hours you're available to provide services.
           </Text>
 
-          <View style={styles.availabilityContainer}>
-            {DAYS.map(day => (
-              <View key={day} style={styles.dayContainer}>
+          <Animated.View style={[
+            styles.availabilityContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: availabilitySlideAnim }]
+            }
+          ]}>
+            {DAYS.map((day, index) => (
+              <Animated.View 
+                key={day} 
+                style={[
+                  styles.dayContainer,
+                  {
+                    opacity: fadeAnim,
+                    transform: [
+                      {
+                        translateY: Animated.add(
+                          availabilitySlideAnim,
+                          new Animated.Value(index * 8)
+                        )
+                      }
+                    ]
+                  }
+                ]}
+              >
                 <View style={styles.dayHeader}>
                   <View style={styles.dayTitleContainer}>
                     <Text style={styles.dayTitle}>{formatDayName(day)}</Text>
@@ -255,16 +338,24 @@ export default function AvailabilityScreen() {
                     ))}
                   </View>
                 )}
-              </View>
+              </Animated.View>
             ))}
-          </View>
-        </View>
+          </Animated.View>
+        </Animated.View>
 
-        <OnboardingNavigation
-          onBack={() => router.back()}
-          onNext={handleContinue}
-          testID="availability-navigation"
-        />
+        <Animated.View style={[
+          styles.animatedNavigationContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: navigationSlideAnim }]
+          }
+        ]}>
+          <OnboardingNavigation
+            onBack={() => router.back()}
+            onNext={handleContinue}
+            testID="availability-navigation"
+          />
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -364,5 +455,8 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 'auto',
     marginBottom: SPACING.lg,
+  },
+  animatedNavigationContainer: {
+    // Container for animated navigation
   },
 });

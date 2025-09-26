@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableOpacity, Animated } from 'react-native';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { useRouter } from 'expo-router';
 import { GradientButton } from '@/components/GradientButton';
@@ -25,6 +25,63 @@ export default function ProfileScreen() {
   const [bioText, setBioText] = useState(bio || '');
   const [imageUri, setImageUri] = useState<string | null>(profileImage);
   const [error, setError] = useState('');
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const headerSlideAnim = useRef(new Animated.Value(-20)).current;
+  const imageSlideAnim = useRef(new Animated.Value(40)).current;
+  const bioSlideAnim = useRef(new Animated.Value(50)).current;
+  const navigationSlideAnim = useRef(new Animated.Value(30)).current;
+  
+  useEffect(() => {
+    // Staggered animation sequence
+    const animations = Animated.stagger(120, [
+      // Header animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(headerSlideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Content animation
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 700,
+        useNativeDriver: true,
+      }),
+      // Image animation
+      Animated.timing(imageSlideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      // Bio animation
+      Animated.timing(bioSlideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      // Navigation animation
+      Animated.timing(navigationSlideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]);
+    
+    animations.start();
+    
+    return () => {
+      animations.stop();
+    };
+  }, [fadeAnim, slideAnim, headerSlideAnim, imageSlideAnim, bioSlideAnim, navigationSlideAnim]);
 
   const pickImage = async () => {
     try {
@@ -84,18 +141,35 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
+        <Animated.View style={[
+          styles.header,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: headerSlideAnim }]
+          }
+        ]}>
           <Text style={styles.title}>GET STARTED</Text>
+        </Animated.View>
 
-        </View>
-
-        <View style={styles.content}>
+        <Animated.View style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}>
           <Text style={styles.question}>Build your profile</Text>
           <Text style={styles.description}>
             Add a profile photo and write a bio to help clients get to know you.
           </Text>
 
-          <View style={styles.profileImageContainer}>
+          <Animated.View style={[
+            styles.profileImageContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: imageSlideAnim }]
+            }
+          ]}>
             <View style={styles.imageContainer}>
               {imageUri && imageUri.trim() !== '' ? (
                 <ImageWithFallback source={{ uri: imageUri }} style={styles.profileImage} fallbackIcon="user" />
@@ -127,9 +201,15 @@ export default function ProfileScreen() {
             </View>
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
-          </View>
+          </Animated.View>
 
-          <View style={styles.bioContainer}>
+          <Animated.View style={[
+            styles.bioContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: bioSlideAnim }]
+            }
+          ]}>
             <Text style={styles.inputLabel}>ABOUT YOU</Text>
             <TextInput
               style={styles.bioInput}
@@ -144,14 +224,22 @@ export default function ProfileScreen() {
               testID="bio-input"
             />
             <Text style={styles.charCount}>{bioText.length}/500</Text>
-          </View>
-        </View>
+          </Animated.View>
+        </Animated.View>
 
-        <OnboardingNavigation
-          onBack={() => router.back()}
-          onNext={handleContinue}
-          testID="profile-navigation"
-        />
+        <Animated.View style={[
+          styles.animatedNavigationContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: navigationSlideAnim }]
+          }
+        ]}>
+          <OnboardingNavigation
+            onBack={() => router.back()}
+            onNext={handleContinue}
+            testID="profile-navigation"
+          />
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -280,5 +368,8 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 'auto',
     marginBottom: SPACING.lg,
+  },
+  animatedNavigationContainer: {
+    // Container for animated navigation
   },
 });
