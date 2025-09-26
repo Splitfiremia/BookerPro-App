@@ -116,7 +116,7 @@ export default function PaymentScreen() {
               </View>
 
               <View style={styles.finePrintSection}>
-                <Text style={styles.finePrintTitle}>THE FINE PRINT</Text>
+
 
                 <View style={styles.finePrintItem}>
                   <Text style={styles.finePrintLabel}>Preauthorization</Text>
