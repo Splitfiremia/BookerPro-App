@@ -265,9 +265,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingBottom: 32,
+    paddingVertical: 20,
   },
   backButton: {
     padding: 10,
@@ -275,8 +275,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   spacer: {
-    flex: 1,
-    minHeight: 50,
+    minHeight: 20,
   },
   glassCard: {
     backgroundColor: Platform.select({
@@ -287,8 +286,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.18)',
-    padding: 24,
-    marginBottom: 32,
+    padding: 20,
+    marginBottom: 20,
     ...(Platform.OS === 'ios' && {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 10 },
@@ -301,7 +300,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   tab: {
     flex: 1,
@@ -325,7 +324,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   inputLabel: {
     fontSize: 14,
@@ -348,14 +347,14 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     gap: 16,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   nameField: {
     flex: 1,
   },
   checkboxRow: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 16,
     alignItems: 'flex-start',
   },
   checkbox: {
@@ -383,7 +382,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
     lineHeight: 20,
   },
   termsLink: {
