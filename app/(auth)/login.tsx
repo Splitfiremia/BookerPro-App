@@ -136,19 +136,6 @@ export default function LoginScreen() {
         <View style={styles.backgroundOverlay} />
         
         <SafeAreaView style={styles.safeArea}>
-          {/* Status Bar */}
-          <View style={styles.statusBar}>
-            <Text style={styles.timeText}>10:51</Text>
-            <View style={styles.statusIcons}>
-              <Text style={styles.signalText}>●●●●</Text>
-              <Text style={styles.wifiText}>📶</Text>
-              <View style={styles.batteryContainer}>
-                <Text style={styles.batteryText}>90</Text>
-                <Text style={styles.batteryIcon}>🔋</Text>
-              </View>
-            </View>
-          </View>
-
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.keyboardView}
@@ -222,48 +209,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
-    paddingBottom: 8,
-    zIndex: 10,
-  },
-  timeText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-    fontFamily: Platform.select({ ios: 'System', android: 'Roboto', web: 'Poppins' }),
-  },
-  statusIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  signalText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-  },
-  wifiText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-  },
-  batteryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  batteryText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  batteryIcon: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
+
   keyboardView: {
     flex: 1,
   },

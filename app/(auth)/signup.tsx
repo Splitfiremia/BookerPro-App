@@ -86,14 +86,6 @@ export default function SignupScreen() {
         <View style={styles.backgroundOverlay} />
         
         <SafeAreaView style={styles.safeArea}>
-          {/* Status Bar */}
-          <View style={styles.statusBar}>
-            <Text style={styles.timeText}>10:51</Text>
-            <View style={styles.statusIcons}>
-              <Text style={styles.batteryText}>90</Text>
-            </View>
-          </View>
-
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.keyboardView}
@@ -219,9 +211,9 @@ export default function SignupScreen() {
                       {smsOptIn && <Ionicons name="checkmark" size={16} color="#1F2937" />}
                     </View>
                     <Text style={styles.checkboxText}>
-                      By checking this box, you agree to receive SMS appointment updates from theCut. 
-                      Message & data rates may apply. Message frequency varies. Email support@thecut.co 
-                      for help, STOP to cancel.
+                      By checking this box, you agree to receive SMS appointment updates. 
+                      Message & data rates may apply. Message frequency varies. 
+                      STOP to cancel.
                     </Text>
                   </TouchableOpacity>
 
@@ -267,28 +259,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  statusBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    paddingBottom: 8,
-  },
-  timeText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  statusIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  batteryText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
+
   keyboardView: {
     flex: 1,
   },
