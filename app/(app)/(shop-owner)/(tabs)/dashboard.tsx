@@ -4,16 +4,54 @@ import { useRouter } from 'expo-router';
 import { Calendar, BarChart2, Users, DollarSign, TrendingUp } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
+import { useShopManagement } from '@/providers/ShopManagementProvider';
+import { useServices } from '@/providers/ServicesProvider';
 
 export default function ShopOwnerDashboard() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { consolidatedMetrics, isLoading: shopLoading } = useShopManagement();
+  const { masterServices, isLoading: servicesLoading } = useServices();
+  
+  const isLoading = shopLoading || servicesLoading;
+  
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <Text style={styles.loadingText}>Loading dashboard...</Text>
+      </View>
+    );
+  }
 
   const metrics = [
-    { label: 'Today\'s Revenue', value: '$2,450', icon: DollarSign, change: '+15%', color: '#4CAF50' },
-    { label: 'Total Appointments', value: '47', icon: Calendar, change: '+8%', color: '#2196F3' },
-    { label: 'Active Providers', value: '12', icon: Users, change: '+2%', color: '#FF9800' },
-    { label: 'Peak Hours', value: '2-4 PM', icon: TrendingUp, change: 'Busy', color: '#9C27B0' },
+    { 
+      label: 'Today\'s Revenue', 
+      value: `${consolidatedMetrics?.weeklyRevenue?.toLocaleString() || '0'}`, 
+      icon: DollarSign, 
+      change: '+15%', 
+      color: '#4CAF50' 
+    },
+    { 
+      label: 'Total Appointments', 
+      value: `${consolidatedMetrics?.weeklyAppointments || 0}`, 
+      icon: Calendar, 
+      change: '+8%', 
+      color: '#2196F3' 
+    },
+    { 
+      label: 'Active Providers', 
+      value: `${consolidatedMetrics?.stylistCount || 0}`, 
+      icon: Users, 
+      change: '+2%', 
+      color: '#FF9800' 
+    },
+    { 
+      label: 'Active Services', 
+      value: `${masterServices?.filter(s => s.isActive).length || 0}`, 
+      icon: TrendingUp, 
+      change: 'Available', 
+      color: '#9C27B0' 
+    },
   ];
 
   const quickActions = [
@@ -90,7 +128,9 @@ export default function ShopOwnerDashboard() {
           </View>
           <View style={styles.overviewRow}>
             <Text style={styles.overviewLabel}>Revenue Target</Text>
-            <Text style={styles.overviewValue}>$2,450 / $3,000</Text>
+            <Text style={styles.overviewValue}>
+              ${consolidatedMetrics?.weeklyRevenue?.toLocaleString() || '0'} / $3,000
+            </Text>
           </View>
         </View>
       </View>
@@ -265,6 +305,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.lightGray,
     marginTop: 2,
+    fontFamily: FONTS.regular,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: COLORS.text,
+    fontSize: 16,
     fontFamily: FONTS.regular,
   },
 });

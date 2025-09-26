@@ -197,7 +197,7 @@ export default function SummaryScreen() {
               
               <View style={styles.profileSection}>
                 <ImageWithFallback
-                  source={{ uri: profileImage || '' }}
+                  source={{ uri: profileImage || undefined }}
                   style={styles.profileImage}
                   fallbackIcon="user"
                 />

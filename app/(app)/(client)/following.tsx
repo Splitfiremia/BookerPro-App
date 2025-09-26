@@ -36,7 +36,7 @@ export default function FollowingScreen() {
     >
       <View style={styles.providerInfo}>
         <ImageWithFallback
-          source={{ uri: item.profileImage || item.image || '' }}
+          source={{ uri: item.profileImage || item.image || undefined }}
           style={styles.providerImage}
           fallbackIcon="user"
         />

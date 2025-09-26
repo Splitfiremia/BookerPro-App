@@ -12,12 +12,15 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
   const [services, setServices] = useState<Service[]>([]);
   const [masterServices, setMasterServices] = useState<Service[]>([]);
   const [serviceOfferings, setServiceOfferings] = useState<ProviderServiceOffering[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const loadServices = useCallback(async () => {
     if (!user) {
+      setIsLoading(false);
       return;
     }
+    
+    setIsLoading(true);
     
     try {
       // Load based on user role and provider type - synchronously set defaults first
@@ -127,6 +130,8 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
       }
     } catch (error) {
       console.error('Error loading services:', error);
+    } finally {
+      setIsLoading(false);
     }
   }, [user]);
 
@@ -134,6 +139,8 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
   useEffect(() => {
     if (user) {
       loadServices();
+    } else {
+      setIsLoading(false);
     }
   }, [user, loadServices]);
 

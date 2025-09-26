@@ -20,8 +20,11 @@ const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 10,
       refetchOnMount: false,
       refetchOnReconnect: false,
+      networkMode: 'offlineFirst',
     },
-    mutations: {},
+    mutations: {
+      networkMode: 'offlineFirst',
+    },
   },
 });
 
@@ -58,12 +61,12 @@ export default function RootLayout() {
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <WithSafeAreaDeviceProvider>
-            <Suspense fallback={<LoadingFallback />}>
-              <AuthProvider>
+            <AuthProvider>
+              <Suspense fallback={<LoadingFallback />}>
                 <RootLayoutNav />
-                <ModeIndicator />
-              </AuthProvider>
-            </Suspense>
+              </Suspense>
+              <ModeIndicator />
+            </AuthProvider>
           </WithSafeAreaDeviceProvider>
         </QueryClientProvider>
       </ErrorBoundary>

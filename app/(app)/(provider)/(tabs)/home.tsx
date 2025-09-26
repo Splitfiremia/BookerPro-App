@@ -117,7 +117,7 @@ export default function ProviderHomeScreen() {
                 <View style={styles.requestHeader}>
                   <View style={styles.clientInfo}>
                     <ImageWithFallback
-                      source={{ uri: request.clientImage || '' }}
+                      source={{ uri: request.clientImage || undefined }}
                       style={styles.clientImage}
                       fallbackIcon="user"
                     />

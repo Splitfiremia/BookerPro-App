@@ -176,7 +176,7 @@ export default function ClientsScreen() {
       onPress={() => handleClientPress(item)}
       testID={`client-${item.id}`}
     >
-      <ImageWithFallback source={{ uri: item.image || '' }} style={styles.clientImage} fallbackIcon="user" />
+      <ImageWithFallback source={{ uri: item.image || undefined }} style={styles.clientImage} fallbackIcon="user" />
       <View style={styles.clientInfo}>
         <Text style={styles.clientName}>{item.name}</Text>
         <View style={styles.clientMeta}>
