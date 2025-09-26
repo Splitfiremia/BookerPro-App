@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   filterText: {
     color: COLORS.white,
     fontSize: FONT_SIZES.sm,
-    fontFamily: FONTS.medium,
+    fontFamily: FONTS.regular,
     textAlign: 'center',
   },
   filterTextActive: {
