@@ -18,6 +18,7 @@ import { Search, MapPin, Filter, Star, CreditCard, Heart, X, Clock, TrendingUp }
 import { mockProviders } from '@/mocks/providers';
 import { useSocial } from '@/providers/SocialProvider';
 import { router } from 'expo-router';
+import { FeatureErrorBoundary } from '@/components/SpecializedErrorBoundaries';
 
 interface Shop {
   id: string;

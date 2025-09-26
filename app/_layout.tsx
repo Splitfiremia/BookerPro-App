@@ -8,6 +8,7 @@ import { WithSafeAreaDeviceProvider } from "@/providers/DeviceProvider";
 
 import { ModeIndicator } from "@/components/ModeIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { CriticalErrorBoundary } from "@/components/SpecializedErrorBoundaries";
 import { COLORS } from "@/constants/theme";
 
 // Create QueryClient with optimized settings to prevent hydration issues
@@ -58,18 +59,24 @@ export default function RootLayout() {
   
   return (
     <GestureHandlerRootView style={styles.gestureHandler}>
-      <ErrorBoundary>
+      <CriticalErrorBoundary componentName="Root Application">
         <QueryClientProvider client={queryClient}>
-          <WithSafeAreaDeviceProvider>
-            <AuthProvider>
-              <Suspense fallback={<LoadingFallback />}>
-                <RootLayoutNav />
-              </Suspense>
-              <ModeIndicator />
-            </AuthProvider>
-          </WithSafeAreaDeviceProvider>
+          <ErrorBoundary level="critical" resetOnPropsChange={true}>
+            <WithSafeAreaDeviceProvider>
+              <ErrorBoundary level="warning" resetOnPropsChange={true}>
+                <AuthProvider>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ErrorBoundary level="info" resetOnPropsChange={true}>
+                      <RootLayoutNav />
+                    </ErrorBoundary>
+                  </Suspense>
+                  <ModeIndicator />
+                </AuthProvider>
+              </ErrorBoundary>
+            </WithSafeAreaDeviceProvider>
+          </ErrorBoundary>
         </QueryClientProvider>
-      </ErrorBoundary>
+      </CriticalErrorBoundary>
     </GestureHandlerRootView>
   );
 }
