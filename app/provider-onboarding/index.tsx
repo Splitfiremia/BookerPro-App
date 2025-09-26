@@ -1,130 +1,213 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Animated } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
-import { OnboardingNavigation } from '@/components/OnboardingNavigation';
-import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
-import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
+import { OnboardingNavigation } from '@/components/OnboardingNavigation';
+import { useProviderOnboarding, WorkSituation } from '@/providers/ProviderOnboardingProvider';
+import { Building2, Store, Car, Home } from 'lucide-react-native';
+import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
 
 export default function ProviderOnboardingIntro() {
   const router = useRouter();
-  const { resetOnboarding } = useProviderOnboarding();
+  const { 
+    currentStep, 
+    totalSteps, 
+    workSituation, 
+    setWorkSituation, 
+    nextStep,
+    resetOnboarding 
+  } = useProviderOnboarding();
+  
+  const [selected, setSelected] = useState<WorkSituation | null>(workSituation);
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const imageOpacity = useRef(new Animated.Value(0)).current;
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
-
-  // Reset onboarding state when starting
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const headerSlideAnim = useRef(new Animated.Value(-20)).current;
+  const optionsSlideAnim = useRef(new Animated.Value(50)).current;
+  const navigationSlideAnim = useRef(new Animated.Value(30)).current;
+  
   useEffect(() => {
+    // Reset onboarding state when starting
     resetOnboarding();
     
-    // Start animations
-    const animationSequence = Animated.sequence([
-      // First, fade in the image
-      Animated.timing(imageOpacity, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      // Then add overlay
-      Animated.timing(overlayOpacity, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]);
-    
-    // Animate content
-    const contentAnimation = Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
+    // Staggered animation sequence
+    const animations = Animated.stagger(120, [
+      // Header animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(headerSlideAnim, {
+          toValue: 0,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Content animation
       Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 700,
+        useNativeDriver: true,
+      }),
+      // Options animation
+      Animated.timing(optionsSlideAnim, {
         toValue: 0,
         duration: 800,
         useNativeDriver: true,
       }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 800,
+      // Navigation animation
+      Animated.timing(navigationSlideAnim, {
+        toValue: 0,
+        duration: 600,
         useNativeDriver: true,
       }),
     ]);
     
-    // Start both animations
-    animationSequence.start();
-    const timeoutId = setTimeout(() => contentAnimation.start(), 300);
+    animations.start();
     
-    // Cleanup function
     return () => {
-      clearTimeout(timeoutId);
-      animationSequence.stop();
-      contentAnimation.stop();
+      animations.stop();
     };
-  }, [resetOnboarding, fadeAnim, slideAnim, scaleAnim, imageOpacity, overlayOpacity]);
+  }, [resetOnboarding, fadeAnim, slideAnim, headerSlideAnim, optionsSlideAnim, navigationSlideAnim]);
 
-  const handleGetStarted = () => {
-    router.push('/provider-onboarding/employment-type');
+  const handleSelect = (situation: WorkSituation) => {
+    setSelected(situation);
   };
+
+  const handleContinue = () => {
+    if (selected) {
+      setWorkSituation(selected);
+      nextStep();
+      
+      // Route to the appropriate next screen based on selection
+      switch (selected) {
+        case 'own_shop':
+          router.replace('/provider-onboarding/service-address');
+          break;
+        case 'work_at_shop':
+          router.replace('/provider-onboarding/shop-search');
+          break;
+        case 'mobile':
+          router.replace('/provider-onboarding/service-address');
+          break;
+        case 'home_studio':
+          router.replace('/provider-onboarding/service-address');
+          break;
+        default:
+          router.replace('/provider-onboarding/service-address');
+      }
+    }
+  };
+
+  const workOptions: { 
+    id: WorkSituation; 
+    title: string; 
+    description: string; 
+    icon: React.ReactNode 
+  }[] = [
+    {
+      id: 'own_shop',
+      title: 'I have my own shop / studio',
+      description: 'You own or rent a commercial space for your services',
+      icon: <Building2 size={24} color={COLORS.primary} />
+    },
+    {
+      id: 'work_at_shop',
+      title: 'I work at a shop',
+      description: 'You work at an established business owned by someone else',
+      icon: <Store size={24} color={COLORS.primary} />
+    },
+    {
+      id: 'mobile',
+      title: 'I am mobile / I travel to clients',
+      description: "You travel to provide services at clients' locations",
+      icon: <Car size={24} color={COLORS.primary} />
+    },
+    {
+      id: 'home_studio',
+      title: 'I work from a home studio',
+      description: 'You provide services from your home or private space',
+      icon: <Home size={24} color={COLORS.primary} />
+    }
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.imageContainer}>
-          <Animated.Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2940&auto=format&fit=crop' }} 
-            style={[styles.image, { opacity: imageOpacity }]}
-            resizeMode="cover"
-          />
-          <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} />
-        </View>
-        
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <Animated.View style={[
-          styles.textContainer,
-          {
-            opacity: fadeAnim,
-            transform: [
-              { translateY: slideAnim },
-              { scale: scaleAnim }
-            ]
-          }
-        ]}>
-          <Text style={styles.title}>THE POWER OF BARBERING</Text>
-          <Text style={styles.subtitle}>
-            Barbering is an art form. When you master your craft, you have the power to transform not just appearances, but confidence.
-          </Text>
-        </Animated.View>
-
-        <Animated.View style={[
-          styles.indicatorContainer,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }]
-          }
-        ]}>
-          <View style={styles.indicator} />
-        </Animated.View>
-
-        <Animated.View style={[
-          styles.navigationContainer,
+          styles.content,
           {
             opacity: fadeAnim,
             transform: [{ translateY: slideAnim }]
           }
         ]}>
+          <Text style={styles.question}>How do you work?</Text>
+          <Text style={styles.description}>
+            This helps us set up your profile correctly.
+          </Text>
+
+          <Animated.View style={[
+            styles.optionsContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: optionsSlideAnim }]
+            }
+          ]}>
+            {workOptions.map((option, index) => (
+              <Animated.View
+                key={option.id}
+                style={[
+                  styles.animatedOptionContainer,
+                  {
+                    opacity: fadeAnim,
+                    transform: [
+                      {
+                        translateY: Animated.add(
+                          optionsSlideAnim,
+                          new Animated.Value(index * 12)
+                        )
+                      }
+                    ]
+                  }
+                ]}
+              >
+                <TouchableOpacity
+                  style={[
+                    styles.optionCard,
+                    selected === option.id && styles.selectedCard
+                  ]}
+                  onPress={() => handleSelect(option.id)}
+                  testID={`work-option-${option.id}`}
+                >
+                  <View style={styles.iconContainer}>{option.icon}</View>
+                  <View style={styles.optionTextContainer}>
+                    <Text style={styles.optionTitle}>{option.title}</Text>
+                    <Text style={styles.optionDescription}>{option.description}</Text>
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </Animated.View>
+        </Animated.View>
+
+        <Animated.View style={[
+          styles.animatedNavigationContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: navigationSlideAnim }]
+          }
+        ]}>
           <OnboardingNavigation
-            onNext={handleGetStarted}
-            nextTitle="GET STARTED"
+            onNext={handleContinue}
+            nextDisabled={!selected}
             showBack={false}
-            testID="intro-navigation"
+            testID="work-situation-navigation"
           />
         </Animated.View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -134,62 +217,68 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  content: {
-    flex: 1,
-    justifyContent: 'space-between',
-    padding: SPACING.md,
-  },
-  imageContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: COLORS.overlay,
-  },
-  textContainer: {
-    marginTop: 100,
-    paddingHorizontal: SPACING.md,
-    ...GLASS_STYLES.card,
+  scrollContent: {
+    flexGrow: 1,
     padding: SPACING.lg,
   },
-  title: {
+  content: {
+    flex: 1,
+  },
+  question: {
     fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold' as const,
     color: COLORS.text,
-    marginBottom: SPACING.md,
-    textAlign: 'center',
+    marginBottom: SPACING.sm,
     fontFamily: FONTS.bold,
   },
-  subtitle: {
+  description: {
     fontSize: FONT_SIZES.md,
     color: COLORS.lightGray,
-    textAlign: 'center',
-    lineHeight: 24,
+    marginBottom: SPACING.xl,
     fontFamily: FONTS.regular,
   },
-  indicatorContainer: {
+  optionsContainer: {
+    marginBottom: SPACING.xl,
+  },
+  optionCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACING.xxl,
+    ...GLASS_STYLES.card,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
   },
-  indicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.primary,
+  selectedCard: {
+    borderColor: COLORS.primary,
+    backgroundColor: `${COLORS.primary}20`,
   },
-  buttonContainer: {
-    marginBottom: SPACING.xxl,
-    paddingHorizontal: SPACING.md,
+  iconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: COLORS.glass.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.md,
   },
-  navigationContainer: {
-    // Empty style for animation container
+  optionTextContainer: {
+    flex: 1,
+  },
+  optionTitle: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: 'bold' as const,
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+    fontFamily: FONTS.bold,
+  },
+  optionDescription: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.lightGray,
+    fontFamily: FONTS.regular,
+  },
+  animatedOptionContainer: {
+    // Container for animated option cards
+  },
+  animatedNavigationContainer: {
+    // Container for animated navigation
   },
 });

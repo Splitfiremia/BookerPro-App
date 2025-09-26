@@ -17,6 +17,7 @@ export default function PersonalInfoScreen() {
     lastName, 
     phone, 
     email, 
+    workSituation,
     setPersonalInfo, 
     nextStep,
     previousStep 
@@ -158,7 +159,13 @@ export default function PersonalInfoScreen() {
         formData.email
       );
       nextStep();
-      router.push('/provider-onboarding/work-situation');
+      
+      // Navigate based on work situation
+      if (workSituation === 'work_at_shop') {
+        router.push('/provider-onboarding/shop-search');
+      } else {
+        router.push('/provider-onboarding/service-address');
+      }
     } else {
       // Mark all fields as touched to show all errors
       setTouched({

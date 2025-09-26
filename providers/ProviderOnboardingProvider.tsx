@@ -106,7 +106,6 @@ const STEP_ROUTES = [
   '/provider-onboarding/index',
   '/provider-onboarding/provider-type',
   '/provider-onboarding/personal-info',
-  '/provider-onboarding/work-situation',
   '/provider-onboarding/service-address',
   '/provider-onboarding/shop-search',
   '/provider-onboarding/services',
@@ -213,7 +212,7 @@ export const [ProviderOnboardingProvider, useProviderOnboarding] = createContext
     const currentStepIndex = state.currentStep - 1; // Convert to 0-based index
     
     // Handle conditional routing based on work situation
-    if (currentStepIndex === 3) { // work-situation step
+    if (currentStepIndex === 0) { // index step (how do you work)
       const situation = workSituation || state.workSituation;
       if (situation === 'work_at_shop') {
         return '/provider-onboarding/shop-search';
@@ -223,7 +222,7 @@ export const [ProviderOnboardingProvider, useProviderOnboarding] = createContext
     }
     
     // Handle shop-search routing
-    if (currentStepIndex === 5) { // shop-search step
+    if (currentStepIndex === 4) { // shop-search step
       return '/provider-onboarding/services';
     }
     

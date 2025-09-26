@@ -11,10 +11,8 @@ export default function ProviderOnboardingLayout() {
         contentStyle: { backgroundColor: '#000000' }
       }}>
         <Stack.Screen name="index" />
-        <Stack.Screen name="employment-type" />
         <Stack.Screen name="provider-type" />
         <Stack.Screen name="personal-info" />
-        <Stack.Screen name="work-situation" />
         <Stack.Screen name="service-address" />
         <Stack.Screen name="shop-search" />
         <Stack.Screen name="invite-owner" />
