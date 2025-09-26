@@ -237,12 +237,15 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   filterButton: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.round,
     borderWidth: 1,
     borderColor: COLORS.lightGray,
     backgroundColor: 'transparent',
+    minHeight: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   filterButtonActive: {
     backgroundColor: COLORS.accent,
@@ -250,8 +253,9 @@ const styles = StyleSheet.create({
   },
   filterText: {
     color: COLORS.lightGray,
-    fontSize: FONT_SIZES.sm,
+    fontSize: FONT_SIZES.xs,
     fontFamily: FONTS.regular,
+    textAlign: 'center',
   },
   filterTextActive: {
     color: COLORS.background,
