@@ -34,7 +34,7 @@ export default function WelcomeScreen() {
             <View style={styles.content}>
               <View style={styles.textContainer}>
                 <View style={styles.glassTitle}>
-                  <Text style={styles.title}>ELEVATE YOUR HAIRCUT EXPERIENCE</Text>
+                  <Text style={styles.title}>SECURE YOUR APPOINTMENT</Text>
                 </View>
               </View>
 
