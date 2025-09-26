@@ -30,7 +30,7 @@ export default function LandingScreen() {
     console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode, 'isInitialized:', isInitialized);
   }, [isAuthenticated, user, isDeveloperMode, isInitialized]);
 
-  // Wait for initialization to prevent hydration mismatch
+  // Show loading state while initializing to prevent hydration mismatch
   if (!isInitialized) {
     return (
       <View style={styles.container}>
@@ -38,6 +38,7 @@ export default function LandingScreen() {
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.logoSection}>
             <Text style={styles.logo}>BookerPro</Text>
+            <Text style={styles.loadingText}>Initializing...</Text>
           </View>
         </SafeAreaView>
       </View>
@@ -712,6 +713,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  loadingText: {
+    color: '#CCCCCC',
+    fontSize: 14,
+    marginTop: 16,
     textAlign: 'center',
   },
 });

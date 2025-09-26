@@ -48,20 +48,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       if (!isMounted) return;
       
       try {
-        // Load data with a reasonable timeout
-        const loadPromise = Promise.all([
-          AsyncStorage.getItem("user"),
-          AsyncStorage.getItem("developerMode")
-        ]);
-        
-        const timeoutPromise = new Promise<[string | null, string | null]>((_, reject) => 
-          setTimeout(() => reject(new Error('Storage timeout')), 1000)
-        );
-        
-        const [storedUser, storedDevMode] = await Promise.race([
-          loadPromise,
-          timeoutPromise
-        ]);
+        // Use a shorter timeout and simpler approach
+        const storedUser = await AsyncStorage.getItem("user");
+        const storedDevMode = await AsyncStorage.getItem("developerMode");
         
         if (!isMounted) return;
         
@@ -73,7 +62,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             setUser(userData);
           } catch (error) {
             console.log('AuthProvider: Error parsing stored user data, clearing storage');
-            await AsyncStorage.removeItem("user");
+            AsyncStorage.removeItem("user").catch(() => {});
           }
         }
         
@@ -94,8 +83,12 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       }
     };
     
-    // Start loading after component mounts
-    loadStoredData();
+    // Use setTimeout to defer loading and prevent blocking
+    setTimeout(() => {
+      if (isMounted) {
+        loadStoredData();
+      }
+    }, 0);
     
     return () => {
       isMounted = false;

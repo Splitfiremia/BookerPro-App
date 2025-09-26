@@ -1,17 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
-import { StyleSheet } from "react-native";
+import React, { Suspense } from "react";
+import { StyleSheet, View, Text } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/providers/AuthProvider";
-import { AppointmentProvider } from "@/providers/AppointmentProvider";
-import { OnboardingProvider } from "@/providers/OnboardingProvider";
-import { ServicesProvider } from "@/providers/ServicesProvider";
-import { SocialProvider } from "@/providers/SocialProvider";
-import { PaymentProvider } from "@/providers/PaymentProvider";
-import { WaitlistProvider } from "@/providers/WaitlistProvider";
-import { TeamManagementProvider } from "@/providers/TeamManagementProvider";
-import { ShopManagementProvider } from "@/providers/ShopManagementProvider";
 import { WithSafeAreaDeviceProvider } from "@/providers/DeviceProvider";
 
 import { ModeIndicator } from "@/components/ModeIndicator";
@@ -32,6 +24,15 @@ const queryClient = new QueryClient({
     mutations: {},
   },
 });
+
+// Loading fallback component
+function LoadingFallback() {
+  return (
+    <View style={styles.loadingContainer}>
+      <Text style={styles.loadingText}>Loading...</Text>
+    </View>
+  );
+}
 
 function RootLayoutNav() {
   return (
@@ -57,26 +58,12 @@ export default function RootLayout() {
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <WithSafeAreaDeviceProvider>
-            <AuthProvider>
-              <OnboardingProvider>
-                <AppointmentProvider>
-                  <PaymentProvider>
-                    <SocialProvider>
-                      <WaitlistProvider>
-                        <TeamManagementProvider>
-                          <ShopManagementProvider>
-                            <ServicesProvider>
-                              <RootLayoutNav />
-                              <ModeIndicator />
-                            </ServicesProvider>
-                          </ShopManagementProvider>
-                        </TeamManagementProvider>
-                      </WaitlistProvider>
-                    </SocialProvider>
-                  </PaymentProvider>
-                </AppointmentProvider>
-              </OnboardingProvider>
-            </AuthProvider>
+            <Suspense fallback={<LoadingFallback />}>
+              <AuthProvider>
+                <RootLayoutNav />
+                <ModeIndicator />
+              </AuthProvider>
+            </Suspense>
           </WithSafeAreaDeviceProvider>
         </QueryClientProvider>
       </ErrorBoundary>
@@ -87,4 +74,15 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   contentStyle: { backgroundColor: COLORS.background },
   gestureHandler: { flex: 1 },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '500',
+  },
 });
