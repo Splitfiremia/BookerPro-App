@@ -9,8 +9,11 @@ import {
   ScrollView,
   Switch,
   Alert,
+  Platform,
 } from 'react-native';
-import { X, User, DollarSign, Shield } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import { X, User, DollarSign, Shield, Camera, Upload } from 'lucide-react-native';
 import { COLORS } from '@/constants/theme';
 
 export interface Provider {
@@ -46,12 +49,68 @@ const roleOptions = [
 
 export default function EditProviderModal({ visible, provider, onClose, onSave }: EditProviderModalProps) {
   const [editedProvider, setEditedProvider] = useState<Provider | null>(provider);
+  const [error, setError] = useState('');
 
   React.useEffect(() => {
     setEditedProvider(provider);
   }, [provider]);
 
   if (!editedProvider) return null;
+
+  const pickImage = async () => {
+    try {
+      // Request permissions first on iOS
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to upload images!');
+          return;
+        }
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        updateProvider({ profileImage: result.assets[0].uri });
+        setError('');
+      }
+    } catch (err) {
+      console.error('Error picking image:', err);
+      setError('Failed to pick image. Please try again.');
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      // Request camera permissions
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos!');
+          return;
+        }
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        updateProvider({ profileImage: result.assets[0].uri });
+        setError('');
+      }
+    } catch (err) {
+      console.error('Error taking photo:', err);
+      setError('Failed to take photo. Please try again.');
+    }
+  };
 
   const handleSave = () => {
     if (!editedProvider.name.trim()) {
@@ -96,6 +155,53 @@ export default function EditProviderModal({ visible, provider, onClose, onSave }
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Profile Image Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <User size={20} color={COLORS.primary} />
+              <Text style={styles.sectionTitle}>Profile Image</Text>
+            </View>
+            
+            <View style={styles.profileImageContainer}>
+              <View style={styles.imageContainer}>
+                {editedProvider.profileImage ? (
+                  <ImageWithFallback 
+                    source={{ uri: editedProvider.profileImage }} 
+                    style={styles.profileImage} 
+                    fallbackIcon="user" 
+                    testID="profile-image"
+                  />
+                ) : (
+                  <View style={styles.placeholderImage}>
+                    <Upload size={40} color={COLORS.secondary} />
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.imageButtonsContainer}>
+                <TouchableOpacity 
+                  style={styles.imageButton} 
+                  onPress={pickImage}
+                  testID="pick-image-button"
+                >
+                  <Upload size={20} color={COLORS.primary} />
+                  <Text style={styles.imageButtonText}>Upload Photo</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.imageButton} 
+                  onPress={takePhoto}
+                  testID="take-photo-button"
+                >
+                  <Camera size={20} color={COLORS.primary} />
+                  <Text style={styles.imageButtonText}>Take Photo</Text>
+                </TouchableOpacity>
+              </View>
+
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            </View>
+          </View>
+
           {/* Basic Info Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -277,6 +383,61 @@ export default function EditProviderModal({ visible, provider, onClose, onSave }
 }
 
 const styles = StyleSheet.create({
+  profileImageContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  imageContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    overflow: 'hidden',
+    marginBottom: 16,
+    backgroundColor: COLORS.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderImage: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+  },
+  imageButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  imageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: `${COLORS.primary}20`,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginHorizontal: 6,
+  },
+  imageButtonText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.background,

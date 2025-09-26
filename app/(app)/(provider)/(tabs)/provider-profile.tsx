@@ -309,12 +309,39 @@ export default function ProviderProfileScreen() {
             <Text style={styles.title}>Provider</Text>
           </View>
           
-          <View style={styles.profileImageContainer}>
+          <TouchableOpacity 
+            style={styles.profileImageContainer}
+            onPress={() => {
+              // Create a mock provider object for the EditProviderModal
+              const mockProvider = {
+                id: user?.id || 'temp-id',
+                name: user?.name || 'Provider Name',
+                email: user?.email || '',
+                phone: user?.phone || '',
+                profileImage: '',
+                role: 'standard' as const,
+                compensationModel: 'commission' as const,
+                commissionRate: 60,
+                boothRentFee: 200,
+                isActive: true,
+                shopId: '',
+                joinedDate: new Date().toISOString(),
+                totalEarnings: 0,
+                clientCount: 0,
+                occupancyRate: 0
+              };
+              
+              // Show edit modal with provider data
+              setEditingProvider(mockProvider);
+              setShowEditProviderModal(true);
+            }}
+            testID="profile-image-container"
+          >
             <Text style={styles.profileInitial}>L</Text>
             <View style={styles.editProfileBadge}>
               <Edit size={16} color={COLORS.background} />
             </View>
-          </View>
+          </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.editProfileButton}
@@ -342,6 +369,7 @@ export default function ProviderProfileScreen() {
               setEditingProvider(mockProvider);
               setShowEditProviderModal(true);
             }}
+            testID="edit-profile-button"
           >
             <Text style={styles.editProfileText}>EDIT PROFILE</Text>
           </TouchableOpacity>
