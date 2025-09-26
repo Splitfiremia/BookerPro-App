@@ -294,34 +294,35 @@ export default function SettingsScreen() {
         },
       ],
     },
-    {
-      title: 'Support',
-      items: [
-        {
-          id: 'help',
-          title: 'Help Center',
-          icon: HelpCircle,
-          type: 'navigate' as const,
-          onPress: () => {
-            Alert.alert(
-              'Help Center',
-              'Contact support: support@bookerapp.com\nPhone: 1-800-BOOKER\nHours: Mon-Fri 9AM-6PM EST',
-              [
-                { text: 'OK' }
-              ]
-            );
-          },
-        },
-        {
-          id: 'signout',
-          title: 'Sign Out',
-          icon: LogOut,
-          type: 'action' as const,
-          onPress: handleSignOut,
-        },
-      ],
-    },
   ];
+
+  const supportSection = {
+    title: 'Support',
+    items: [
+      {
+        id: 'help',
+        title: 'Help Center',
+        icon: HelpCircle,
+        type: 'navigate' as const,
+        onPress: () => {
+          Alert.alert(
+            'Help Center',
+            'Contact support: support@bookerapp.com\nPhone: 1-800-BOOKER\nHours: Mon-Fri 9AM-6PM EST',
+            [
+              { text: 'OK' }
+            ]
+          );
+        },
+      },
+      {
+        id: 'signout',
+        title: 'Sign Out',
+        icon: LogOut,
+        type: 'action' as const,
+        onPress: handleSignOut,
+      },
+    ],
+  };
 
   const renderSettingItem = (item: SettingItem) => {
     if (item.type === 'toggle') {
@@ -421,6 +422,14 @@ export default function SettingsScreen() {
           ) : (
             renderMasterServices()
           )}
+        </View>
+      </View>
+      
+      {/* Support Section - Moved to bottom */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{supportSection.title}</Text>
+        <View style={styles.sectionContent}>
+          {supportSection.items.map(renderSettingItem)}
         </View>
       </View>
       
