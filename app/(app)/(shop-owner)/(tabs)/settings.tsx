@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, FlatList, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ChevronRight, Bell, Lock, CreditCard, HelpCircle, LogOut, Store, Users, Calendar, Plus, Edit, Trash2, DollarSign } from 'lucide-react-native';
+import { ChevronRight, Bell, Lock, CreditCard, HelpCircle, LogOut, Store, Users, Calendar, Plus, Edit, Trash2, DollarSign, Globe } from 'lucide-react-native';
 import { useServices } from '@/providers/ServicesProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { useShopManagement } from '@/providers/ShopManagementProvider';
@@ -186,6 +186,35 @@ export default function SettingsScreen() {
               console.error('Shop Owner Settings: Navigation error:', error);
               Alert.alert('Error', 'Unable to navigate to team management');
             }
+          },
+        },
+        {
+          id: 'website-setup',
+          title: 'Shop Website',
+          subtitle: 'Set up your online presence',
+          icon: Globe,
+          type: 'navigate' as const,
+          onPress: () => {
+            Alert.alert(
+              'Shop Website Setup',
+              'Create and customize your shop\'s website to showcase your services, accept online bookings, and grow your business.',
+              [
+                {
+                  text: 'Learn More',
+                  onPress: () => {
+                    Alert.alert(
+                      'Website Features',
+                      '• Custom domain and branding\n• Online booking integration\n• Service showcase\n• Customer reviews\n• Mobile-responsive design\n• SEO optimization\n• Analytics dashboard',
+                      [
+                        { text: 'Get Started', onPress: () => console.log('Website setup initiated') },
+                        { text: 'Cancel', style: 'cancel' }
+                      ]
+                    );
+                  }
+                },
+                { text: 'Cancel', style: 'cancel' }
+              ]
+            );
           },
         },
         {
