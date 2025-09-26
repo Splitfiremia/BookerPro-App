@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ChevronLeft, User, Scissors, Store } from 'lucide-react-native';
+import { User, Scissors, Store } from 'lucide-react-native';
 import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES, BORDER_RADIUS } from '@/constants/theme';
 
 export default function ProfileTypeScreen() {
@@ -34,16 +34,7 @@ export default function ProfileTypeScreen() {
       >
         <View style={styles.overlay}>
           <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-              <TouchableOpacity 
-                style={styles.backButton} 
-                onPress={() => router.back()}
-                testID="profile-type-back-button"
-              >
-                <ChevronLeft size={28} color="#FFFFFF" />
-              </TouchableOpacity>
-              <View style={styles.headerSpacer} />
-            </View>
+
 
             <View style={styles.tabContainer}>
               <View style={[styles.tab, styles.activeTab]}>
@@ -135,26 +126,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.sm,
-    marginBottom: SPACING.md,
-  },
-  backButton: {
-    ...GLASS_STYLES.card,
-    padding: SPACING.sm,
-    marginRight: SPACING.sm,
-    borderRadius: BORDER_RADIUS.round,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerSpacer: {
-    flex: 1,
-  },
+
   tabContainer: {
     flexDirection: 'row',
     marginHorizontal: SPACING.lg,
