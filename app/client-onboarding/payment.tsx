@@ -37,8 +37,6 @@ export default function PaymentScreen() {
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
               <View style={styles.header}>
                 <Text style={styles.title}>SECURELY STORE PAYMENT INFORMATION</Text>
-                <Text style={styles.subtitle}>PHONE NUMBER</Text>
-                <Text style={styles.phoneNumber}>13013996890</Text>
               </View>
 
               <View style={styles.paymentSection}>
@@ -189,7 +187,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.md,
-    paddingBottom: SPACING.xl,
+    paddingBottom: SPACING.lg,
   },
   title: {
     color: COLORS.text,
@@ -199,23 +197,10 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     fontFamily: FONTS.bold,
   },
-  subtitle: {
-    color: COLORS.lightGray,
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '500' as const,
-    marginBottom: SPACING.xs,
-    letterSpacing: 0.5,
-    fontFamily: FONTS.regular,
-  },
-  phoneNumber: {
-    color: COLORS.text,
-    fontSize: FONT_SIZES.lg,
-    fontWeight: '500' as const,
-    fontFamily: FONTS.regular,
-  },
+
   paymentSection: {
     paddingHorizontal: SPACING.lg,
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
   },
   sectionTitle: {
     color: COLORS.text,
@@ -229,9 +214,9 @@ const styles = StyleSheet.create({
     ...GLASS_STYLES.card,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
     borderWidth: 2,
     borderColor: COLORS.border,
   },
@@ -296,7 +281,7 @@ const styles = StyleSheet.create({
   },
   finePrintSection: {
     paddingHorizontal: SPACING.lg,
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
   },
   finePrintTitle: {
     color: COLORS.text,
@@ -308,8 +293,8 @@ const styles = StyleSheet.create({
   },
   finePrintItem: {
     ...GLASS_STYLES.card,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
+    padding: SPACING.sm,
+    marginBottom: SPACING.sm,
   },
   finePrintLabel: {
     color: COLORS.text,
@@ -327,10 +312,10 @@ const styles = StyleSheet.create({
   bottomSection: {
     ...GLASS_STYLES.card,
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.xl,
+    paddingVertical: SPACING.lg,
     alignItems: 'center',
     marginHorizontal: SPACING.lg,
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
   },
   bottomTitle: {
     color: COLORS.text,
@@ -344,8 +329,8 @@ const styles = StyleSheet.create({
     color: COLORS.lightGray,
     fontSize: FONT_SIZES.md,
     textAlign: 'center',
-    marginBottom: SPACING.xl,
-    lineHeight: 24,
+    marginBottom: SPACING.lg,
+    lineHeight: 20,
     fontFamily: FONTS.regular,
   },
   getStartedButton: {
