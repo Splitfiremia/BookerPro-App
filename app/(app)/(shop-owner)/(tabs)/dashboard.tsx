@@ -3,9 +3,10 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Calendar, BarChart2, Users, DollarSign, TrendingUp } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
+import { COLORS, FONTS, GLASS_STYLES } from '@/constants/theme';
 import { useShopManagement } from '@/providers/ShopManagementProvider';
 import { useServices } from '@/providers/ServicesProvider';
+
 
 export default function ShopOwnerDashboard() {
   const router = useRouter();
@@ -15,7 +16,7 @@ export default function ShopOwnerDashboard() {
   
   const isLoading = shopLoading || servicesLoading;
   
-  if (isLoading) {
+  if (isLoading || !consolidatedMetrics) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <Text style={styles.loadingText}>Loading dashboard...</Text>
@@ -26,21 +27,21 @@ export default function ShopOwnerDashboard() {
   const metrics = [
     { 
       label: 'Today\'s Revenue', 
-      value: `${consolidatedMetrics?.weeklyRevenue?.toLocaleString() || '0'}`, 
+      value: `${consolidatedMetrics.weeklyRevenue?.toLocaleString() || '0'}`, 
       icon: DollarSign, 
       change: '+15%', 
       color: '#4CAF50' 
     },
     { 
       label: 'Total Appointments', 
-      value: `${consolidatedMetrics?.weeklyAppointments || 0}`, 
+      value: `${consolidatedMetrics.weeklyAppointments || 0}`, 
       icon: Calendar, 
       change: '+8%', 
       color: '#2196F3' 
     },
     { 
       label: 'Active Providers', 
-      value: `${consolidatedMetrics?.stylistCount || 0}`, 
+      value: `${consolidatedMetrics.stylistCount || 0}`, 
       icon: Users, 
       change: '+2%', 
       color: '#FF9800' 
@@ -129,7 +130,7 @@ export default function ShopOwnerDashboard() {
           <View style={styles.overviewRow}>
             <Text style={styles.overviewLabel}>Revenue Target</Text>
             <Text style={styles.overviewValue}>
-              ${consolidatedMetrics?.weeklyRevenue?.toLocaleString() || '0'} / $3,000
+              ${consolidatedMetrics.weeklyRevenue?.toLocaleString() || '0'} / $3,000
             </Text>
           </View>
         </View>

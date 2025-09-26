@@ -100,7 +100,10 @@ export const [ShopManagementProvider, useShopManagement] = createContextHook(() 
     const loadShopData = async () => {
       setIsLoading(true);
       try {
-        if (!user || user.role !== "owner") return;
+        if (!user || user.role !== "owner") {
+          setIsLoading(false);
+          return;
+        }
 
         if (isDeveloperMode) {
           // Generate mock shop data

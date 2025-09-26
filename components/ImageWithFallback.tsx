@@ -46,7 +46,7 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     if (typeof source === 'number') return true; // Local image
     if (typeof source === 'object' && source.uri) {
       const uri = source.uri?.trim();
-      return uri && uri.length > 0 && (uri.startsWith('http') || uri.startsWith('file://') || uri.startsWith('data:'));
+      return uri && uri.length > 0 && uri !== 'undefined' && (uri.startsWith('http') || uri.startsWith('file://') || uri.startsWith('data:'));
     }
     return false;
   };
