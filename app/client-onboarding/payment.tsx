@@ -10,13 +10,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { CreditCard } from 'lucide-react-native';
+import { CreditCard, Banknote } from 'lucide-react-native';
 import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES, BORDER_RADIUS } from '@/constants/theme';
 
 export default function PaymentScreen() {
   const [selectedPayment, setSelectedPayment] = useState<string>('card');
 
   const handleGetStarted = () => {
+    router.replace('/(app)/(client)/(tabs)/home');
+  };
+
+  const handleSkipForNow = () => {
     router.replace('/(app)/(client)/(tabs)/home');
   };
 
@@ -32,7 +36,7 @@ export default function PaymentScreen() {
           <SafeAreaView style={styles.container}>
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
               <View style={styles.header}>
-                <Text style={styles.title}>ADDITIONAL INFORMATION</Text>
+                <Text style={styles.title}>SECURELY STORE PAYMENT INFORMATION</Text>
                 <Text style={styles.subtitle}>PHONE NUMBER</Text>
                 <Text style={styles.phoneNumber}>13013996890</Text>
               </View>
@@ -94,6 +98,23 @@ export default function PaymentScreen() {
                     <Text style={styles.changeText}>CHANGE</Text>
                   </View>
                 </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[
+                    styles.paymentOption,
+                    selectedPayment === 'cash' && styles.paymentOptionSelected
+                  ]}
+                  onPress={() => setSelectedPayment('cash')}
+                  testID="payment-option-cash"
+                >
+                  <View style={styles.radioButton}>
+                    {selectedPayment === 'cash' && <View style={styles.radioButtonInner} />}
+                  </View>
+                  <View style={styles.paymentIcon}>
+                    <Banknote size={20} color="#22C55E" />
+                  </View>
+                  <Text style={styles.paymentText}>Pay with Cash</Text>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.finePrintSection}>
@@ -128,6 +149,14 @@ export default function PaymentScreen() {
                 testID="payment-get-started"
               >
                 <Text style={styles.getStartedButtonText}>GET STARTED</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.skipButton}
+                onPress={handleSkipForNow}
+                testID="payment-skip"
+              >
+                <Text style={styles.skipButtonText}>Skip for Now</Text>
               </TouchableOpacity>
             </View>
           </SafeAreaView>
@@ -330,5 +359,18 @@ const styles = StyleSheet.create({
     color: COLORS.background,
     letterSpacing: 1,
     fontFamily: FONTS.bold,
+  },
+  skipButton: {
+    marginTop: SPACING.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.xxl,
+  },
+  skipButtonText: {
+    fontSize: FONT_SIZES.md,
+    fontWeight: '500' as const,
+    color: COLORS.lightGray,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    fontFamily: FONTS.regular,
   },
 });
