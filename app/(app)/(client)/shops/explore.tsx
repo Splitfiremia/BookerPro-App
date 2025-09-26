@@ -237,14 +237,14 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
   },
   filterButton: {
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
     borderRadius: 20,
     backgroundColor: COLORS.gray,
-    height: 36,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    minWidth: 70,
+    minWidth: 50,
   },
   filterButtonActive: {
     backgroundColor: COLORS.accent,
