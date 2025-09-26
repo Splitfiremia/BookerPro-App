@@ -34,7 +34,11 @@ export default function PaymentScreen() {
       >
         <View style={styles.overlay}>
           <SafeAreaView style={styles.container}>
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <ScrollView 
+              style={styles.content} 
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+            >
               <View style={styles.header}>
                 <Text style={styles.title}>SECURELY STORE PAYMENT INFORMATION</Text>
               </View>
@@ -116,8 +120,6 @@ export default function PaymentScreen() {
               </View>
 
               <View style={styles.finePrintSection}>
-
-
                 <View style={styles.finePrintItem}>
                   <Text style={styles.finePrintLabel}>Preauthorization</Text>
                   <Text style={styles.finePrintText}>
@@ -183,6 +185,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 200, // Add padding to prevent overlap with bottom section
   },
   header: {
     paddingHorizontal: SPACING.lg,
@@ -281,7 +286,7 @@ const styles = StyleSheet.create({
   },
   finePrintSection: {
     paddingHorizontal: SPACING.lg,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.xl,
   },
   finePrintTitle: {
     color: COLORS.text,
@@ -293,8 +298,8 @@ const styles = StyleSheet.create({
   },
   finePrintItem: {
     ...GLASS_STYLES.card,
-    padding: SPACING.sm,
-    marginBottom: SPACING.sm,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
   },
   finePrintLabel: {
     color: COLORS.text,
