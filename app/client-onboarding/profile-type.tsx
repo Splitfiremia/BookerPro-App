@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
+  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -13,6 +14,7 @@ import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES, BORDER_RADIUS } from 
 
 export default function ProfileTypeScreen() {
   const handleProfileSelection = (type: 'client' | 'provider' | 'owner') => {
+    console.log('ProfileTypeScreen: select', type);
     if (type === 'client') {
       router.push('/client-onboarding/welcome' as any);
     } else if (type === 'provider') {
@@ -23,96 +25,115 @@ export default function ProfileTypeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.root} testID="client-onboarding-profile-type-root">
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => router.back()}
-        >
-          <ChevronLeft size={28} color="#FFFFFF" />
-        </TouchableOpacity>
-        
-        <Text style={styles.logo}>theCut</Text>
-      </View>
+      <ImageBackground
+        source={{ uri: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=1200&q=80' }}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={styles.overlay}>
+          <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+              <TouchableOpacity 
+                style={styles.backButton} 
+                onPress={() => router.back()}
+                testID="profile-type-back-button"
+              >
+                <ChevronLeft size={28} color="#FFFFFF" />
+              </TouchableOpacity>
+              <View style={styles.headerSpacer} />
+            </View>
 
-      {/* Tabs */}
-      <View style={styles.tabContainer}>
-        <View style={[styles.tab, styles.activeTab]}>
-          <Text style={[styles.tabText, styles.activeTabText]}>SIGN UP</Text>
+            <View style={styles.tabContainer}>
+              <View style={[styles.tab, styles.activeTab]}>
+                <Text style={[styles.tabText, styles.activeTabText]}>SIGN UP</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.tab}
+                onPress={() => router.replace('/(auth)/login')}
+                testID="profile-type-login-tab"
+              >
+                <Text style={styles.tabText}>LOG IN</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.content}>
+              <Text style={styles.title}>SELECT PROFILE TYPE</Text>
+
+              <TouchableOpacity 
+                style={[styles.profileOption, styles.clientOption]}
+                onPress={() => handleProfileSelection('client')}
+                testID="profile-type-client"
+              >
+                <View style={styles.iconContainer}>
+                  <User size={32} color="#000000" />
+                </View>
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionTitle}>CLIENT</Text>
+                  <Text style={styles.optionDescription}>Search providers and book appointments</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.profileOption, styles.providerOption]}
+                onPress={() => handleProfileSelection('provider')}
+                testID="profile-type-provider"
+              >
+                <View style={styles.iconContainer}>
+                  <Scissors size={32} color="#FFFFFF" />
+                </View>
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionTitle}>PROVIDER</Text>
+                  <Text style={styles.optionDescription}>Manage your business and clients</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.profileOption, styles.ownerOption]}
+                onPress={() => handleProfileSelection('owner')}
+                testID="profile-type-owner"
+              >
+                <View style={styles.iconContainer}>
+                  <Store size={32} color="#FFFFFF" />
+                </View>
+                <View style={styles.optionContent}>
+                  <Text style={styles.optionTitle}>SHOP OWNER</Text>
+                  <Text style={styles.optionDescription}>Manage your shops and providers</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.createButton}
+                onPress={() => handleProfileSelection('client')}
+                testID="profile-type-create-account"
+              >
+                <Text style={styles.createButtonText}>CREATE ACCOUNT</Text>
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
         </View>
-        <TouchableOpacity 
-          style={styles.tab}
-          onPress={() => router.replace('/(auth)/login')}
-        >
-          <Text style={styles.tabText}>LOG IN</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Content */}
-      <View style={styles.content}>
-        <Text style={styles.title}>SELECT PROFILE TYPE</Text>
-        
-        {/* Client Option */}
-        <TouchableOpacity 
-          style={[styles.profileOption, styles.clientOption]}
-          onPress={() => handleProfileSelection('client')}
-        >
-          <View style={styles.iconContainer}>
-            <User size={32} color="#000000" />
-          </View>
-          <View style={styles.optionContent}>
-            <Text style={styles.optionTitle}>CLIENT</Text>
-            <Text style={styles.optionDescription}>Search providers and book appointments</Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Provider Option */}
-        <TouchableOpacity 
-          style={[styles.profileOption, styles.providerOption]}
-          onPress={() => handleProfileSelection('provider')}
-        >
-          <View style={styles.iconContainer}>
-            <Scissors size={32} color="#FFFFFF" />
-          </View>
-          <View style={styles.optionContent}>
-            <Text style={styles.optionTitle}>PROVIDER</Text>
-            <Text style={styles.optionDescription}>Manage your business and clients</Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Shop Owner Option */}
-        <TouchableOpacity 
-          style={[styles.profileOption, styles.ownerOption]}
-          onPress={() => handleProfileSelection('owner')}
-        >
-          <View style={styles.iconContainer}>
-            <Store size={32} color="#FFFFFF" />
-          </View>
-          <View style={styles.optionContent}>
-            <Text style={styles.optionTitle}>SHOP OWNER</Text>
-            <Text style={styles.optionDescription}>Manage your shops and providers</Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Create Account Button */}
-        <TouchableOpacity 
-          style={styles.createButton}
-          onPress={() => handleProfileSelection('client')}
-        >
-          <Text style={styles.createButtonText}>CREATE ACCOUNT</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: COLORS.overlay,
+  },
+  container: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -131,15 +152,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logo: {
-    fontSize: 48,
-    fontWeight: '300' as const,
-    fontStyle: 'italic',
-    color: COLORS.text,
-    textAlign: 'center',
+  headerSpacer: {
     flex: 1,
-    marginRight: 48,
-    fontFamily: FONTS.display,
   },
   tabContainer: {
     flexDirection: 'row',

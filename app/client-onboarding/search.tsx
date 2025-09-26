@@ -8,6 +8,7 @@ import {
   TextInput,
   ScrollView,
   Image,
+  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -30,7 +31,6 @@ interface Provider {
   distance: string;
 }
 
-// Mock shops for testing
 const mockShops: Shop[] = [
   {
     id: '1',
@@ -55,7 +55,7 @@ const mockShops: Shop[] = [
   },
   {
     id: '4',
-    name: 'The Gentleman\'s Den',
+    name: "The Gentleman's Den",
     image: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=400',
     description: 'Traditional Barbershop',
     type: 'Barber Shop'
@@ -86,9 +86,9 @@ export default function SearchScreen() {
   const [searchText, setSearchText] = useState<string>('');
   const [selectedFilter, setSelectedFilter] = useState<string>('Nearby');
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
-  
+
   const isShopSearch = type === 'shop';
-  
+
   const filteredShops = mockShops.filter(shop => 
     shop.name.toLowerCase().includes(searchText.toLowerCase()) ||
     shop.description.toLowerCase().includes(searchText.toLowerCase())
@@ -100,7 +100,7 @@ export default function SearchScreen() {
     }
     router.push('/client-onboarding/payment' as any);
   };
-  
+
   const handleShopSelect = (shop: Shop) => {
     if (!shop?.id?.trim()) return;
     if (!shop?.name?.trim()) return;
@@ -112,240 +112,262 @@ export default function SearchScreen() {
     };
     setSelectedShop(sanitizedShop);
   };
-  
+
   if (isShopSearch) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.root}>
         <StatusBar barStyle="light-content" backgroundColor="#000000" />
-        
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          testID="search-back-button"
+        <ImageBackground
+          source={{ uri: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=1200&q=80' }}
+          style={styles.backgroundImage}
+          resizeMode="cover"
         >
-          <ChevronLeft size={20} color="#CCCCCC" />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
-        
-        {/* Progress Header */}
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressText}>GET STARTED</Text>
-          <View style={styles.progressDots}>
-            <View style={[styles.dot, styles.activeDot]} />
-            <View style={styles.dot} />
-            <View style={styles.dot} />
-            <View style={styles.dot} />
-            <View style={styles.dot} />
-            <View style={styles.dot} />
-          </View>
-        </View>
-        
-        {/* Content */}
-        <View style={styles.shopSearchContent}>
-          <Text style={styles.shopSearchTitle}>Search for your shop</Text>
-          <Text style={styles.shopSearchSubtitle}>
-            Find the Shop where you work to connect with them.
-          </Text>
-          
-          {/* Search Input */}
-          <View style={styles.shopSearchContainer}>
-            <Search size={20} color="#666666" />
-            <TextInput
-              style={styles.shopSearchInput}
-              placeholder="Enter shop name or address"
-              placeholderTextColor="#666666"
-              value={searchText}
-              onChangeText={setSearchText}
-            />
-          </View>
-          
-          {/* Shop Results */}
-          {searchText.length > 0 && (
-            <ScrollView style={styles.shopResults} showsVerticalScrollIndicator={false}>
-              {filteredShops.map((shop) => (
-                <TouchableOpacity
-                  key={shop.id}
+          <View style={styles.overlay}>
+            <SafeAreaView style={styles.container}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => router.back()}
+                testID="search-back-button"
+              >
+                <ChevronLeft size={20} color="#CCCCCC" />
+                <Text style={styles.backText}>Back</Text>
+              </TouchableOpacity>
+
+              <View style={styles.progressContainer}>
+                <Text style={styles.progressText}>GET STARTED</Text>
+                <View style={styles.progressDots}>
+                  <View style={[styles.dot, styles.activeDot]} />
+                  <View style={styles.dot} />
+                  <View style={styles.dot} />
+                  <View style={styles.dot} />
+                  <View style={styles.dot} />
+                  <View style={styles.dot} />
+                </View>
+              </View>
+
+              <View style={styles.shopSearchContent}>
+                <Text style={styles.shopSearchTitle}>Search for your shop</Text>
+                <Text style={styles.shopSearchSubtitle}>
+                  Find the Shop where you work to connect with them.
+                </Text>
+
+                <View style={styles.shopSearchContainer}>
+                  <Search size={20} color="#666666" />
+                  <TextInput
+                    style={styles.shopSearchInput}
+                    placeholder="Enter shop name or address"
+                    placeholderTextColor="#666666"
+                    value={searchText}
+                    onChangeText={setSearchText}
+                  />
+                </View>
+
+                {searchText.length > 0 && (
+                  <ScrollView style={styles.shopResults} showsVerticalScrollIndicator={false}>
+                    {filteredShops.map((shop) => (
+                      <TouchableOpacity
+                        key={shop.id}
+                        style={[
+                          styles.shopResultItem,
+                          selectedShop?.id === shop.id && styles.shopResultItemSelected
+                        ]}
+                        onPress={() => {
+                          if (!shop?.id?.trim()) return;
+                          if (!shop?.name?.trim()) return;
+                          if (shop.name.length > 100) return;
+                          const sanitizedShop = {
+                            ...shop,
+                            name: shop.name.trim(),
+                            description: shop.description.trim()
+                          };
+                          handleShopSelect(sanitizedShop);
+                        }}
+                      >
+                        <Image source={{ uri: shop.image }} style={styles.shopResultImage} />
+                        <View style={styles.shopResultInfo}>
+                          <Text style={styles.shopResultName}>{shop.name}</Text>
+                          <Text style={styles.shopResultDescription}>{shop.description}</Text>
+                          <Text style={styles.shopResultType}>{shop.type}</Text>
+                        </View>
+                        {selectedShop?.id === shop.id && (
+                          <View style={styles.selectedIndicator} />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+              </View>
+
+              <View style={styles.shopSearchBottom}>
+                <TouchableOpacity 
                   style={[
-                    styles.shopResultItem,
-                    selectedShop?.id === shop.id && styles.shopResultItemSelected
+                    styles.continueButton,
+                    (!selectedShop || searchText.length === 0) && styles.continueButtonDisabled
                   ]}
-                  onPress={() => {
-                    if (!shop?.id?.trim()) return;
-                    if (!shop?.name?.trim()) return;
-                    if (shop.name.length > 100) return;
-                    const sanitizedShop = {
-                      ...shop,
-                      name: shop.name.trim(),
-                      description: shop.description.trim()
-                    };
-                    handleShopSelect(sanitizedShop);
-                  }}
+                  onPress={handleNext}
+                  disabled={!selectedShop || searchText.length === 0}
                 >
-                  <Image source={{ uri: shop.image }} style={styles.shopResultImage} />
-                  <View style={styles.shopResultInfo}>
-                    <Text style={styles.shopResultName}>{shop.name}</Text>
-                    <Text style={styles.shopResultDescription}>{shop.description}</Text>
-                    <Text style={styles.shopResultType}>{shop.type}</Text>
-                  </View>
-                  {selectedShop?.id === shop.id && (
-                    <View style={styles.selectedIndicator} />
-                  )}
+                  <Text style={[
+                    styles.continueButtonText,
+                    (!selectedShop || searchText.length === 0) && styles.continueButtonTextDisabled
+                  ]}>
+                    CONTINUE
+                  </Text>
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-        </View>
-        
-        {/* Continue Button */}
-        <View style={styles.shopSearchBottom}>
-          <TouchableOpacity 
-            style={[
-              styles.continueButton,
-              (!selectedShop || searchText.length === 0) && styles.continueButtonDisabled
-            ]}
-            onPress={handleNext}
-            disabled={!selectedShop || searchText.length === 0}
-          >
-            <Text style={[
-              styles.continueButtonText,
-              (!selectedShop || searchText.length === 0) && styles.continueButtonTextDisabled
-            ]}>
-              CONTINUE
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+              </View>
+            </SafeAreaView>
+          </View>
+        </ImageBackground>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.searchContainer}>
-          <Search size={20} color="#666666" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search"
-            placeholderTextColor="#666666"
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-        </View>
-        
-        <TouchableOpacity style={styles.locationContainer}>
-          <MapPin size={16} color="#666666" />
-          <Text style={styles.locationText}>Houston, TX</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Filter Options */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
-        style={styles.filtersContainer}
-        contentContainerStyle={styles.filtersContent}
+      <ImageBackground
+        source={{ uri: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1200&q=80' }}
+        style={styles.backgroundImage}
+        resizeMode="cover"
       >
-        <TouchableOpacity style={[styles.filterButton, styles.filterButtonActive]}>
-          <Filter size={16} color="#000000" />
-        </TouchableOpacity>
-        {filterOptions.map((filter) => (
-          <TouchableOpacity
-            key={filter}
-            style={[
-              styles.filterButton,
-              selectedFilter === filter && styles.filterButtonActive
-            ]}
-            onPress={() => {
-              if (!filter?.trim()) return;
-              if (filter.length > 100) return;
-              const sanitizedFilter = filter.trim();
-              setSelectedFilter(sanitizedFilter);
-            }}
-          >
-            <Text style={[
-              styles.filterText,
-              selectedFilter === filter && styles.filterTextActive
-            ]}>
-              {filter}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Shops Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>SHOPS</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {mockShops.map((shop) => (
-              <View key={shop.id} style={styles.shopCard}>
-                <Image source={{ uri: shop.image }} style={styles.shopImage} />
-                <View style={styles.shopInfo}>
-                  <Text style={styles.shopName}>{shop.name}</Text>
-                  <Text style={styles.shopDescription}>{shop.description}</Text>
-                </View>
+        <View style={styles.overlay}>
+          <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+              <View style={styles.searchContainer}>
+                <Search size={20} color="#666666" />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search"
+                  placeholderTextColor="#666666"
+                  value={searchText}
+                  onChangeText={setSearchText}
+                />
               </View>
-            ))}
-          </ScrollView>
-        </View>
 
-        {/* Providers Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>PROVIDERS</Text>
-          {mockProviders.map((provider) => (
-            <View key={provider.id} style={styles.providerCard}>
-              <View style={styles.providerHeader}>
-                <Image source={{ uri: provider.image }} style={styles.providerAvatar} />
-                <View style={styles.providerInfo}>
-                  <Text style={styles.providerName}>{provider.name}</Text>
-                  <Text style={styles.providerService}>Papi Kutz</Text>
-                  <View style={styles.ratingContainer}>
-                    <Star size={14} color="#FFD700" fill="#FFD700" />
-                    <Text style={styles.rating}>{provider.rating} (5)</Text>
-                    <Text style={styles.distance}>{provider.distance}</Text>
-                  </View>
-                </View>
-              </View>
-              
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.portfolioContainer}>
-                {[1, 2, 3, 4].map((item) => (
-                  <Image 
-                    key={item}
-                    source={{ uri: `https://images.unsplash.com/photo-150795191487${item}?w=200&q=80` }}
-                    style={styles.portfolioImage} 
-                  />
-                ))}
-              </ScrollView>
+              <TouchableOpacity style={styles.locationContainer}>
+                <MapPin size={16} color="#666666" />
+                <Text style={styles.locationText}>Houston, TX</Text>
+              </TouchableOpacity>
             </View>
-          ))}
-        </View>
-      </ScrollView>
 
-      {/* Bottom Section */}
-      <View style={styles.bottomSection}>
-        <Text style={styles.bottomTitle}>SEARCH</Text>
-        <Text style={styles.bottomDescription}>
-          Quickly find top providers in your area with just a few taps.
-        </Text>
-        
-        <TouchableOpacity 
-          style={styles.nextButton}
-          onPress={handleNext}
-        >
-          <Text style={styles.nextButtonText}>NEXT</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              style={styles.filtersContainer}
+              contentContainerStyle={styles.filtersContent}
+            >
+              <TouchableOpacity style={[styles.filterButton, styles.filterButtonActive]}>
+                <Filter size={16} color="#000000" />
+              </TouchableOpacity>
+              {filterOptions.map((filter) => (
+                <TouchableOpacity
+                  key={filter}
+                  style={[
+                    styles.filterButton,
+                    selectedFilter === filter && styles.filterButtonActive
+                  ]}
+                  onPress={() => {
+                    if (!filter?.trim()) return;
+                    if (filter.length > 100) return;
+                    const sanitizedFilter = filter.trim();
+                    setSelectedFilter(sanitizedFilter);
+                  }}
+                >
+                  <Text style={[
+                    styles.filterText,
+                    selectedFilter === filter && styles.filterTextActive
+                  ]}
+                  >
+                    {filter}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>SHOPS</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {mockShops.map((shop) => (
+                    <View key={shop.id} style={styles.shopCard}>
+                      <Image source={{ uri: shop.image }} style={styles.shopImage} />
+                      <View style={styles.shopInfo}>
+                        <Text style={styles.shopName}>{shop.name}</Text>
+                        <Text style={styles.shopDescription}>{shop.description}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>PROVIDERS</Text>
+                {mockProviders.map((provider) => (
+                  <View key={provider.id} style={styles.providerCard}>
+                    <View style={styles.providerHeader}>
+                      <Image source={{ uri: provider.image }} style={styles.providerAvatar} />
+                      <View style={styles.providerInfo}>
+                        <Text style={styles.providerName}>{provider.name}</Text>
+                        <Text style={styles.providerService}>Papi Kutz</Text>
+                        <View style={styles.ratingContainer}>
+                          <Star size={14} color="#FFD700" fill="#FFD700" />
+                          <Text style={styles.rating}>{provider.rating} (5)</Text>
+                          <Text style={styles.distance}>{provider.distance}</Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.portfolioContainer}>
+                      {[1, 2, 3, 4].map((item) => (
+                        <Image 
+                          key={item}
+                          source={{ uri: `https://images.unsplash.com/photo-150795191487${item}?w=200&q=80` }}
+                          style={styles.portfolioImage} 
+                        />
+                      ))}
+                    </ScrollView>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+
+            <View style={styles.bottomSection}>
+              <Text style={styles.bottomTitle}>SEARCH</Text>
+              <Text style={styles.bottomDescription}>
+                Quickly find top providers in your area with just a few taps.
+              </Text>
+
+              <TouchableOpacity 
+                style={styles.nextButton}
+                onPress={handleNext}
+                testID="search-next-button"
+              >
+                <Text style={styles.nextButtonText}>NEXT</Text>
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
+        </View>
+      </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: COLORS.overlay,
+  },
+  container: {
+    flex: 1,
   },
   header: {
     paddingHorizontal: SPACING.lg,
@@ -505,12 +527,12 @@ const styles = StyleSheet.create({
     marginRight: SPACING.sm,
   },
   bottomSection: {
-    backgroundColor: COLORS.background,
+    ...GLASS_STYLES.card,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.xl,
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.xl,
   },
   backButton: {
     ...GLASS_STYLES.card,
@@ -603,7 +625,6 @@ const styles = StyleSheet.create({
   },
   shopResultItemSelected: {
     borderColor: COLORS.primary,
-    backgroundColor: COLORS.card,
   },
   shopResultImage: {
     width: 60,

@@ -17,16 +17,15 @@ export default function WelcomeScreen() {
   };
 
   const handleEnterCode = () => {
-    // Handle referral code entry
-    console.log('Enter code pressed');
+    console.log('WelcomeScreen: enter code');
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.root} testID="client-onboarding-welcome-root">
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
-      
+
       <ImageBackground
-        source={{ uri: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80' }}
+        source={{ uri: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1200&q=80' }}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
@@ -34,20 +33,24 @@ export default function WelcomeScreen() {
           <SafeAreaView style={styles.safeArea}>
             <View style={styles.content}>
               <View style={styles.textContainer}>
-                <Text style={styles.title}>ELEVATE YOUR HAIRCUT EXPERIENCE</Text>
+                <View style={styles.glassTitle}>
+                  <Text style={styles.title}>ELEVATE YOUR HAIRCUT EXPERIENCE</Text>
+                </View>
               </View>
-              
+
               <View style={styles.buttonContainer}>
                 <TouchableOpacity 
                   style={styles.getStartedButton}
                   onPress={handleGetStarted}
+                  testID="welcome-get-started"
                 >
                   <Text style={styles.getStartedButtonText}>GET STARTED</Text>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity 
                   style={styles.enterCodeButton}
                   onPress={handleEnterCode}
+                  testID="welcome-enter-code"
                 >
                   <Text style={styles.enterCodeButtonText}>ENTER CODE</Text>
                 </TouchableOpacity>
@@ -61,7 +64,7 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
@@ -88,6 +91,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: SPACING.md,
+  },
+  glassTitle: {
+    ...GLASS_STYLES.card,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg,
   },
   title: {
     fontSize: FONT_SIZES.xxxl,

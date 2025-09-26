@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StatusBar,
   ScrollView,
+  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -16,125 +17,142 @@ export default function PaymentScreen() {
   const [selectedPayment, setSelectedPayment] = useState<string>('card');
 
   const handleGetStarted = () => {
-    // Complete onboarding and navigate to client dashboard
     router.replace('/(app)/(client)/(tabs)/home');
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
-      
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>ADDITIONAL INFORMATION</Text>
-          <Text style={styles.subtitle}>PHONE NUMBER</Text>
-          <Text style={styles.phoneNumber}>13013996890</Text>
+      <ImageBackground
+        source={{ uri: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=1200&q=80' }}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={styles.overlay}>
+          <SafeAreaView style={styles.container}>
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+              <View style={styles.header}>
+                <Text style={styles.title}>ADDITIONAL INFORMATION</Text>
+                <Text style={styles.subtitle}>PHONE NUMBER</Text>
+                <Text style={styles.phoneNumber}>13013996890</Text>
+              </View>
+
+              <View style={styles.paymentSection}>
+                <Text style={styles.sectionTitle}>PAYMENT</Text>
+
+                <TouchableOpacity 
+                  style={[
+                    styles.paymentOption,
+                    selectedPayment === 'apple' && styles.paymentOptionSelected
+                  ]}
+                  onPress={() => setSelectedPayment('apple')}
+                  testID="payment-option-apple"
+                >
+                  <View style={styles.radioButton}>
+                    {selectedPayment === 'apple' && <View style={styles.radioButtonInner} />}
+                  </View>
+                  <View style={styles.paymentIcon}>
+                    <Text style={styles.applePayText}>🍎</Text>
+                  </View>
+                  <Text style={styles.paymentText}>Apple Pay</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[
+                    styles.paymentOption,
+                    selectedPayment === 'cashapp' && styles.paymentOptionSelected
+                  ]}
+                  onPress={() => setSelectedPayment('cashapp')}
+                  testID="payment-option-cashapp"
+                >
+                  <View style={styles.radioButton}>
+                    {selectedPayment === 'cashapp' && <View style={styles.radioButtonInner} />}
+                  </View>
+                  <View style={styles.paymentIcon}>
+                    <Text style={styles.cashAppText}>$</Text>
+                  </View>
+                  <Text style={styles.paymentText}>Cash App Pay</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[
+                    styles.paymentOption,
+                    styles.paymentOptionSelected,
+                    selectedPayment === 'card' && styles.paymentOptionActive
+                  ]}
+                  onPress={() => setSelectedPayment('card')}
+                  testID="payment-option-card"
+                >
+                  <View style={styles.radioButton}>
+                    <View style={styles.radioButtonInner} />
+                  </View>
+                  <View style={styles.paymentIcon}>
+                    <CreditCard size={20} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.cardInfo}>
+                    <Text style={styles.paymentText}>•••••••• 9752</Text>
+                    <Text style={styles.changeText}>CHANGE</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.finePrintSection}>
+                <Text style={styles.finePrintTitle}>THE FINE PRINT</Text>
+
+                <View style={styles.finePrintItem}>
+                  <Text style={styles.finePrintLabel}>Preauthorization</Text>
+                  <Text style={styles.finePrintText}>
+                    A hold will not be placed on your payment method, you will only be charged once the 
+                    appointment has been completed by the provider.
+                  </Text>
+                </View>
+
+                <View style={styles.finePrintItem}>
+                  <Text style={styles.finePrintLabel}>Cancellation Policy</Text>
+                  <Text style={styles.finePrintText}>
+                    Any cancellation within 1 hour of the appointment are subject to a 100% fee of the original service price.
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.bottomSection}>
+              <Text style={styles.bottomTitle}>PAY</Text>
+              <Text style={styles.bottomDescription}>
+                Securely pay for your service with flexible payment options.
+              </Text>
+
+              <TouchableOpacity 
+                style={styles.getStartedButton}
+                onPress={handleGetStarted}
+                testID="payment-get-started"
+              >
+                <Text style={styles.getStartedButtonText}>GET STARTED</Text>
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
         </View>
-
-        {/* Payment Section */}
-        <View style={styles.paymentSection}>
-          <Text style={styles.sectionTitle}>PAYMENT</Text>
-          
-          {/* Apple Pay */}
-          <TouchableOpacity 
-            style={[
-              styles.paymentOption,
-              selectedPayment === 'apple' && styles.paymentOptionSelected
-            ]}
-            onPress={() => setSelectedPayment('apple')}
-          >
-            <View style={styles.radioButton}>
-              {selectedPayment === 'apple' && <View style={styles.radioButtonInner} />}
-            </View>
-            <View style={styles.paymentIcon}>
-              <Text style={styles.applePayText}>🍎</Text>
-            </View>
-            <Text style={styles.paymentText}>Apple Pay</Text>
-          </TouchableOpacity>
-
-          {/* Cash App Pay */}
-          <TouchableOpacity 
-            style={[
-              styles.paymentOption,
-              selectedPayment === 'cashapp' && styles.paymentOptionSelected
-            ]}
-            onPress={() => setSelectedPayment('cashapp')}
-          >
-            <View style={styles.radioButton}>
-              {selectedPayment === 'cashapp' && <View style={styles.radioButtonInner} />}
-            </View>
-            <View style={styles.paymentIcon}>
-              <Text style={styles.cashAppText}>$</Text>
-            </View>
-            <Text style={styles.paymentText}>Cash App Pay</Text>
-          </TouchableOpacity>
-
-          {/* Credit Card */}
-          <TouchableOpacity 
-            style={[
-              styles.paymentOption,
-              styles.paymentOptionSelected,
-              selectedPayment === 'card' && styles.paymentOptionActive
-            ]}
-            onPress={() => setSelectedPayment('card')}
-          >
-            <View style={styles.radioButton}>
-              <View style={styles.radioButtonInner} />
-            </View>
-            <View style={styles.paymentIcon}>
-              <CreditCard size={20} color="#FFFFFF" />
-            </View>
-            <View style={styles.cardInfo}>
-              <Text style={styles.paymentText}>•••••••• 9752</Text>
-              <Text style={styles.changeText}>CHANGE</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        {/* Fine Print */}
-        <View style={styles.finePrintSection}>
-          <Text style={styles.finePrintTitle}>THE FINE PRINT</Text>
-          
-          <View style={styles.finePrintItem}>
-            <Text style={styles.finePrintLabel}>Preauthorization</Text>
-            <Text style={styles.finePrintText}>
-              A hold will not be placed on your payment method, you will only be charged once the 
-              appointment has been completed by the provider.
-            </Text>
-          </View>
-
-          <View style={styles.finePrintItem}>
-            <Text style={styles.finePrintLabel}>Cancellation Policy</Text>
-            <Text style={styles.finePrintText}>
-              Any cancellation within 1 hour of the appointment are subject to a 100% fee of the original service price.
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Bottom Section */}
-      <View style={styles.bottomSection}>
-        <Text style={styles.bottomTitle}>PAY</Text>
-        <Text style={styles.bottomDescription}>
-          Securely pay for your service with flexible payment options.
-        </Text>
-        
-        <TouchableOpacity 
-          style={styles.getStartedButton}
-          onPress={handleGetStarted}
-        >
-          <Text style={styles.getStartedButtonText}>GET STARTED</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: COLORS.overlay,
+  },
+  container: {
+    flex: 1,
   },
   content: {
     flex: 1,
@@ -278,12 +296,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
   },
   bottomSection: {
-    backgroundColor: COLORS.background,
+    ...GLASS_STYLES.card,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.xl,
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.xl,
   },
   bottomTitle: {
     color: COLORS.text,
