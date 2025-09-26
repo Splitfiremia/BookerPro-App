@@ -1,19 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import Slider from '@react-native-community/slider';
+import { CustomSlider } from '@/components/CustomSlider';
 import { useRouter } from 'expo-router';
-import { GradientButton } from '@/components/GradientButton';
+
 import { FormInput } from '@/components/FormInput';
 
 import { OnboardingNavigation } from '@/components/OnboardingNavigation';
 import { useProviderOnboarding } from '@/providers/ProviderOnboardingProvider';
-import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES } from '@/constants/theme';
+import { COLORS, FONTS, FONT_SIZES, SPACING } from '@/constants/theme';
 
 export default function ServiceAddressScreen() {
   const router = useRouter();
   const { 
-    currentStep, 
-    totalSteps, 
     workSituation,
     address,
     city,
@@ -240,7 +238,7 @@ export default function ServiceAddressScreen() {
                 <Text style={styles.radiusLabel}>Maximum Travel Distance</Text>
                 <Text style={styles.radiusValue}>{radius} miles</Text>
                 
-                <Slider
+                <CustomSlider
                   style={styles.slider}
                   minimumValue={1}
                   maximumValue={50}
