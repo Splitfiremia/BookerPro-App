@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StatusBar,
   ImageBackground,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -13,15 +14,23 @@ import { User, Scissors, Store } from 'lucide-react-native';
 import { COLORS, FONTS, FONT_SIZES, SPACING, GLASS_STYLES, BORDER_RADIUS } from '@/constants/theme';
 
 export default function ProfileTypeScreen() {
+  const [selectedType, setSelectedType] = useState<'client' | 'provider' | 'owner' | null>(null);
+  const [hoveredType, setHoveredType] = useState<'client' | 'provider' | 'owner' | null>(null);
+
   const handleProfileSelection = (type: 'client' | 'provider' | 'owner') => {
     console.log('ProfileTypeScreen: select', type);
-    if (type === 'client') {
-      router.push('/client-onboarding/welcome' as any);
-    } else if (type === 'provider') {
-      router.push('/provider-onboarding');
-    } else {
-      router.push('/shop-owner-onboarding');
-    }
+    setSelectedType(type);
+    
+    // Add a small delay to show the selection effect
+    setTimeout(() => {
+      if (type === 'client') {
+        router.push('/client-onboarding/welcome' as any);
+      } else if (type === 'provider') {
+        router.push('/provider-onboarding');
+      } else {
+        router.push('/shop-owner-onboarding');
+      }
+    }, 150);
   };
 
   return (
@@ -52,55 +61,124 @@ export default function ProfileTypeScreen() {
             <View style={styles.content}>
               <Text style={styles.title}>SELECT PROFILE TYPE</Text>
 
-              <TouchableOpacity 
-                style={[styles.profileOption, styles.clientOption]}
+              <Pressable 
+                style={({ pressed }) => [
+                  styles.profileOption,
+                  selectedType === 'client' && styles.selectedOption,
+                  hoveredType === 'client' && styles.hoveredOption,
+                  pressed && styles.pressedOption
+                ]}
                 onPress={() => handleProfileSelection('client')}
+                onHoverIn={() => setHoveredType('client')}
+                onHoverOut={() => setHoveredType(null)}
                 testID="profile-type-client"
               >
-                <View style={styles.iconContainer}>
-                  <User size={32} color="#000000" />
+                <View style={[
+                  styles.iconContainer,
+                  selectedType === 'client' && styles.selectedIconContainer,
+                  hoveredType === 'client' && styles.hoveredIconContainer
+                ]}>
+                  <User 
+                    size={32} 
+                    color={selectedType === 'client' || hoveredType === 'client' ? "#000000" : "#FFFFFF"} 
+                  />
                 </View>
                 <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>CLIENT</Text>
-                  <Text style={styles.optionDescription}>Search providers and book appointments</Text>
+                  <Text style={[
+                    styles.optionTitle,
+                    selectedType === 'client' && styles.selectedOptionTitle,
+                    hoveredType === 'client' && styles.hoveredOptionTitle
+                  ]}>CLIENT</Text>
+                  <Text style={[
+                    styles.optionDescription,
+                    selectedType === 'client' && styles.selectedOptionDescription,
+                    hoveredType === 'client' && styles.hoveredOptionDescription
+                  ]}>Search providers and book appointments</Text>
                 </View>
-              </TouchableOpacity>
+              </Pressable>
 
-              <TouchableOpacity 
-                style={[styles.profileOption, styles.providerOption]}
+              <Pressable 
+                style={({ pressed }) => [
+                  styles.profileOption,
+                  selectedType === 'provider' && styles.selectedOption,
+                  hoveredType === 'provider' && styles.hoveredOption,
+                  pressed && styles.pressedOption
+                ]}
                 onPress={() => handleProfileSelection('provider')}
+                onHoverIn={() => setHoveredType('provider')}
+                onHoverOut={() => setHoveredType(null)}
                 testID="profile-type-provider"
               >
-                <View style={styles.iconContainer}>
-                  <Scissors size={32} color="#FFFFFF" />
+                <View style={[
+                  styles.iconContainer,
+                  selectedType === 'provider' && styles.selectedIconContainer,
+                  hoveredType === 'provider' && styles.hoveredIconContainer
+                ]}>
+                  <Scissors 
+                    size={32} 
+                    color={selectedType === 'provider' || hoveredType === 'provider' ? "#000000" : "#FFFFFF"} 
+                  />
                 </View>
                 <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>PROVIDER</Text>
-                  <Text style={styles.optionDescription}>Manage your business and clients</Text>
+                  <Text style={[
+                    styles.optionTitle,
+                    selectedType === 'provider' && styles.selectedOptionTitle,
+                    hoveredType === 'provider' && styles.hoveredOptionTitle
+                  ]}>PROVIDER</Text>
+                  <Text style={[
+                    styles.optionDescription,
+                    selectedType === 'provider' && styles.selectedOptionDescription,
+                    hoveredType === 'provider' && styles.hoveredOptionDescription
+                  ]}>Manage your business and clients</Text>
                 </View>
-              </TouchableOpacity>
+              </Pressable>
 
-              <TouchableOpacity 
-                style={[styles.profileOption, styles.ownerOption]}
+              <Pressable 
+                style={({ pressed }) => [
+                  styles.profileOption,
+                  selectedType === 'owner' && styles.selectedOption,
+                  hoveredType === 'owner' && styles.hoveredOption,
+                  pressed && styles.pressedOption
+                ]}
                 onPress={() => handleProfileSelection('owner')}
+                onHoverIn={() => setHoveredType('owner')}
+                onHoverOut={() => setHoveredType(null)}
                 testID="profile-type-owner"
               >
-                <View style={styles.iconContainer}>
-                  <Store size={32} color="#FFFFFF" />
+                <View style={[
+                  styles.iconContainer,
+                  selectedType === 'owner' && styles.selectedIconContainer,
+                  hoveredType === 'owner' && styles.hoveredIconContainer
+                ]}>
+                  <Store 
+                    size={32} 
+                    color={selectedType === 'owner' || hoveredType === 'owner' ? "#000000" : "#FFFFFF"} 
+                  />
                 </View>
                 <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>SHOP OWNER</Text>
-                  <Text style={styles.optionDescription}>Manage your shops and providers</Text>
+                  <Text style={[
+                    styles.optionTitle,
+                    selectedType === 'owner' && styles.selectedOptionTitle,
+                    hoveredType === 'owner' && styles.hoveredOptionTitle
+                  ]}>SHOP OWNER</Text>
+                  <Text style={[
+                    styles.optionDescription,
+                    selectedType === 'owner' && styles.selectedOptionDescription,
+                    hoveredType === 'owner' && styles.hoveredOptionDescription
+                  ]}>Manage your shops and providers</Text>
                 </View>
-              </TouchableOpacity>
+              </Pressable>
 
-              <TouchableOpacity 
-                style={styles.createButton}
-                onPress={() => handleProfileSelection('client')}
+              <Pressable 
+                style={({ pressed }) => [
+                  styles.createButton,
+                  pressed && styles.pressedCreateButton
+                ]}
+                onPress={() => selectedType ? handleProfileSelection(selectedType) : handleProfileSelection('client')}
                 testID="profile-type-create-account"
               >
                 <Text style={styles.createButtonText}>CREATE ACCOUNT</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </SafeAreaView>
         </View>
@@ -174,17 +252,39 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     marginBottom: SPACING.md,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.glass.background,
+    transform: [{ scale: 1 }],
   },
-  clientOption: {
+  hoveredOption: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary + '15',
+    transform: [{ scale: 1.02 }],
+    shadowColor: COLORS.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  selectedOption: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
+    transform: [{ scale: 1.05 }],
+    shadowColor: COLORS.primary,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
   },
-  providerOption: {
-    borderColor: COLORS.border,
-  },
-  ownerOption: {
-    borderColor: COLORS.border,
+  pressedOption: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.8,
   },
   iconContainer: {
     width: 60,
@@ -194,6 +294,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.md,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  hoveredIconContainer: {
+    backgroundColor: COLORS.primary + '20',
+    borderColor: COLORS.primary,
+    transform: [{ scale: 1.1 }],
+  },
+  selectedIconContainer: {
+    backgroundColor: COLORS.secondary,
+    borderColor: COLORS.secondary,
+    transform: [{ scale: 1.15 }],
   },
   optionContent: {
     flex: 1,
@@ -206,17 +318,34 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     fontFamily: FONTS.bold,
   },
+  hoveredOptionTitle: {
+    color: COLORS.primary,
+  },
+  selectedOptionTitle: {
+    color: COLORS.background,
+  },
   optionDescription: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.lightGray,
     lineHeight: 20,
     fontFamily: FONTS.regular,
   },
+  hoveredOptionDescription: {
+    color: COLORS.text,
+  },
+  selectedOptionDescription: {
+    color: COLORS.background + 'CC',
+  },
   createButton: {
     ...GLASS_STYLES.button.primary,
     paddingVertical: SPACING.md,
     marginTop: SPACING.xxl,
     marginBottom: SPACING.xxl,
+    transform: [{ scale: 1 }],
+  },
+  pressedCreateButton: {
+    transform: [{ scale: 0.95 }],
+    opacity: 0.8,
   },
   createButtonText: {
     fontSize: FONT_SIZES.lg,
