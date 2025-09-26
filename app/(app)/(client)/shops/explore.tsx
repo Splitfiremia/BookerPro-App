@@ -17,15 +17,15 @@ import { mockShops, getShopRating, getShopProviders, getShopStartingPrice } from
 import { router } from 'expo-router';
 
 const filterOptions = [
-  { id: 'all', label: 'All Shops' },
   { id: 'nearby', label: 'Nearby' },
+  { id: 'price', label: 'Price' },
+  { id: 'available', label: 'Available' },
   { id: 'rating', label: 'Top Rated' },
-  { id: 'available', label: 'Available Now' },
 ];
 
 export default function ShopsExploreScreen() {
   const [searchText, setSearchText] = useState<string>('');
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [selectedFilter, setSelectedFilter] = useState<string>('nearby');
   const insets = useSafeAreaInsets();
 
   const filteredShops = mockShops.filter(shop => {
@@ -234,27 +234,25 @@ const styles = StyleSheet.create({
   },
   filtersContent: {
     paddingHorizontal: SPACING.md,
-    gap: SPACING.sm,
+    gap: SPACING.xs,
   },
   filterButton: {
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
-    borderRadius: BORDER_RADIUS.round,
-    borderWidth: 1,
-    borderColor: COLORS.lightGray,
-    backgroundColor: 'transparent',
-    minHeight: 32,
+    borderRadius: 20,
+    backgroundColor: COLORS.gray,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
+    minWidth: 70,
   },
   filterButtonActive: {
     backgroundColor: COLORS.accent,
-    borderColor: COLORS.accent,
   },
   filterText: {
-    color: COLORS.lightGray,
-    fontSize: FONT_SIZES.xs,
-    fontFamily: FONTS.regular,
+    color: COLORS.white,
+    fontSize: FONT_SIZES.sm,
+    fontFamily: FONTS.medium,
     textAlign: 'center',
   },
   filterTextActive: {
