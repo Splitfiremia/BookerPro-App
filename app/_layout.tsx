@@ -12,6 +12,7 @@ import { PaymentProvider } from "@/providers/PaymentProvider";
 import { WaitlistProvider } from "@/providers/WaitlistProvider";
 import { TeamManagementProvider } from "@/providers/TeamManagementProvider";
 import { ShopManagementProvider } from "@/providers/ShopManagementProvider";
+import { WithSafeAreaDeviceProvider } from "@/providers/DeviceProvider";
 
 import { ModeIndicator } from "@/components/ModeIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -22,16 +23,13 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      refetchOnWindowFocus: false, // Prevent unnecessary refetches
-      gcTime: 1000 * 60 * 10, // 10 minutes garbage collection
-      refetchOnMount: false, // Prevent hydration issues
-      refetchOnReconnect: false, // Prevent hydration issues
-      // Remove networkMode to prevent potential issues
+      staleTime: 1000 * 60 * 5,
+      refetchOnWindowFocus: false,
+      gcTime: 1000 * 60 * 10,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
     },
-    mutations: {
-      // Remove networkMode to prevent potential issues
-    },
+    mutations: {},
   },
 });
 
@@ -58,26 +56,28 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.gestureHandler}>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <OnboardingProvider>
-              <AppointmentProvider>
-                <PaymentProvider>
-                  <SocialProvider>
-                    <WaitlistProvider>
-                      <TeamManagementProvider>
-                        <ShopManagementProvider>
-                          <ServicesProvider>
-                            <RootLayoutNav />
-                            <ModeIndicator />
-                          </ServicesProvider>
-                        </ShopManagementProvider>
-                      </TeamManagementProvider>
-                    </WaitlistProvider>
-                  </SocialProvider>
-                </PaymentProvider>
-              </AppointmentProvider>
-            </OnboardingProvider>
-          </AuthProvider>
+          <WithSafeAreaDeviceProvider>
+            <AuthProvider>
+              <OnboardingProvider>
+                <AppointmentProvider>
+                  <PaymentProvider>
+                    <SocialProvider>
+                      <WaitlistProvider>
+                        <TeamManagementProvider>
+                          <ShopManagementProvider>
+                            <ServicesProvider>
+                              <RootLayoutNav />
+                              <ModeIndicator />
+                            </ServicesProvider>
+                          </ShopManagementProvider>
+                        </TeamManagementProvider>
+                      </WaitlistProvider>
+                    </SocialProvider>
+                  </PaymentProvider>
+                </AppointmentProvider>
+              </OnboardingProvider>
+            </AuthProvider>
+          </WithSafeAreaDeviceProvider>
         </QueryClientProvider>
       </ErrorBoundary>
     </GestureHandlerRootView>
