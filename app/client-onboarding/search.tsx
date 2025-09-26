@@ -408,13 +408,14 @@ const styles = StyleSheet.create({
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    marginRight: SPACING.sm,
-    borderRadius: BORDER_RADIUS.round,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 6,
+    marginRight: SPACING.xs,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
     backgroundColor: 'transparent',
+    minHeight: 32,
   },
   filterButtonActive: {
     backgroundColor: COLORS.primary,
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
   },
   filterText: {
     color: COLORS.text,
-    fontSize: FONT_SIZES.sm,
+    fontSize: FONT_SIZES.xs,
     fontWeight: '500' as const,
     fontFamily: FONTS.regular,
   },
