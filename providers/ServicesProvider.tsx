@@ -20,14 +20,15 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
       return;
     }
     
-    setIsLoading(true);
+    // Set loading to false immediately to prevent blocking UI
+    setIsLoading(false);
     
     try {
-      // Load based on user role and provider type - synchronously set defaults first
+      // Load based on user role and provider type - set defaults synchronously
       if (user.role === 'provider') {
         const mockData = user.mockData;
         if (mockData?.profile?.isIndependent !== false) {
-          // Independent provider - initialize with mock data first
+          // Independent provider - initialize with mock data immediately
           const initialServices: Service[] = mockData?.profile?.services?.map((s: any, index: number) => ({
             id: `service_${index + 1}`,
             name: s.name,
@@ -41,15 +42,17 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
           })) || [];
           setServices(initialServices);
           
-          // Then try to load from storage asynchronously
-          try {
-            const storedServices = await AsyncStorage.getItem(`services_${user.id}`);
-            if (storedServices) {
-              setServices(JSON.parse(storedServices));
+          // Load from storage asynchronously without blocking
+          setTimeout(async () => {
+            try {
+              const storedServices = await AsyncStorage.getItem(`services_${user.id}`);
+              if (storedServices) {
+                setServices(JSON.parse(storedServices));
+              }
+            } catch (error) {
+              console.log('Could not load stored services, using defaults');
             }
-          } catch (error) {
-            console.log('Could not load stored services, using defaults');
-          }
+          }, 0);
         } else {
           // Shop-based provider - set defaults immediately
           const defaultMasterServices: Service[] = [
@@ -130,15 +133,15 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
       }
     } catch (error) {
       console.error('Error loading services:', error);
-    } finally {
       setIsLoading(false);
     }
   }, [user]);
 
-  // Load services on mount
+  // Load services on mount with timeout to prevent blocking
   useEffect(() => {
     if (user) {
-      loadServices();
+      const timeoutId = setTimeout(loadServices, 0);
+      return () => clearTimeout(timeoutId);
     } else {
       setIsLoading(false);
     }

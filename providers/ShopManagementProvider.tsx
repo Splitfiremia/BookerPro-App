@@ -98,16 +98,17 @@ export const [ShopManagementProvider, useShopManagement] = createContextHook(() 
   // Load shop data from storage or mock data
   useEffect(() => {
     const loadShopData = async () => {
-      setIsLoading(true);
-      try {
-        if (!user || user.role !== "owner") {
-          setIsLoading(false);
-          return;
-        }
+      if (!user || user.role !== "owner") {
+        setIsLoading(false);
+        return;
+      }
 
+      setIsLoading(true);
+      
+      try {
         if (isDeveloperMode) {
-          // Generate mock shop data
-          const mockShops: ShopSettings[] = [
+          // Set minimal mock data immediately for fast loading
+          const quickMockShops: ShopSettings[] = [
             {
               id: "shop-1",
               name: "Downtown Hair Studio",
@@ -152,96 +153,137 @@ export const [ShopManagementProvider, useShopManagement] = createContextHook(() 
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             },
-            {
-              id: "shop-2",
-              name: "Uptown Beauty Lounge",
-              address: "456 Park Avenue",
-              city: "New York",
-              state: "NY",
-              zip: "10022",
-              phone: "(212) 555-0456",
-              email: "hello@uptownbeauty.com",
-              website: "www.uptownbeauty.com",
-              description: "Luxury beauty destination in uptown",
-              image: "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=400",
-              hours: [
-                { day: "Monday", isOpen: true, openTime: "10:00", closeTime: "19:00" },
-                { day: "Tuesday", isOpen: true, openTime: "09:00", closeTime: "20:00" },
-                { day: "Wednesday", isOpen: true, openTime: "09:00", closeTime: "20:00" },
-                { day: "Thursday", isOpen: true, openTime: "09:00", closeTime: "21:00" },
-                { day: "Friday", isOpen: true, openTime: "09:00", closeTime: "21:00" },
-                { day: "Saturday", isOpen: true, openTime: "08:00", closeTime: "19:00" },
-                { day: "Sunday", isOpen: true, openTime: "10:00", closeTime: "18:00" },
-              ],
-              services: [
-                { id: "s4", name: "Premium Cut & Style", description: "Luxury haircut experience", duration: 75, price: 120, category: "Hair", isActive: true },
-                { id: "s5", name: "Balayage", description: "Hand-painted highlights", duration: 180, price: 220, category: "Color", isActive: true },
-                { id: "s6", name: "Keratin Treatment", description: "Smoothing treatment", duration: 150, price: 180, category: "Treatment", isActive: true },
-              ],
-              photos: [
-                { id: "p3", url: "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=400", type: "interior", caption: "Reception area" },
-                { id: "p4", url: "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400", type: "interior", caption: "VIP styling room" },
-              ],
-              holidaySchedule: [],
-              preferences: {
-                bookingAdvanceTime: 48,
-                cancellationPolicy: "48 hours notice required for full refund",
-                depositRequired: true,
-                depositAmount: 50,
-                autoConfirmBookings: true,
-                allowOnlineBooking: true,
-                requireClientNotes: true,
-              },
-              ownerId: user?.id || "",
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
           ];
 
-          // Generate mock metrics
-          const mockMetrics: ShopMetrics[] = mockShops.map((shop, index) => ({
+          // Generate minimal mock metrics for fast loading
+          const quickMockMetrics: ShopMetrics[] = quickMockShops.map((shop, index) => ({
             shopId: shop.id,
-            totalRevenue: 45000 + (index * 15000),
-            monthlyRevenue: 12000 + (index * 3000),
-            weeklyRevenue: 3000 + (index * 750),
-            totalAppointments: 180 + (index * 60),
-            monthlyAppointments: 48 + (index * 16),
-            weeklyAppointments: 12 + (index * 4),
-            averageRating: 4.6 + (index * 0.2),
-            totalReviews: 89 + (index * 30),
-            stylistCount: 4 + index,
-            chairUtilizationRate: 75 + (index * 10),
-            averageTicketSize: 95 + (index * 15),
-            topServices: shop.services.map((service, sIndex) => ({
+            totalRevenue: 45000,
+            monthlyRevenue: 12000,
+            weeklyRevenue: 3000,
+            totalAppointments: 180,
+            monthlyAppointments: 48,
+            weeklyAppointments: 12,
+            averageRating: 4.6,
+            totalReviews: 89,
+            stylistCount: 4,
+            chairUtilizationRate: 75,
+            averageTicketSize: 95,
+            topServices: shop.services.slice(0, 2).map((service, sIndex) => ({
               serviceId: service.id,
               serviceName: service.name,
               count: 25 - (sIndex * 5),
               revenue: service.price * (25 - (sIndex * 5)),
             })),
             revenueByPeriod: [
-              { period: "Jan", revenue: 8000 + (index * 2000), appointments: 32 + (index * 8) },
-              { period: "Feb", revenue: 9500 + (index * 2500), appointments: 38 + (index * 10) },
-              { period: "Mar", revenue: 11000 + (index * 3000), appointments: 44 + (index * 12) },
-              { period: "Apr", revenue: 12500 + (index * 3500), appointments: 50 + (index * 14) },
+              { period: "Jan", revenue: 8000, appointments: 32 },
+              { period: "Feb", revenue: 9500, appointments: 38 },
+              { period: "Mar", revenue: 11000, appointments: 44 },
+              { period: "Apr", revenue: 12500, appointments: 50 },
             ],
           }));
 
-          setShops(mockShops);
-          setShopMetrics(mockMetrics);
-          setSelectedShopId(mockShops[0]?.id || null);
+          // Set data immediately for fast UI rendering
+          setShops(quickMockShops);
+          setShopMetrics(quickMockMetrics);
+          setSelectedShopId(quickMockShops[0]?.id || null);
+          setIsLoading(false);
+          
+          // Load additional shop data asynchronously without blocking UI
+          setTimeout(() => {
+            const fullMockShops: ShopSettings[] = [
+              ...quickMockShops,
+              {
+                id: "shop-2",
+                name: "Uptown Beauty Lounge",
+                address: "456 Park Avenue",
+                city: "New York",
+                state: "NY",
+                zip: "10022",
+                phone: "(212) 555-0456",
+                email: "hello@uptownbeauty.com",
+                website: "www.uptownbeauty.com",
+                description: "Luxury beauty destination in uptown",
+                image: "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=400",
+                hours: [
+                  { day: "Monday", isOpen: true, openTime: "10:00", closeTime: "19:00" },
+                  { day: "Tuesday", isOpen: true, openTime: "09:00", closeTime: "20:00" },
+                  { day: "Wednesday", isOpen: true, openTime: "09:00", closeTime: "20:00" },
+                  { day: "Thursday", isOpen: true, openTime: "09:00", closeTime: "21:00" },
+                  { day: "Friday", isOpen: true, openTime: "09:00", closeTime: "21:00" },
+                  { day: "Saturday", isOpen: true, openTime: "08:00", closeTime: "19:00" },
+                  { day: "Sunday", isOpen: true, openTime: "10:00", closeTime: "18:00" },
+                ],
+                services: [
+                  { id: "s4", name: "Premium Cut & Style", description: "Luxury haircut experience", duration: 75, price: 120, category: "Hair", isActive: true },
+                  { id: "s5", name: "Balayage", description: "Hand-painted highlights", duration: 180, price: 220, category: "Color", isActive: true },
+                  { id: "s6", name: "Keratin Treatment", description: "Smoothing treatment", duration: 150, price: 180, category: "Treatment", isActive: true },
+                ],
+                photos: [
+                  { id: "p3", url: "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=400", type: "interior", caption: "Reception area" },
+                  { id: "p4", url: "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400", type: "interior", caption: "VIP styling room" },
+                ],
+                holidaySchedule: [],
+                preferences: {
+                  bookingAdvanceTime: 48,
+                  cancellationPolicy: "48 hours notice required for full refund",
+                  depositRequired: true,
+                  depositAmount: 50,
+                  autoConfirmBookings: true,
+                  allowOnlineBooking: true,
+                  requireClientNotes: true,
+                },
+                ownerId: user?.id || "",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              },
+            ];
+            
+            const fullMockMetrics: ShopMetrics[] = fullMockShops.map((shop, index) => ({
+              shopId: shop.id,
+              totalRevenue: 45000 + (index * 15000),
+              monthlyRevenue: 12000 + (index * 3000),
+              weeklyRevenue: 3000 + (index * 750),
+              totalAppointments: 180 + (index * 60),
+              monthlyAppointments: 48 + (index * 16),
+              weeklyAppointments: 12 + (index * 4),
+              averageRating: 4.6 + (index * 0.2),
+              totalReviews: 89 + (index * 30),
+              stylistCount: 4 + index,
+              chairUtilizationRate: 75 + (index * 10),
+              averageTicketSize: 95 + (index * 15),
+              topServices: shop.services.map((service, sIndex) => ({
+                serviceId: service.id,
+                serviceName: service.name,
+                count: 25 - (sIndex * 5),
+                revenue: service.price * (25 - (sIndex * 5)),
+              })),
+              revenueByPeriod: [
+                { period: "Jan", revenue: 8000 + (index * 2000), appointments: 32 + (index * 8) },
+                { period: "Feb", revenue: 9500 + (index * 2500), appointments: 38 + (index * 10) },
+                { period: "Mar", revenue: 11000 + (index * 3000), appointments: 44 + (index * 12) },
+                { period: "Apr", revenue: 12500 + (index * 3500), appointments: 50 + (index * 14) },
+              ],
+            }));
+            
+            setShops(fullMockShops);
+            setShopMetrics(fullMockMetrics);
+          }, 100);
         } else {
           // Load from AsyncStorage in live mode
           // TODO: Implement storage through provider
           console.log("Live mode storage not implemented yet");
+          setIsLoading(false);
         }
       } catch (error) {
         console.error("Error loading shop data:", error);
-      } finally {
         setIsLoading(false);
       }
     };
 
-    loadShopData();
+    // Use setTimeout to prevent blocking the main thread
+    const timeoutId = setTimeout(loadShopData, 0);
+    return () => clearTimeout(timeoutId);
   }, [user, isDeveloperMode]);
 
   // Add a new shop

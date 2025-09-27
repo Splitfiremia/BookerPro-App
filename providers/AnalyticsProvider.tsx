@@ -256,67 +256,123 @@ export const [AnalyticsProvider, useAnalytics] = createContextHook(() => {
   // Load analytics data from storage or mock data
   useEffect(() => {
     const loadAnalyticsData = async () => {
-      setIsLoading(true);
-      try {
-        if (!user) return;
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
 
+      // Set loading to false immediately to prevent blocking UI
+      setIsLoading(false);
+      
+      try {
         if (isDeveloperMode) {
-          // In developer mode, use mock data
+          // In developer mode, use minimal mock data for fast loading
           if (user.role === "owner") {
-            // For owners, load shop analytics
-            const ownerShops = user.mockData?.shops || [];
+            // For owners, load minimal shop analytics immediately
+            const ownerShops = user.mockData?.shops || [{ id: 'shop-1', name: 'Default Shop' }];
             const ownerTeam = user.mockData?.team || [];
             
-            const shopAnalytics: ShopAnalytics[] = ownerShops.map((shop: any) => {
-              const shopStylists = ownerTeam.filter((member: any) => member.shopId === shop.id);
+            // Create minimal analytics data for immediate display
+            const quickShopAnalytics: ShopAnalytics[] = ownerShops.slice(0, 1).map((shop: any) => {
               const mockData = generateMockAnalytics("owner", user.mockData);
               
               return {
                 id: shop.id,
                 name: shop.name,
-                stylists: shopStylists.length,
+                stylists: 4,
                 ...mockData,
                 totalRevenue: mockData.earnings.totalRevenue,
                 totalAppointments: mockData.metrics.totalAppointments,
-                revenueByPeriod: mockData.earnings.revenueByPeriod.slice(-7).map(item => ({
-                  period: new Date(item.period).toLocaleDateString('en-US', { weekday: 'short' }),
-                  revenue: item.totalRevenue,
-                })),
+                revenueByPeriod: [
+                  { period: 'Mon', revenue: 800 },
+                  { period: 'Tue', revenue: 950 },
+                  { period: 'Wed', revenue: 1100 },
+                  { period: 'Thu', revenue: 1250 },
+                  { period: 'Fri', revenue: 1400 },
+                  { period: 'Sat', revenue: 1600 },
+                  { period: 'Sun', revenue: 900 },
+                ],
               };
             });
             
-            setOwnerAnalytics(shopAnalytics);
+            setOwnerAnalytics(quickShopAnalytics);
             
-            // Generate booth rent status for team members
-            const rentStatus: BoothRentStatus[] = ownerTeam.map((member: any) => {
-              const shop = ownerShops.find((s: any) => s.id === member.shopId);
+            // Set minimal booth rent status
+            const quickRentStatus: BoothRentStatus[] = ownerTeam.slice(0, 3).map((member: any, index: number) => {
               const dueDate = new Date();
-              dueDate.setDate(dueDate.getDate() + Math.floor(Math.random() * 14) - 7); // Random due date between -7 and +7 days
-              
-              const rentType = Math.random() > 0.5 ? "fixed" : "percentage";
-              const baseAmount = Math.floor(Math.random() * 500) + 500;
+              dueDate.setDate(dueDate.getDate() + (index * 3) - 3);
               
               return {
-                id: `rent-${member.id}`,
-                stylistId: member.id,
-                stylistName: member.name,
-                shopId: member.shopId,
-                shopName: shop?.name || "Unknown Shop",
-                amount: baseAmount,
+                id: `rent-${member.id || index}`,
+                stylistId: member.id || `stylist-${index}`,
+                stylistName: member.name || `Stylist ${index + 1}`,
+                shopId: 'shop-1',
+                shopName: 'Default Shop',
+                amount: 500 + (index * 100),
                 dueDate: dueDate.toISOString(),
-                status: dueDate < new Date() ? "overdue" : "pending",
-                rentType,
-                percentageRate: rentType === "percentage" ? Math.floor(Math.random() * 10) + 15 : undefined,
-                autoDeduct: Math.random() > 0.6,
-                lastReminderSent: Math.random() > 0.5 ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString() : undefined,
-                reminderCount: Math.floor(Math.random() * 3),
-                lateFee: Math.random() > 0.7 ? Math.floor(Math.random() * 100) + 25 : undefined,
-                gracePeriodDays: Math.floor(Math.random() * 5) + 1,
+                status: index === 0 ? "overdue" : "pending",
+                rentType: "fixed",
+                autoDeduct: index % 2 === 0,
+                reminderCount: index,
+                gracePeriodDays: 3,
               };
             });
             
-            setBoothRentStatus(rentStatus);
-          } else if (user.role === "stylist") {
+            setBoothRentStatus(quickRentStatus);
+            
+            // Load full data asynchronously without blocking UI
+            setTimeout(() => {
+              const fullShopAnalytics: ShopAnalytics[] = ownerShops.map((shop: any) => {
+                const shopStylists = ownerTeam.filter((member: any) => member.shopId === shop.id);
+                const mockData = generateMockAnalytics("owner", user.mockData);
+                
+                return {
+                  id: shop.id,
+                  name: shop.name,
+                  stylists: shopStylists.length,
+                  ...mockData,
+                  totalRevenue: mockData.earnings.totalRevenue,
+                  totalAppointments: mockData.metrics.totalAppointments,
+                  revenueByPeriod: mockData.earnings.revenueByPeriod.slice(-7).map(item => ({
+                    period: new Date(item.period).toLocaleDateString('en-US', { weekday: 'short' }),
+                    revenue: item.totalRevenue,
+                  })),
+                };
+              });
+              
+              setOwnerAnalytics(fullShopAnalytics);
+              
+              // Generate full booth rent status for team members
+              const fullRentStatus: BoothRentStatus[] = ownerTeam.map((member: any) => {
+                const shop = ownerShops.find((s: any) => s.id === member.shopId);
+                const dueDate = new Date();
+                dueDate.setDate(dueDate.getDate() + Math.floor(Math.random() * 14) - 7);
+                
+                const rentType = Math.random() > 0.5 ? "fixed" : "percentage";
+                const baseAmount = Math.floor(Math.random() * 500) + 500;
+                
+                return {
+                  id: `rent-${member.id}`,
+                  stylistId: member.id,
+                  stylistName: member.name,
+                  shopId: member.shopId,
+                  shopName: shop?.name || "Unknown Shop",
+                  amount: baseAmount,
+                  dueDate: dueDate.toISOString(),
+                  status: dueDate < new Date() ? "overdue" : "pending",
+                  rentType,
+                  percentageRate: rentType === "percentage" ? Math.floor(Math.random() * 10) + 15 : undefined,
+                  autoDeduct: Math.random() > 0.6,
+                  lastReminderSent: Math.random() > 0.5 ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+                  reminderCount: Math.floor(Math.random() * 3),
+                  lateFee: Math.random() > 0.7 ? Math.floor(Math.random() * 100) + 25 : undefined,
+                  gracePeriodDays: Math.floor(Math.random() * 5) + 1,
+                };
+              });
+              
+              setBoothRentStatus(fullRentStatus);
+            }, 100);
+          } else if (user.role === "provider") {
             // For stylists, load their analytics
             const stylistProfile = user.mockData?.profile || {};
 
@@ -370,12 +426,13 @@ export const [AnalyticsProvider, useAnalytics] = createContextHook(() => {
         }
       } catch (error) {
         console.error("Error loading analytics data:", error);
-      } finally {
         setIsLoading(false);
       }
     };
 
-    loadAnalyticsData();
+    // Use setTimeout to prevent blocking the main thread
+    const timeoutId = setTimeout(loadAnalyticsData, 0);
+    return () => clearTimeout(timeoutId);
   }, [user, isDeveloperMode]);
 
   // Update booth rent status
@@ -384,7 +441,7 @@ export const [AnalyticsProvider, useAnalytics] = createContextHook(() => {
     
     try {
       if (!user) throw new Error("User not authenticated");
-      if (user.role !== "owner" && user.role !== "stylist") throw new Error("Unauthorized");
+      if (user.role !== "owner" && user.role !== "provider") throw new Error("Unauthorized");
       
       const updatedRentStatus = boothRentStatus.map(rent => {
         if (rent.id === rentId) {
@@ -557,7 +614,7 @@ export const [AnalyticsProvider, useAnalytics] = createContextHook(() => {
   const getCurrentAnalytics = useCallback(() => {
     if (user?.role === "owner") {
       return ownerAnalytics[0] || null;
-    } else if (user?.role === "stylist") {
+    } else if (user?.role === "provider") {
       return stylistAnalytics[0] || null;
     }
     return null;

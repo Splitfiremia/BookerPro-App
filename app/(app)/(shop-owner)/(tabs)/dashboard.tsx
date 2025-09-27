@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Calendar, BarChart2, Users, DollarSign, TrendingUp } from 'lucide-react-native';
@@ -14,61 +14,73 @@ export default function ShopOwnerDashboard() {
   const { consolidatedMetrics, isLoading: shopLoading } = useShopManagement();
   const { masterServices, isLoading: servicesLoading } = useServices();
   
-  const isLoading = shopLoading || servicesLoading;
+  // Memoize loading state to prevent unnecessary re-renders
+  const isLoading = useMemo(() => shopLoading || servicesLoading, [shopLoading, servicesLoading]);
   
-  if (isLoading || !consolidatedMetrics) {
+  // Memoize navigation handlers to prevent re-creation on every render
+  const navigateToCalendar = useCallback(() => router.push('/calendar'), [router]);
+  const navigateToAnalytics = useCallback(() => router.push('/analytics'), [router]);
+  
+  // Memoize metrics calculation to prevent recalculation on every render
+  const metrics = useMemo(() => {
+    if (!consolidatedMetrics) return [];
+    
+    return [
+      { 
+        label: 'Today\'s Revenue', 
+        value: `${consolidatedMetrics.weeklyRevenue?.toLocaleString() || '0'}`, 
+        icon: DollarSign, 
+        change: '+15%', 
+        color: '#4CAF50' 
+      },
+      { 
+        label: 'Total Appointments', 
+        value: `${consolidatedMetrics.weeklyAppointments || 0}`, 
+        icon: Calendar, 
+        change: '+8%', 
+        color: '#2196F3' 
+      },
+      { 
+        label: 'Active Providers', 
+        value: `${consolidatedMetrics.stylistCount || 0}`, 
+        icon: Users, 
+        change: '+2%', 
+        color: '#FF9800' 
+      },
+      { 
+        label: 'Active Services', 
+        value: `${masterServices?.filter(s => s.isActive).length || 0}`, 
+        icon: TrendingUp, 
+        change: 'Available', 
+        color: '#9C27B0' 
+      },
+    ];
+  }, [consolidatedMetrics, masterServices]);
+
+  // Memoize quick actions to prevent re-creation
+  const quickActions = useMemo(() => [
+    {
+      title: 'View Aggregated Calendar',
+      subtitle: 'All providers\' appointments',
+      icon: Calendar,
+      onPress: navigateToCalendar,
+    },
+    {
+      title: 'Business Analytics',
+      subtitle: 'Performance insights',
+      icon: BarChart2,
+      onPress: navigateToAnalytics,
+    },
+  ], [navigateToCalendar, navigateToAnalytics]);
+  
+  // Show loading state immediately without waiting for all data
+  if (isLoading) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <Text style={styles.loadingText}>Loading dashboard...</Text>
       </View>
     );
   }
-
-  const metrics = [
-    { 
-      label: 'Today\'s Revenue', 
-      value: `${consolidatedMetrics.weeklyRevenue?.toLocaleString() || '0'}`, 
-      icon: DollarSign, 
-      change: '+15%', 
-      color: '#4CAF50' 
-    },
-    { 
-      label: 'Total Appointments', 
-      value: `${consolidatedMetrics.weeklyAppointments || 0}`, 
-      icon: Calendar, 
-      change: '+8%', 
-      color: '#2196F3' 
-    },
-    { 
-      label: 'Active Providers', 
-      value: `${consolidatedMetrics.stylistCount || 0}`, 
-      icon: Users, 
-      change: '+2%', 
-      color: '#FF9800' 
-    },
-    { 
-      label: 'Active Services', 
-      value: `${masterServices?.filter(s => s.isActive).length || 0}`, 
-      icon: TrendingUp, 
-      change: 'Available', 
-      color: '#9C27B0' 
-    },
-  ];
-
-  const quickActions = [
-    {
-      title: 'View Aggregated Calendar',
-      subtitle: 'All providers\' appointments',
-      icon: Calendar,
-      onPress: () => router.push('/calendar'),
-    },
-    {
-      title: 'Business Analytics',
-      subtitle: 'Performance insights',
-      icon: BarChart2,
-      onPress: () => router.push('/analytics'),
-    },
-  ];
 
   return (
     <ScrollView style={[styles.container, { paddingTop: insets.top }]} showsVerticalScrollIndicator={false}>
@@ -130,31 +142,42 @@ export default function ShopOwnerDashboard() {
           <View style={styles.overviewRow}>
             <Text style={styles.overviewLabel}>Revenue Target</Text>
             <Text style={styles.overviewValue}>
-              ${consolidatedMetrics.weeklyRevenue?.toLocaleString() || '0'} / $3,000
+              ${consolidatedMetrics?.weeklyRevenue?.toLocaleString() || '0'} / $3,000
             </Text>
           </View>
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Activity</Text>
-        {[
-          { text: 'New appointment confirmed - Sarah with Mike', time: '5 min ago' },
-          { text: 'Payment processed - $85 haircut service', time: '12 min ago' },
-          { text: 'Provider availability updated - Emma', time: '25 min ago' },
-        ].map((item, index) => (
-          <View key={index} style={styles.activityItem}>
-            <View style={styles.activityDot} />
-            <View style={styles.activityContent}>
-              <Text style={styles.activityText}>{item.text}</Text>
-              <Text style={styles.activityTime}>{item.time}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
+      <RecentActivitySection />
     </ScrollView>
   );
 }
+
+// Memoized component for recent activity to prevent unnecessary re-renders
+const RecentActivitySection = React.memo(() => {
+  const activityItems = useMemo(() => [
+    { text: 'New appointment confirmed - Sarah with Mike', time: '5 min ago' },
+    { text: 'Payment processed - $85 haircut service', time: '12 min ago' },
+    { text: 'Provider availability updated - Emma', time: '25 min ago' },
+  ], []);
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Recent Activity</Text>
+      {activityItems.map((item, index) => (
+        <View key={index} style={styles.activityItem}>
+          <View style={styles.activityDot} />
+          <View style={styles.activityContent}>
+            <Text style={styles.activityText}>{item.text}</Text>
+            <Text style={styles.activityTime}>{item.time}</Text>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+});
+
+RecentActivitySection.displayName = 'RecentActivitySection';
 
 const styles = StyleSheet.create({
   container: {
