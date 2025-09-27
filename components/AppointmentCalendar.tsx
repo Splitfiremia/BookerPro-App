@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { Calendar, DateData } from 'react-native-calendars';
 import { useAppointments, APPOINTMENT_COLORS } from '@/providers/AppointmentProvider';
 import { AppointmentStatus } from '@/models/database';
-import { useAuth } from '@/providers/AuthProvider';
+
+import { COLORS, FONTS } from '@/constants/theme';
 
 interface AppointmentCalendarProps {
   onDateSelect?: (date: string) => void;
@@ -38,7 +39,7 @@ const StatusFilter: React.FC<StatusFilterProps> = ({ selectedStatuses, onStatusT
               style={[
                 styles.filterChip,
                 {
-                  backgroundColor: isSelected ? APPOINTMENT_COLORS[status] : '#f0f0f0',
+                  backgroundColor: isSelected ? APPOINTMENT_COLORS[status] : COLORS.glass.background,
                   borderColor: APPOINTMENT_COLORS[status],
                 }
               ]}
@@ -47,7 +48,7 @@ const StatusFilter: React.FC<StatusFilterProps> = ({ selectedStatuses, onStatusT
             >
               <Text style={[
                 styles.filterChipText,
-                { color: isSelected ? '#fff' : '#333' }
+                { color: isSelected ? COLORS.background : COLORS.text }
               ]}>
                 {label}
               </Text>
@@ -64,7 +65,7 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
   selectedDate
 }) => {
   const { getAppointmentsWithColors } = useAppointments();
-  const { user } = useAuth();
+
   const [selectedStatuses, setSelectedStatuses] = useState<AppointmentStatus[]>([
     'requested', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show', 'rescheduled'
   ]);
@@ -100,7 +101,7 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
       marked[date] = {
         dots,
         selected: date === selectedDate,
-        selectedColor: date === selectedDate ? '#2196F3' : undefined,
+        selectedColor: date === selectedDate ? COLORS.primary : undefined,
       };
     });
 
@@ -108,7 +109,7 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
     if (selectedDate && !marked[selectedDate]) {
       marked[selectedDate] = {
         selected: true,
-        selectedColor: '#2196F3',
+        selectedColor: COLORS.primary,
       };
     }
 
@@ -147,23 +148,23 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
         markedDates={markedDates}
         markingType={'multi-dot'}
         theme={{
-          backgroundColor: '#ffffff',
-          calendarBackground: '#ffffff',
-          textSectionTitleColor: '#b6c1cd',
-          selectedDayBackgroundColor: '#2196F3',
-          selectedDayTextColor: '#ffffff',
-          todayTextColor: '#2196F3',
-          dayTextColor: '#2d4150',
-          textDisabledColor: '#d9e1e8',
-          dotColor: '#00adf5',
-          selectedDotColor: '#ffffff',
-          arrowColor: '#2196F3',
-          disabledArrowColor: '#d9e1e8',
-          monthTextColor: '#2d4150',
-          indicatorColor: '#2196F3',
-          textDayFontFamily: 'System',
-          textMonthFontFamily: 'System',
-          textDayHeaderFontFamily: 'System',
+          backgroundColor: COLORS.background,
+          calendarBackground: COLORS.background,
+          textSectionTitleColor: COLORS.secondary,
+          selectedDayBackgroundColor: COLORS.primary,
+          selectedDayTextColor: COLORS.background,
+          todayTextColor: COLORS.primary,
+          dayTextColor: COLORS.text,
+          textDisabledColor: COLORS.secondary,
+          dotColor: COLORS.primary,
+          selectedDotColor: COLORS.background,
+          arrowColor: COLORS.primary,
+          disabledArrowColor: COLORS.secondary,
+          monthTextColor: COLORS.text,
+          indicatorColor: COLORS.primary,
+          textDayFontFamily: FONTS.regular,
+          textMonthFontFamily: FONTS.bold,
+          textDayHeaderFontFamily: FONTS.regular,
           textDayFontWeight: '300',
           textMonthFontWeight: 'bold',
           textDayHeaderFontWeight: '300',
@@ -210,18 +211,20 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
   },
   filterContainer: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.background,
   },
   filterTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 12,
-    color: '#333',
+    color: COLORS.text,
+    fontFamily: FONTS.bold,
   },
   filterScroll: {
     flexDirection: 'row',
@@ -238,30 +241,34 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: 12,
     fontWeight: '500',
+    fontFamily: FONTS.regular,
   },
   appointmentsList: {
     padding: 16,
     maxHeight: 300,
+    backgroundColor: COLORS.background,
   },
   appointmentsTitle: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 12,
-    color: '#333',
+    color: COLORS.text,
+    fontFamily: FONTS.bold,
   },
   noAppointments: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.secondary,
     fontStyle: 'italic',
     textAlign: 'center',
     marginTop: 20,
+    fontFamily: FONTS.regular,
   },
   appointmentItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: COLORS.border,
   },
   statusIndicator: {
     width: 12,
@@ -275,17 +282,20 @@ const styles = StyleSheet.create({
   appointmentTime: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: COLORS.text,
+    fontFamily: FONTS.bold,
   },
   appointmentService: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.secondary,
     marginTop: 2,
+    fontFamily: FONTS.regular,
   },
   appointmentStatus: {
     fontSize: 12,
-    color: '#888',
+    color: COLORS.secondary,
     marginTop: 2,
+    fontFamily: FONTS.regular,
   },
 });
 
