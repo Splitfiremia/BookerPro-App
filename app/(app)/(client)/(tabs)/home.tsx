@@ -112,7 +112,7 @@ export default function HomeScreen() {
       duration: 200,
       useNativeDriver: false,
     }).start();
-  }, [isSearchFocused, searchAnimation]);
+  }, [isSearchFocused]); // Remove searchAnimation dependency to prevent infinite loop
 
   // Animate suggestions
   useEffect(() => {
@@ -121,7 +121,7 @@ export default function HomeScreen() {
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [showSearchSuggestions, suggestionAnimation]);
+  }, [showSearchSuggestions]); // Remove suggestionAnimation dependency to prevent infinite loop
 
   // Enhanced autocomplete suggestions
   const autocompleteSuggestions = useMemo(() => {

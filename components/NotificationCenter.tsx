@@ -117,7 +117,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ visible 
       // In a real implementation, this could trigger push notifications or sound alerts
     }
     setLastNotificationCount(unreadNotifications.length);
-  }, [unreadNotifications.length, lastNotificationCount]);
+  }, [unreadNotifications.length]); // Remove lastNotificationCount dependency to prevent infinite loop
 
   const handleMarkRead = async (notificationId: string) => {
     console.log('Marking notification as read:', notificationId);
@@ -471,7 +471,7 @@ export const useRealTimeNotifications = () => {
       const timer = setTimeout(() => setHasNewNotifications(false), 3000);
       return () => clearTimeout(timer);
     }
-  }, [context.unreadNotifications.length, context.isInitialized]);
+  }, [context.unreadNotifications.length]); // Remove context.isInitialized dependency to prevent infinite loop
   
   return {
     notifications: context.notifications,

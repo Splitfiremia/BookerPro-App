@@ -82,7 +82,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     return () => {
       isMounted = false;
     };
-  }, [multiGet]);
+  }, []); // Remove multiGet dependency to prevent infinite loop
 
   // Set developer mode with persistence
   const setDeveloperMode = useCallback(async (value: boolean) => {

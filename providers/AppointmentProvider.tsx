@@ -172,7 +172,7 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, []); // Empty dependency array to prevent infinite loop
 
   // Save data to storage using batched operations
   const saveAppointments = useCallback(async (newAppointments: Appointment[]) => {
