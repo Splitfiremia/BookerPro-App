@@ -118,7 +118,7 @@ export default function AggregatedCalendarScreen() {
             ]}
             onPress={() => setActiveView('appointments')}
           >
-            <Clock size={16} color={activeView === 'appointments' ? COLORS.card : COLORS.secondary} />
+            <Clock size={16} color={activeView === 'appointments' ? COLORS.card : COLORS.text} />
             <Text style={[
               styles.toggleButtonText,
               activeView === 'appointments' && styles.toggleButtonTextActive
@@ -134,7 +134,7 @@ export default function AggregatedCalendarScreen() {
             ]}
             onPress={() => setActiveView('waitlist')}
           >
-            <Users size={16} color={activeView === 'waitlist' ? COLORS.card : COLORS.secondary} />
+            <Users size={16} color={activeView === 'waitlist' ? COLORS.card : COLORS.text} />
             <Text style={[
               styles.toggleButtonText,
               activeView === 'waitlist' && styles.toggleButtonTextActive
@@ -210,7 +210,7 @@ export default function AggregatedCalendarScreen() {
               >
                 <View style={styles.appointmentHeader}>
                   <View style={styles.timeContainer}>
-                    <Clock size={16} color={COLORS.secondary} />
+                    <Clock size={16} color={COLORS.text} />
                     <Text style={styles.appointmentTime}>{appointment.time}</Text>
                     <Text style={styles.appointmentDuration}>({appointment.duration})</Text>
                   </View>
@@ -225,7 +225,7 @@ export default function AggregatedCalendarScreen() {
                 <View style={styles.appointmentContent}>
                   <View style={styles.appointmentInfo}>
                     <View style={styles.infoRow}>
-                      <User size={14} color={COLORS.secondary} />
+                      <User size={14} color={COLORS.text} />
                       <Text style={styles.clientName}>{appointment.clientName}</Text>
                     </View>
                     <Text style={styles.providerName}>with {appointment.providerName}</Text>
@@ -324,8 +324,9 @@ const styles = StyleSheet.create({
   filtersTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.secondary,
+    color: COLORS.text,
     marginBottom: 8,
+    opacity: 0.8,
   },
   filterChip: {
     ...GLASS_STYLES.button,
@@ -338,7 +339,8 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 12,
-    color: COLORS.secondary,
+    color: COLORS.text,
+    opacity: 0.8,
   },
   filterChipTextActive: {
     color: COLORS.card,
@@ -360,8 +362,9 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: COLORS.secondary,
+    color: COLORS.text,
     marginTop: 2,
+    opacity: 0.7,
   },
   analyticsButton: {
     backgroundColor: COLORS.primary,
@@ -403,7 +406,8 @@ const styles = StyleSheet.create({
   },
   appointmentDuration: {
     fontSize: 12,
-    color: COLORS.secondary,
+    color: COLORS.text,
+    opacity: 0.6,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -438,8 +442,9 @@ const styles = StyleSheet.create({
   },
   providerName: {
     fontSize: 14,
-    color: COLORS.secondary,
+    color: COLORS.text,
     marginBottom: 2,
+    opacity: 0.8,
   },
   serviceName: {
     fontSize: 14,
@@ -488,7 +493,8 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 14,
-    color: COLORS.secondary,
+    color: COLORS.text,
+    opacity: 0.7,
   },
   summaryValue: {
     fontSize: 14,
@@ -518,7 +524,8 @@ const styles = StyleSheet.create({
   toggleButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.secondary,
+    color: COLORS.text,
+    opacity: 0.8,
   },
   toggleButtonTextActive: {
     color: COLORS.card,

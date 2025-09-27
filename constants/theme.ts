@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 
 export const COLORS = {
   primary: '#FBBF24', // Amber-400 (Gold)
-  secondary: '#909099',
+  secondary: '#B0B0B9',
   background: '#181611', // Dark background from approved design
   backgroundLight: '#F3F4F6', // Gray-100 (background-light)
   text: '#ffffff',
@@ -92,6 +92,12 @@ export const GLASS_STYLES = {
     fontFamily: FONTS.regular,
   },
   button: {
+    backgroundColor: 'rgba(31, 41, 55, 0.2)',
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.glass.border,
+    alignItems: 'center',
+    justifyContent: 'center',
     primary: {
       backgroundColor: COLORS.primary,
       paddingVertical: 12,
