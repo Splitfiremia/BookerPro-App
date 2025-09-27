@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import createContextHook from "@nkzw/create-context-hook";
+import { useAsyncStorageBatch } from "@/utils/asyncStorageUtils";
 import { useAuth } from "./AuthProvider";
 import { 
   Appointment, 
@@ -118,6 +118,7 @@ const mockAppointmentsData: Appointment[] = [
 
 const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook(() => {
   const { user } = useAuth();
+  const { multiGet, set } = useAsyncStorageBatch();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -143,34 +144,21 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
         );
         
         const result = await Promise.race([
-          Promise.all([
-            AsyncStorage.getItem("appointments"),
-            AsyncStorage.getItem("notifications")
-          ]),
+          multiGet(['appointments', 'notifications']),
           timeoutPromise
-        ]) as [string | null, string | null];
+        ]) as { appointments: Appointment[] | null; notifications: Notification[] | null };
         
-        const [storedAppointments, storedNotifications] = result;
+        const { appointments: storedAppointments, notifications: storedNotifications } = result;
         
         if (!isMounted) return;
         
         if (storedAppointments) {
-          try {
-            const parsedAppointments = JSON.parse(storedAppointments);
-            console.log('Loaded stored appointments:', parsedAppointments.length);
-            setAppointments(parsedAppointments);
-          } catch (error) {
-            console.log('Error parsing stored appointments, using mock data');
-          }
+          console.log('Loaded stored appointments:', storedAppointments.length);
+          setAppointments(storedAppointments);
         }
         
         if (storedNotifications) {
-          try {
-            const parsedNotifications = JSON.parse(storedNotifications);
-            setNotifications(parsedNotifications);
-          } catch (error) {
-            console.log('Error parsing stored notifications');
-          }
+          setNotifications(storedNotifications);
         }
         
       } catch (error) {
@@ -186,24 +174,24 @@ const [AppointmentProviderInternal, useAppointmentsInternal] = createContextHook
     };
   }, []);
 
-  // Save data to storage
+  // Save data to storage using batched operations
   const saveAppointments = useCallback(async (newAppointments: Appointment[]) => {
     try {
-      await AsyncStorage.setItem("appointments", JSON.stringify(newAppointments));
+      await set("appointments", newAppointments);
       console.log('Appointments saved to storage');
     } catch (error) {
       console.error('Error saving appointments:', error);
     }
-  }, []);
+  }, [set]);
 
   const saveNotifications = useCallback(async (newNotifications: Notification[]) => {
     try {
-      await AsyncStorage.setItem("notifications", JSON.stringify(newNotifications));
+      await set("notifications", newNotifications);
       console.log('Notifications saved to storage');
     } catch (error) {
       console.error('Error saving notifications:', error);
     }
-  }, []);
+  }, [set]);
 
   // Create status change record using TheCut-style state machine
   const createStatusChange = useCallback((

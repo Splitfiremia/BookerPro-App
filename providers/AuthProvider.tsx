@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import createContextHook from "@nkzw/create-context-hook";
 import { testUsers } from "@/mocks/users";
 import { clientData, providerData, ownerData } from "@/mocks/userSpecificData";
 import { UserRole } from "@/models/database";
+import { useAsyncStorageBatch } from "@/utils/asyncStorageUtils";
 
 export interface User {
   id?: string;
@@ -35,6 +35,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const [isDeveloperMode, setIsDeveloperMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const { multiGet, set, remove, getWithDefault } = useAsyncStorageBatch();
   
   // Initialize auth state - prevent hydration timeout by setting defaults immediately
   useEffect(() => {
@@ -48,33 +49,21 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       if (!isMounted) return;
       
       try {
-        // Use a shorter timeout and simpler approach
-        const storedUser = await AsyncStorage.getItem("user");
-        const storedDevMode = await AsyncStorage.getItem("developerMode");
+        // Use batched read for better performance
+        const data = await multiGet(['user', 'developerMode']);
         
         if (!isMounted) return;
         
         // Parse and set user data
-        if (storedUser) {
-          try {
-            const userData = JSON.parse(storedUser);
-            console.log('AuthProvider: Loaded user from storage:', userData.email);
-            setUser(userData);
-          } catch (error) {
-            console.log('AuthProvider: Error parsing stored user data, clearing storage');
-            AsyncStorage.removeItem("user").catch(() => {});
-          }
+        if (data.user) {
+          console.log('AuthProvider: Loaded user from storage:', data.user.email);
+          setUser(data.user);
         }
         
         // Parse and set developer mode
-        if (storedDevMode) {
-          try {
-            const devMode = JSON.parse(storedDevMode);
-            console.log('AuthProvider: Loaded developer mode from storage:', devMode);
-            setIsDeveloperMode(devMode);
-          } catch (error) {
-            console.log('AuthProvider: Error parsing developer mode, using default');
-          }
+        if (data.developerMode !== null) {
+          console.log('AuthProvider: Loaded developer mode from storage:', data.developerMode);
+          setIsDeveloperMode(data.developerMode);
         }
         
       } catch (error) {
@@ -93,197 +82,208 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [multiGet]);
 
   // Set developer mode with persistence
   const setDeveloperMode = useCallback(async (value: boolean) => {
     console.log('Setting developer mode:', value);
-    setIsDeveloperMode(value);
     try {
-      await AsyncStorage.setItem("developerMode", JSON.stringify(value));
+      await set("developerMode", value);
+      setIsDeveloperMode(value);
+      console.log('AuthProvider: Developer mode updated successfully');
     } catch (error) {
-      console.error('Error saving developer mode:', error);
+      console.error('AuthProvider: Failed to update developer mode:', error);
     }
-  }, []);
+  }, [set]);
 
-  // Login function that handles both developer and live mode
-  const login = useCallback(async (email: string, password: string) => {
-    console.log('Login attempt for email:', email);
-    setIsLoading(true);
+  // Check developer mode from storage
+  const checkDeveloperMode = useCallback(async (): Promise<boolean> => {
     try {
-      // Check if this is a test user email
-      const isTestUserEmail = testUsers.some(
-        (u) => u.email.toLowerCase().trim() === email.toLowerCase().trim()
-      );
-      
-      // Get current developer mode from storage as well to ensure consistency
-      const storedDevMode = await AsyncStorage.getItem("developerMode");
-      const currentDevMode = storedDevMode ? JSON.parse(storedDevMode) : isDeveloperMode;
-      
-      console.log('Is test user email:', isTestUserEmail, 'Current dev mode:', currentDevMode);
-      
-      if (isTestUserEmail || currentDevMode) {
-        // In developer mode or for test users, check against mock data
-        const testUser = testUsers.find(
-          (u) => u.email.toLowerCase().trim() === email.toLowerCase().trim() && u.password === password
-        );
-        
-        if (!testUser) {
-          console.error("Invalid credentials for test user");
-          throw new Error("Invalid credentials. Test passwords: client123, provider123, owner123");
-        }
-        
-        // Add role-specific mock data
-        let mockData;
-        switch (testUser.role) {
-          case "client":
-            mockData = clientData;
-            break;
-          case "provider":
-            mockData = providerData;
-            break;
-          case "owner":
-            mockData = ownerData;
-            break;
-          default:
-            mockData = {};
-        }
-
-        const userData: User = {
-          id: testUser.id,
-          email: testUser.email,
-          role: testUser.role,
-          name: testUser.name,
-          profileImage: testUser.profileImage,
-          phone: testUser.phone,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          mockData
-        };
-        
-        setUser(userData);
-        await AsyncStorage.setItem("user", JSON.stringify(userData));
-        console.log('Login successful (demo mode):', userData.email);
-      } else {
-        // In live mode, would connect to Supabase or other backend
-        // For now, just simulate a successful login with basic validation
-        if (email && password.length >= 6) {
-          const userData: User = {
-            id: "live-user-1",
-            email,
-            role: "client", // Default role for live mode
-            name: email.split("@")[0],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          
-          setUser(userData);
-          await AsyncStorage.setItem("user", JSON.stringify(userData));
-          console.log('Login successful (live mode):', userData.email);
-        } else {
-          throw new Error("Invalid credentials");
-        }
-      }
+      return await getWithDefault("developerMode", false);
     } catch (error) {
-      console.error("Login error:", error);
-      throw error;
+      console.error('AuthProvider: Failed to check developer mode:', error);
+      return false;
+    }
+  }, [getWithDefault]);
+
+  // Login function
+  const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    console.log('AuthProvider: Attempting login for:', email);
+    setIsLoading(true);
+    
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Find user in test data
+      const foundUser = testUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+      
+      if (!foundUser) {
+        console.log('AuthProvider: User not found');
+        return { success: false, error: 'User not found' };
+      }
+      
+      if (foundUser.password !== password) {
+        console.log('AuthProvider: Invalid password');
+        return { success: false, error: 'Invalid password' };
+      }
+      
+      // Create user object without password
+      const { password: _, ...userWithoutPassword } = foundUser;
+      
+      // Add mock data based on role
+      let userData: User = {
+        ...userWithoutPassword,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      // Add role-specific mock data
+      switch (userData.role) {
+        case 'client':
+          userData.mockData = clientData;
+          break;
+        case 'provider':
+          userData.mockData = providerData;
+          break;
+        case 'owner':
+          userData.mockData = ownerData;
+          break;
+      }
+      
+      // Store user data
+      await set("user", userData);
+      setUser(userData);
+      
+      console.log('AuthProvider: Login successful for:', userData.email, 'Role:', userData.role);
+      return { success: true };
+      
+    } catch (error) {
+      console.error('AuthProvider: Login error:', error);
+      return { success: false, error: 'Login failed' };
     } finally {
       setIsLoading(false);
     }
-  }, [isDeveloperMode]);
+  }, [set]);
 
-  // Register function for new users
-  const register = useCallback(async (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>, password: string) => {
-    console.log('Register attempt:', userData.email);
+  // Register function
+  const register = useCallback(async (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ success: boolean; error?: string }> => {
+    console.log('AuthProvider: Attempting registration for:', userData.email);
     setIsLoading(true);
+    
     try {
-      if (isDeveloperMode) {
-        // In developer mode, just create a mock user
-        const newUser: User = {
-          ...userData,
-          id: `user-${Date.now()}`,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-
-        // Add role-specific mock data
-        let mockData;
-        switch (newUser.role) {
-          case "client":
-            mockData = clientData;
-            break;
-          case "provider":
-            mockData = providerData;
-            break;
-          case "owner":
-            mockData = ownerData;
-            break;
-          default:
-            mockData = {};
-        }
-
-        newUser.mockData = mockData;
-        
-        setUser(newUser);
-        await AsyncStorage.setItem("user", JSON.stringify(newUser));
-        console.log('Registration successful (demo mode):', newUser.email);
-        return newUser;
-      } else {
-        // In live mode, would connect to Supabase or other backend
-        // For now, just simulate a successful registration
-        const newUser: User = {
-          ...userData,
-          id: `live-user-${Date.now()}`,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        
-        setUser(newUser);
-        await AsyncStorage.setItem("user", JSON.stringify(newUser));
-        console.log('Registration successful (live mode):', newUser.email);
-        return newUser;
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Check if user already exists
+      const existingUser = testUsers.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
+      if (existingUser) {
+        console.log('AuthProvider: User already exists');
+        return { success: false, error: 'User already exists' };
       }
+      
+      // Create new user
+      const newUser: User = {
+        ...userData,
+        id: `user_${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      // Add role-specific mock data
+      switch (newUser.role) {
+        case 'client':
+          newUser.mockData = clientData;
+          break;
+        case 'provider':
+          newUser.mockData = providerData;
+          break;
+        case 'owner':
+          newUser.mockData = ownerData;
+          break;
+      }
+      
+      // Store user data
+      await set("user", newUser);
+      setUser(newUser);
+      
+      console.log('AuthProvider: Registration successful for:', newUser.email, 'Role:', newUser.role);
+      return { success: true };
+      
     } catch (error) {
-      console.error("Registration error:", error);
-      throw error;
+      console.error('AuthProvider: Registration error:', error);
+      return { success: false, error: 'Registration failed' };
     } finally {
       setIsLoading(false);
     }
-  }, [isDeveloperMode]);
+  }, [set]);
 
+  // Update user profile
+  const updateProfile = useCallback(async (updates: Partial<User>): Promise<{ success: boolean; error?: string }> => {
+    if (!user) {
+      return { success: false, error: 'No user logged in' };
+    }
+    
+    console.log('AuthProvider: Updating profile for:', user.email);
+    setIsLoading(true);
+    
+    try {
+      const newUser: User = {
+        ...user,
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      await set("user", newUser);
+      setUser(newUser);
+      
+      console.log('AuthProvider: Profile updated successfully');
+      return { success: true };
+      
+    } catch (error) {
+      console.error('AuthProvider: Profile update error:', error);
+      return { success: false, error: 'Profile update failed' };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, set]);
+
+  // Logout function
   const logout = useCallback(async () => {
-    console.log('AuthProvider: Starting logout process');
+    console.log('AuthProvider: Logging out user');
     setIsLoading(true);
+    
     try {
-      // Clear user state first to trigger immediate UI updates
+      // Clear user from storage
+      await remove("user");
+      console.log('AuthProvider: User removed from storage');
+      
       setUser(null);
-      console.log('AuthProvider: User state cleared');
-      
-      // Clear user from AsyncStorage
-      await AsyncStorage.removeItem("user");
-      console.log('AuthProvider: User removed from AsyncStorage');
-      
+      // Even if storage fails, ensure user state is cleared
     } catch (error) {
-      console.error("AuthProvider: Logout error:", error);
+      console.error('AuthProvider: Logout error:', error);
       // Even if AsyncStorage fails, ensure user state is cleared
       setUser(null);
     } finally {
       setIsLoading(false);
-      console.log('AuthProvider: Logout completed');
     }
-  }, []);
+  }, [remove]);
 
-  const contextValue = useMemo(() => ({
+  // Computed values
+  const isAuthenticated = useMemo(() => user !== null, [user]);
+
+  // Return context value
+  return {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated,
     isDeveloperMode,
     isLoading,
     isInitialized,
     setDeveloperMode,
+    checkDeveloperMode,
     login,
     logout,
     register,
-  }), [user, isDeveloperMode, isLoading, isInitialized, setDeveloperMode, login, logout, register]);
-
-  return contextValue;
+    updateProfile,
+  };
 });
