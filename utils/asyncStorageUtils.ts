@@ -13,7 +13,7 @@ interface BatchReadOperation {
 class AsyncStorageBatch {
   private operations: BatchOperation[] = [];
   private readOperations: BatchReadOperation[] = [];
-  private batchTimeout: NodeJS.Timeout | null = null;
+  private batchTimeout: ReturnType<typeof setTimeout> | null = null;
   private readonly BATCH_DELAY = 100; // 100ms delay to batch operations
 
   // Add a set operation to the batch
@@ -164,7 +164,8 @@ export const AsyncStorageUtils = {
   // Get storage size and cleanup utilities
   async getStorageInfo(): Promise<{ keys: string[], totalSize: number }> {
     try {
-      const keys = await AsyncStorage.getAllKeys();
+      const allKeys = await AsyncStorage.getAllKeys();
+      const keys: string[] = [...allKeys];
       const values = await AsyncStorage.multiGet(keys);
       const totalSize = values.reduce((size, [, value]) => {
         return size + (value ? value.length : 0);
