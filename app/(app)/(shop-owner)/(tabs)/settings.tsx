@@ -195,26 +195,13 @@ export default function SettingsScreen() {
           icon: Globe,
           type: 'navigate' as const,
           onPress: () => {
-            Alert.alert(
-              'Shop Website Setup',
-              'Create and customize your shop\'s website to showcase your services, accept online bookings, and grow your business.',
-              [
-                {
-                  text: 'Learn More',
-                  onPress: () => {
-                    Alert.alert(
-                      'Website Features',
-                      '• Custom domain and branding\n• Online booking integration\n• Service showcase\n• Customer reviews\n• Mobile-responsive design\n• SEO optimization\n• Analytics dashboard',
-                      [
-                        { text: 'Get Started', onPress: () => console.log('Website setup initiated') },
-                        { text: 'Cancel', style: 'cancel' }
-                      ]
-                    );
-                  }
-                },
-                { text: 'Cancel', style: 'cancel' }
-              ]
-            );
+            console.log('Shop Owner Settings: Navigating to website builder');
+            try {
+              router.push('/(app)/(shop-owner)/(tabs)/website');
+            } catch (error) {
+              console.error('Shop Owner Settings: Navigation error:', error);
+              Alert.alert('Error', 'Unable to navigate to website builder');
+            }
           },
         },
         {

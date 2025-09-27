@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Calendar, BarChart2, Settings, Users } from "lucide-react-native";
+import { Calendar, BarChart2, Settings, Users, Globe } from "lucide-react-native";
 import { COLORS } from "@/constants/theme";
 
 export default function ShopOwnerTabsLayout() {
@@ -45,6 +45,13 @@ export default function ShopOwnerTabsLayout() {
         options={{
           title: "Analytics",
           tabBarIcon: ({ color }) => <BarChart2 size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="website"
+        options={{
+          title: "Website",
+          tabBarIcon: ({ color }) => <Globe size={24} color={color} />,
         }}
       />
       <Tabs.Screen
