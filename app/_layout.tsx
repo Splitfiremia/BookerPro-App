@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -10,6 +10,7 @@ import { ModeIndicator } from "@/components/ModeIndicator";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { CriticalErrorBoundary } from "@/components/SpecializedErrorBoundaries";
 import { COLORS } from "@/constants/theme";
+import { initializeDeepLinking, cleanupDeepLinking } from "@/utils/deepLinkHandler";
 
 // Create QueryClient with optimized settings to prevent hydration issues
 const queryClient = new QueryClient({
@@ -56,6 +57,18 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   console.log('RootLayout: Rendering');
+  
+  // Initialize deep linking on app start
+  useEffect(() => {
+    console.log('RootLayout: Initializing deep linking');
+    initializeDeepLinking();
+    
+    // Cleanup on unmount
+    return () => {
+      console.log('RootLayout: Cleaning up deep linking');
+      cleanupDeepLinking();
+    };
+  }, []);
   
   return (
     <GestureHandlerRootView style={styles.gestureHandler}>
