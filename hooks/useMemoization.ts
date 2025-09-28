@@ -48,7 +48,7 @@ export const useDebouncedCallback = <Args extends readonly unknown[]>(
   delay: number,
   deps: readonly unknown[] = []
 ) => {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   return useCallback(
     (...args: Args) => {
@@ -72,7 +72,7 @@ export const useThrottledCallback = <Args extends readonly unknown[]>(
   deps: readonly unknown[] = []
 ) => {
   const lastCallRef = useRef<number>(0);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   return useCallback(
     (...args: Args) => {
