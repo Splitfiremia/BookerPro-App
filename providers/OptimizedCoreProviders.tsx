@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import createContextHook from '@nkzw/create-context-hook';
 import { COLORS } from '@/constants/theme';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -41,32 +42,45 @@ export const useServicesContext = () => useCoreContext().services;
 // Loading fallback component
 function CoreProviderLoadingFallback() {
   return (
-    <div style={{
-      flex: 1,
-      backgroundColor: COLORS.background,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-    }}>
-      <p style={{ color: COLORS.white, fontSize: 16 }}>Loading core services...</p>
-    </div>
+    <View style={styles.loadingContainer}>
+      <Text style={styles.loadingText}>Loading core services...</Text>
+    </View>
   );
 }
 
 // Error fallback component
 function CoreProviderErrorFallback() {
   return (
-    <div style={{
-      flex: 1,
-      backgroundColor: COLORS.background,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-    }}>
-      <p style={{ color: COLORS.error, fontSize: 16 }}>Failed to load core services</p>
-    </div>
+    <View style={styles.errorContainer}>
+      <Text style={styles.errorText}>Failed to load core services</Text>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    color: COLORS.white,
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: COLORS.error,
+    fontSize: 16,
+  },
+});
 
 // Wrapper component with error boundary
 interface CoreProviderWrapperProps {

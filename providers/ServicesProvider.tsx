@@ -12,16 +12,15 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
   const [services, setServices] = useState<Service[]>([]);
   const [masterServices, setMasterServices] = useState<Service[]>([]);
   const [serviceOfferings, setServiceOfferings] = useState<ProviderServiceOffering[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const loadServices = useCallback(async () => {
     if (!user) {
-      setIsLoading(false);
+      console.log('ServicesProvider: No user, skipping load');
       return;
     }
     
-    // Set loading to false immediately to prevent blocking UI
-    setIsLoading(false);
+    console.log('ServicesProvider: Loading services for user role:', user.role);
     
     try {
       // Load based on user role and provider type - set defaults synchronously
@@ -79,6 +78,7 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
               updatedAt: new Date().toISOString(),
             },
           ];
+          console.log('ServicesProvider: Setting master services for shop-based provider');
           setMasterServices(defaultMasterServices);
           
           const defaultOfferings: ProviderServiceOffering[] = [
@@ -129,21 +129,19 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
             updatedAt: new Date().toISOString(),
           },
         ];
+        console.log('ServicesProvider: Setting master services for shop owner');
         setMasterServices(defaultMasterServices);
       }
     } catch (error) {
-      console.error('Error loading services:', error);
-      setIsLoading(false);
+      console.error('ServicesProvider: Error loading services:', error);
     }
   }, [user]);
 
-  // Load services on mount with timeout to prevent blocking
+  // Load services immediately on mount
   useEffect(() => {
+    console.log('ServicesProvider: useEffect triggered, user:', !!user);
     if (user) {
-      const timeoutId = setTimeout(loadServices, 0);
-      return () => clearTimeout(timeoutId);
-    } else {
-      setIsLoading(false);
+      loadServices();
     }
   }, [user, loadServices]);
 

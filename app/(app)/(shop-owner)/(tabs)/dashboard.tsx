@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, Suspense } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Calendar, BarChart2, Users, DollarSign, TrendingUp } from 'lucide-react-native';
@@ -65,6 +65,9 @@ ActionCard.displayName = 'ActionCard';
 const DashboardContent = React.memo(() => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  
+  // Debug: Check if we have access to providers
+  console.log('DashboardContent: Rendering dashboard content');
   
   // Mock data for immediate rendering - replace with actual provider data when loaded
   const mockMetrics = useMemo(() => [
@@ -178,13 +181,9 @@ export default function ShopOwnerDashboard() {
   console.log('ShopOwnerDashboard: Rendering');
   
   return (
-    <Suspense fallback={
-      <View style={[styles.container, styles.loadingContainer]}>
-        <Text style={styles.loadingText}>Loading dashboard...</Text>
-      </View>
-    }>
+    <View style={styles.container}>
       <DashboardContent />
-    </Suspense>
+    </View>
   );
 }
 

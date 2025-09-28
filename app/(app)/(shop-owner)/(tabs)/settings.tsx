@@ -24,14 +24,18 @@ interface SettingItem {
 export default function SettingsScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  
+  // Safely get services context with fallbacks
   const servicesContext = useServices();
-  const {
-    masterServices = [],
-    addMasterService,
-    updateMasterService,
-    deleteMasterService,
-    isLoading: servicesLoading = true,
-  } = servicesContext || {};
+  console.log('SettingsScreen: Services context:', !!servicesContext);
+  
+  const masterServices = servicesContext?.masterServices || [];
+  const addMasterService = servicesContext?.addMasterService;
+  const updateMasterService = servicesContext?.updateMasterService;
+  const deleteMasterService = servicesContext?.deleteMasterService;
+  const servicesLoading = servicesContext?.isLoading || false;
+  
+  console.log('SettingsScreen: Master services count:', masterServices.length);
   const {
     shops,
     selectedShop,
@@ -412,7 +416,9 @@ export default function SettingsScreen() {
         </View>
         
         <View style={styles.servicesContent}>
-          {servicesLoading ? (
+          {!servicesContext ? (
+            <Text style={styles.loadingText}>Initializing services...</Text>
+          ) : servicesLoading ? (
             <Text style={styles.loadingText}>Loading services...</Text>
           ) : (
             renderMasterServices()

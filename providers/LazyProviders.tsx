@@ -3,6 +3,12 @@ import { View, Text, StyleSheet } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
+// Direct imports for Shop Owner providers to avoid lazy loading delays
+import { ServicesProvider as DirectServicesProvider } from '@/providers/ServicesProvider';
+import { ShopManagementProvider as DirectShopManagementProvider } from '@/providers/ShopManagementProvider';
+import { TeamManagementProvider as DirectTeamManagementProvider } from '@/providers/TeamManagementProvider';
+import { AppointmentProvider as DirectAppointmentProvider } from '@/providers/AppointmentProvider';
+
 // Lazy load heavy providers to prevent hydration timeout
 const AppointmentProvider = lazy(() => import('@/providers/AppointmentProvider').then(m => ({ default: m.AppointmentProvider })));
 const OnboardingProvider = lazy(() => import('@/providers/OnboardingProvider').then(m => ({ default: m.OnboardingProvider })));
@@ -142,21 +148,21 @@ export function FlatProviders({ children }: LazyProvidersProps) {
   );
 }
 
-// Optimized provider structure for Shop Owner Dashboard - loads only essential providers
+// Optimized provider structure for Shop Owner Dashboard - loads only essential providers synchronously
 export function ShopOwnerProviders({ children }: LazyProvidersProps) {
+  console.log('ShopOwnerProviders: Initializing with direct imports');
+  
   return (
     <ErrorBoundary fallback={<ProviderErrorFallback />}>
-      <Suspense fallback={<ProviderLoadingFallback />}>
-        <ServicesProvider>
-          <ShopManagementProvider>
-            <TeamManagementProvider>
-              <AppointmentProvider>
-                {children}
-              </AppointmentProvider>
-            </TeamManagementProvider>
-          </ShopManagementProvider>
-        </ServicesProvider>
-      </Suspense>
+      <DirectServicesProvider>
+        <DirectShopManagementProvider>
+          <DirectTeamManagementProvider>
+            <DirectAppointmentProvider>
+              {children}
+            </DirectAppointmentProvider>
+          </DirectTeamManagementProvider>
+        </DirectShopManagementProvider>
+      </DirectServicesProvider>
     </ErrorBoundary>
   );
 }
