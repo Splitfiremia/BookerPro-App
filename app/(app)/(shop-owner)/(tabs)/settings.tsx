@@ -9,6 +9,9 @@ import { useShopManagement } from '@/providers/ShopManagementProvider';
 import ServiceEditModal from '@/components/ServiceEditModal';
 import { Service } from '@/models/database';
 import { COLORS, FONTS, GLASS_STYLES } from '@/constants/theme';
+import { CriticalErrorBoundary, FeatureErrorBoundary } from '@/components/SpecializedErrorBoundaries';
+import { LoadingStateManager, SkeletonLoader, ListSkeleton } from '@/components/LoadingStateManager';
+import { usePerformanceMonitor } from '@/hooks/useMemoization';
 
 
 interface SettingItem {
@@ -22,6 +25,8 @@ interface SettingItem {
 }
 
 export default function SettingsScreen() {
+  usePerformanceMonitor('SettingsScreen');
+  
   const router = useRouter();
   const { logout } = useAuth();
   
@@ -29,11 +34,15 @@ export default function SettingsScreen() {
   const servicesContext = useServices();
   console.log('SettingsScreen: Services context:', !!servicesContext);
   
-  const masterServices = servicesContext?.masterServices || [];
-  const addMasterService = servicesContext?.addMasterService;
-  const updateMasterService = servicesContext?.updateMasterService;
-  const deleteMasterService = servicesContext?.deleteMasterService;
-  const servicesLoading = servicesContext?.isLoading || false;
+  const {
+    masterServices = [],
+    sortedMasterServices = [],
+    addMasterService,
+    updateMasterService,
+    deleteMasterService,
+    loadingState,
+    refreshServices,
+  } = servicesContext || {};
   
   console.log('SettingsScreen: Master services count:', masterServices.length);
   const {
@@ -104,7 +113,9 @@ export default function SettingsScreen() {
   };
 
   const renderMasterServices = () => {
-    if (masterServices.length === 0) {
+    const servicesToRender = sortedMasterServices.length > 0 ? sortedMasterServices : masterServices.filter(s => s.isActive);
+    
+    if (servicesToRender.length === 0) {
       return (
         <View style={styles.emptyState}>
           <DollarSign size={48} color="#666" />
@@ -116,39 +127,44 @@ export default function SettingsScreen() {
 
     return (
       <FlatList
-        data={masterServices.filter(s => s.isActive)}
+        data={servicesToRender}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.serviceItem}>
-            <View style={styles.serviceInfo}>
-              <Text style={styles.serviceName}>{item.name}</Text>
-              <Text style={styles.serviceDetails}>
-                {item.baseDuration} min • ${item.basePrice}
-              </Text>
-              {item.description && (
-                <Text style={styles.serviceDescription}>{item.description}</Text>
-              )}
+          <FeatureErrorBoundary featureName="Service Item">
+            <View style={styles.serviceItem}>
+              <View style={styles.serviceInfo}>
+                <Text style={styles.serviceName}>{item.name}</Text>
+                <Text style={styles.serviceDetails}>
+                  {item.baseDuration} min • ${item.basePrice}
+                </Text>
+                {item.description && (
+                  <Text style={styles.serviceDescription}>{item.description}</Text>
+                )}
+              </View>
+              <View style={styles.serviceActions}>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => {
+                    setEditingService(item);
+                    setShowServiceModal(true);
+                  }}
+                >
+                  <Edit size={16} color="#007AFF" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => handleDeleteService(item.id)}
+                >
+                  <Trash2 size={16} color="#FF3B30" />
+                </TouchableOpacity>
+              </View>
             </View>
-            <View style={styles.serviceActions}>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => {
-                  setEditingService(item);
-                  setShowServiceModal(true);
-                }}
-              >
-                <Edit size={16} color="#007AFF" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => handleDeleteService(item.id)}
-              >
-                <Trash2 size={16} color="#FF3B30" />
-              </TouchableOpacity>
-            </View>
-          </View>
+          </FeatureErrorBoundary>
         )}
         scrollEnabled={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
       />
     );
   };
@@ -416,13 +432,34 @@ export default function SettingsScreen() {
         </View>
         
         <View style={styles.servicesContent}>
-          {!servicesContext ? (
-            <Text style={styles.loadingText}>Initializing services...</Text>
-          ) : servicesLoading ? (
-            <Text style={styles.loadingText}>Loading services...</Text>
-          ) : (
-            renderMasterServices()
-          )}
+          <FeatureErrorBoundary 
+            featureName="Services Management"
+            fallbackComponent={
+              <View style={styles.errorFallback}>
+                <Text style={styles.errorText}>Unable to load services</Text>
+                <TouchableOpacity 
+                  style={styles.retryButton}
+                  onPress={refreshServices}
+                >
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            }
+          >
+            <LoadingStateManager
+              loadingState={loadingState || { isLoading: false, error: null, isEmpty: false }}
+              loadingComponent={<ListSkeleton count={3} />}
+              emptyComponent={
+                <View style={styles.emptyState}>
+                  <DollarSign size={48} color="#666" />
+                  <Text style={styles.emptyStateText}>No services added yet</Text>
+                  <Text style={styles.emptyStateSubtext}>Add your first service to get started</Text>
+                </View>
+              }
+            >
+              {renderMasterServices()}
+            </LoadingStateManager>
+          </FeatureErrorBoundary>
         </View>
       </View>
       
@@ -609,5 +646,26 @@ const styles = StyleSheet.create({
   actionButton: {
     ...GLASS_STYLES.button,
     padding: 8,
+  },
+  errorFallback: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  errorText: {
+    fontSize: 16,
+    color: COLORS.error,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

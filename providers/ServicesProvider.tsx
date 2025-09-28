@@ -1,139 +1,198 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { Service, ProviderServiceOffering } from '@/models/database';
 import { useAuth } from './AuthProvider';
+import { ServicesRepository, ServiceOfferingsRepository } from '@/repositories/ServicesRepository';
+import { LoadingState } from '@/components/LoadingStateManager';
+import { useMemoizedFilter, useMemoizedSort, usePerformanceMonitor } from '@/hooks/useMemoization';
 
 
+
+// Repository instances
+const servicesRepository = new ServicesRepository();
+const serviceOfferingsRepository = new ServiceOfferingsRepository();
 
 export const [ServicesProvider, useServices] = createContextHook(() => {
   console.log('ServicesProvider: Initializing context...');
+  usePerformanceMonitor('ServicesProvider');
+  
   const { user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
   const [masterServices, setMasterServices] = useState<Service[]>([]);
   const [serviceOfferings, setServiceOfferings] = useState<ProviderServiceOffering[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loadingState, setLoadingState] = useState<LoadingState>({
+    isLoading: false,
+    error: null,
+    isEmpty: false,
+  });
 
   const loadServices = useCallback(async () => {
     if (!user) {
       console.log('ServicesProvider: No user, skipping load');
+      setLoadingState({ isLoading: false, error: null, isEmpty: true });
       return;
     }
     
     console.log('ServicesProvider: Loading services for user role:', user.role);
+    setLoadingState({ isLoading: true, error: null, isEmpty: false });
     
     try {
-      // Load based on user role and provider type - set defaults synchronously
+      // Load based on user role and provider type
       if (user.role === 'provider') {
         const mockData = user.mockData;
         if (mockData?.profile?.isIndependent !== false) {
-          // Independent provider - initialize with mock data immediately
-          const initialServices: Service[] = mockData?.profile?.services?.map((s: any, index: number) => ({
-            id: `service_${index + 1}`,
-            name: s.name,
-            description: s.description || '',
-            baseDuration: parseInt(s.duration) || 30,
-            basePrice: s.price,
-            isActive: true,
-            providerId: user.id,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })) || [];
-          setServices(initialServices);
-          
-          // Load from storage asynchronously without blocking
-          setTimeout(async () => {
-            try {
-              const storedServices = await AsyncStorage.getItem(`services_${user.id}`);
-              if (storedServices) {
-                setServices(JSON.parse(storedServices));
+          // Independent provider - load from repository
+          try {
+            const storedServices = await servicesRepository.getByProviderId(user.id!);
+            if (storedServices.length > 0) {
+              setServices(storedServices);
+            } else {
+              // Initialize with mock data if no stored services
+              const initialServices: Service[] = mockData?.profile?.services?.map((s: any, index: number) => ({
+                id: `service_${index + 1}`,
+                name: s.name,
+                description: s.description || '',
+                baseDuration: parseInt(s.duration) || 30,
+                basePrice: s.price,
+                isActive: true,
+                providerId: user.id,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              })) || [];
+              setServices(initialServices);
+              
+              // Save initial services to repository
+              for (const service of initialServices) {
+                await servicesRepository.createForProvider(user.id!, {
+                  name: service.name,
+                  description: service.description,
+                  baseDuration: service.baseDuration,
+                  basePrice: service.basePrice,
+                  isActive: service.isActive,
+                });
               }
-            } catch (error) {
-              console.log('Could not load stored services, using defaults');
             }
-          }, 0);
+          } catch (error) {
+            console.error('ServicesProvider: Error loading provider services:', error);
+            setLoadingState({ isLoading: false, error: 'Failed to load services', isEmpty: false });
+            return;
+          }
         } else {
-          // Shop-based provider - set defaults immediately
-          const defaultMasterServices: Service[] = [
-            {
-              id: 'master_1',
-              name: "Women's Haircut",
-              description: 'Professional haircut and styling',
-              baseDuration: 45,
-              basePrice: 75,
-              isActive: true,
-              shopId: 'shop_1',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-            {
-              id: 'master_2',
-              name: "Men's Haircut",
-              description: 'Classic and modern cuts',
-              baseDuration: 30,
-              basePrice: 55,
-              isActive: true,
-              shopId: 'shop_1',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-          ];
-          console.log('ServicesProvider: Setting master services for shop-based provider');
-          setMasterServices(defaultMasterServices);
-          
-          const defaultOfferings: ProviderServiceOffering[] = [
-            {
-              id: 'offering_1',
-              providerId: user.id!,
-              serviceId: 'master_1',
-              service: defaultMasterServices[0],
-              isOffered: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-            {
-              id: 'offering_2',
-              providerId: user.id!,
-              serviceId: 'master_2',
-              service: defaultMasterServices[1],
-              isOffered: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-          ];
-          setServiceOfferings(defaultOfferings);
+          // Shop-based provider - load master services and offerings
+          try {
+            const shopId = user.mockData?.shops?.[0]?.id || 'shop_1';
+            const [masterServicesData, offeringsData] = await Promise.all([
+              servicesRepository.getByShopId(shopId),
+              serviceOfferingsRepository.getByProviderId(user.id!)
+            ]);
+            
+            if (masterServicesData.length === 0) {
+              // Initialize with default master services
+              const defaultMasterServices: Service[] = [
+                {
+                  id: 'master_1',
+                  name: "Women's Haircut",
+                  description: 'Professional haircut and styling',
+                  baseDuration: 45,
+                  basePrice: 75,
+                  isActive: true,
+                  shopId,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                },
+                {
+                  id: 'master_2',
+                  name: "Men's Haircut",
+                  description: 'Classic and modern cuts',
+                  baseDuration: 30,
+                  basePrice: 55,
+                  isActive: true,
+                  shopId,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                },
+              ];
+              setMasterServices(defaultMasterServices);
+              
+              // Save to repository
+              for (const service of defaultMasterServices) {
+                await servicesRepository.createForShop(shopId, {
+                  name: service.name,
+                  description: service.description,
+                  baseDuration: service.baseDuration,
+                  basePrice: service.basePrice,
+                  isActive: service.isActive,
+                });
+              }
+            } else {
+              setMasterServices(masterServicesData);
+            }
+            
+            setServiceOfferings(offeringsData);
+          } catch (error) {
+            console.error('ServicesProvider: Error loading shop services:', error);
+            setLoadingState({ isLoading: false, error: 'Failed to load shop services', isEmpty: false });
+            return;
+          }
         }
       } else if (user.role === 'owner') {
-        // Shop owner - set defaults immediately
-        const defaultMasterServices: Service[] = [
-          {
-            id: 'master_1',
-            name: "Women's Haircut",
-            description: 'Professional haircut and styling',
-            baseDuration: 45,
-            basePrice: 75,
-            isActive: true,
-            shopId: 'shop_1',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-          {
-            id: 'master_2',
-            name: "Men's Haircut",
-            description: 'Classic and modern cuts',
-            baseDuration: 30,
-            basePrice: 55,
-            isActive: true,
-            shopId: 'shop_1',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-        ];
-        console.log('ServicesProvider: Setting master services for shop owner');
-        setMasterServices(defaultMasterServices);
+        // Shop owner - load master services
+        try {
+          const shopId = user.mockData?.shops?.[0]?.id || 'shop_1';
+          const masterServicesData = await servicesRepository.getByShopId(shopId);
+          
+          if (masterServicesData.length === 0) {
+            // Initialize with default master services
+            const defaultMasterServices: Service[] = [
+              {
+                id: 'master_1',
+                name: "Women's Haircut",
+                description: 'Professional haircut and styling',
+                baseDuration: 45,
+                basePrice: 75,
+                isActive: true,
+                shopId,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              },
+              {
+                id: 'master_2',
+                name: "Men's Haircut",
+                description: 'Classic and modern cuts',
+                baseDuration: 30,
+                basePrice: 55,
+                isActive: true,
+                shopId,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              },
+            ];
+            setMasterServices(defaultMasterServices);
+            
+            // Save to repository
+            for (const service of defaultMasterServices) {
+              await servicesRepository.createForShop(shopId, {
+                name: service.name,
+                description: service.description,
+                baseDuration: service.baseDuration,
+                basePrice: service.basePrice,
+                isActive: service.isActive,
+              });
+            }
+          } else {
+            setMasterServices(masterServicesData);
+          }
+        } catch (error) {
+          console.error('ServicesProvider: Error loading owner services:', error);
+          setLoadingState({ isLoading: false, error: 'Failed to load services', isEmpty: false });
+          return;
+        }
       }
+      
+      setLoadingState({ isLoading: false, error: null, isEmpty: false });
     } catch (error) {
       console.error('ServicesProvider: Error loading services:', error);
+      setLoadingState({ isLoading: false, error: 'Failed to load services', isEmpty: false });
     }
   }, [user]);
 
@@ -146,118 +205,126 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
   }, [user, loadServices]);
 
   // Independent provider service management
-  const addService = useCallback(async (serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addService = useCallback(async (serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt' | 'providerId'>) => {
     if (!user?.id) return;
     
-    const newService: Service = {
-      ...serviceData,
-      id: `service_${Date.now()}`,
-      providerId: user.id,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    const updatedServices = [...services, newService];
-    setServices(updatedServices);
-    await AsyncStorage.setItem(`services_${user.id}`, JSON.stringify(updatedServices));
-  }, [user, services]);
+    try {
+      const newService = await servicesRepository.createForProvider(user.id, serviceData);
+      setServices(prev => [...prev, newService]);
+    } catch (error) {
+      console.error('ServicesProvider: Error adding service:', error);
+      throw error;
+    }
+  }, [user]);
 
   const updateService = useCallback(async (id: string, updates: Partial<Service>) => {
     if (!user?.id) return;
     
-    const updatedServices = services.map(service => 
-      service.id === id 
-        ? { ...service, ...updates, updatedAt: new Date().toISOString() }
-        : service
-    );
-    
-    setServices(updatedServices);
-    await AsyncStorage.setItem(`services_${user.id}`, JSON.stringify(updatedServices));
-  }, [user, services]);
+    try {
+      const updatedService = await servicesRepository.updateForProvider(user.id, id, updates);
+      if (updatedService) {
+        setServices(prev => prev.map(service => 
+          service.id === id ? updatedService : service
+        ));
+      }
+    } catch (error) {
+      console.error('ServicesProvider: Error updating service:', error);
+      throw error;
+    }
+  }, [user]);
 
   const deleteService = useCallback(async (id: string) => {
     if (!user?.id) return;
     
-    const updatedServices = services.filter(service => service.id !== id);
-    setServices(updatedServices);
-    await AsyncStorage.setItem(`services_${user.id}`, JSON.stringify(updatedServices));
-  }, [user, services]);
+    try {
+      const success = await servicesRepository.deleteForProvider(user.id, id);
+      if (success) {
+        setServices(prev => prev.filter(service => service.id !== id));
+      }
+    } catch (error) {
+      console.error('ServicesProvider: Error deleting service:', error);
+      throw error;
+    }
+  }, [user]);
 
   // Shop master service management
-  const addMasterService = useCallback(async (serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addMasterService = useCallback(async (serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt' | 'shopId'>) => {
     if (!user?.id) return;
     
-    const shopId = user.mockData?.shops?.[0]?.id || 'shop_1';
-    const newService: Service = {
-      ...serviceData,
-      id: `master_${Date.now()}`,
-      shopId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    const updatedServices = [...masterServices, newService];
-    setMasterServices(updatedServices);
-    await AsyncStorage.setItem(`master_services_${shopId}`, JSON.stringify(updatedServices));
-  }, [user, masterServices]);
+    try {
+      const shopId = user.mockData?.shops?.[0]?.id || 'shop_1';
+      const newService = await servicesRepository.createForShop(shopId, serviceData);
+      setMasterServices(prev => [...prev, newService]);
+    } catch (error) {
+      console.error('ServicesProvider: Error adding master service:', error);
+      throw error;
+    }
+  }, [user]);
 
   const updateMasterService = useCallback(async (id: string, updates: Partial<Service>) => {
     if (!user?.id) return;
     
-    const shopId = user.mockData?.shops?.[0]?.id || 'shop_1';
-    const updatedServices = masterServices.map(service => 
-      service.id === id 
-        ? { ...service, ...updates, updatedAt: new Date().toISOString() }
-        : service
-    );
-    
-    setMasterServices(updatedServices);
-    await AsyncStorage.setItem(`master_services_${shopId}`, JSON.stringify(updatedServices));
-  }, [user, masterServices]);
+    try {
+      const shopId = user.mockData?.shops?.[0]?.id || 'shop_1';
+      const updatedService = await servicesRepository.updateForShop(shopId, id, updates);
+      if (updatedService) {
+        setMasterServices(prev => prev.map(service => 
+          service.id === id ? updatedService : service
+        ));
+      }
+    } catch (error) {
+      console.error('ServicesProvider: Error updating master service:', error);
+      throw error;
+    }
+  }, [user]);
 
   const deleteMasterService = useCallback(async (id: string) => {
     if (!user?.id) return;
     
-    const shopId = user.mockData?.shops?.[0]?.id || 'shop_1';
-    const updatedServices = masterServices.filter(service => service.id !== id);
-    setMasterServices(updatedServices);
-    await AsyncStorage.setItem(`master_services_${shopId}`, JSON.stringify(updatedServices));
-  }, [user, masterServices]);
+    try {
+      const shopId = user.mockData?.shops?.[0]?.id || 'shop_1';
+      const success = await servicesRepository.deleteForShop(shopId, id);
+      if (success) {
+        setMasterServices(prev => prev.filter(service => service.id !== id));
+      }
+    } catch (error) {
+      console.error('ServicesProvider: Error deleting master service:', error);
+      throw error;
+    }
+  }, [user]);
 
   // Provider service offering management
   const toggleServiceOffering = useCallback(async (serviceId: string, isOffered: boolean) => {
     if (!user?.id) return;
     
-    const existingOffering = serviceOfferings.find(o => o.serviceId === serviceId);
-    let updatedOfferings: ProviderServiceOffering[];
-    
-    if (existingOffering) {
-      updatedOfferings = serviceOfferings.map(offering => 
-        offering.serviceId === serviceId 
-          ? { ...offering, isOffered, updatedAt: new Date().toISOString() }
-          : offering
-      );
-    } else {
+    try {
       const service = masterServices.find(s => s.id === serviceId);
       if (!service) return;
       
-      const newOffering: ProviderServiceOffering = {
-        id: `offering_${Date.now()}`,
-        providerId: user.id,
+      const updatedOffering = await serviceOfferingsRepository.toggleOffering(
+        user.id,
         serviceId,
-        service,
         isOffered,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      updatedOfferings = [...serviceOfferings, newOffering];
+        service
+      );
+      
+      setServiceOfferings(prev => {
+        const existingIndex = prev.findIndex(o => o.serviceId === serviceId);
+        if (existingIndex >= 0) {
+          return prev.map((offering, index) => 
+            index === existingIndex ? updatedOffering : offering
+          );
+        } else {
+          return [...prev, updatedOffering];
+        }
+      });
+    } catch (error) {
+      console.error('ServicesProvider: Error toggling service offering:', error);
+      throw error;
     }
-    
-    setServiceOfferings(updatedOfferings);
-    await AsyncStorage.setItem(`service_offerings_${user.id}`, JSON.stringify(updatedOfferings));
-  }, [user, serviceOfferings, masterServices]);
+  }, [user, masterServices]);
 
-  // Get services for display based on provider type
+  // Get services for display based on provider type with memoization
   const getProviderServices = useCallback((): Service[] => {
     if (!user) return [];
     
@@ -277,37 +344,91 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
     
     return [];
   }, [user, services, masterServices, serviceOfferings]);
+  
+  // Memoized filtered services
+  const activeServices = useMemoizedFilter(
+    services,
+    (service) => service.isActive,
+    [services]
+  );
+  
+  const activeMasterServices = useMemoizedFilter(
+    masterServices,
+    (service) => service.isActive,
+    [masterServices]
+  );
+  
+  // Memoized sorted services
+  const sortedServices = useMemoizedSort(
+    activeServices,
+    (a, b) => a.name.localeCompare(b.name),
+    [activeServices]
+  );
+  
+  const sortedMasterServices = useMemoizedSort(
+    activeMasterServices,
+    (a, b) => a.name.localeCompare(b.name),
+    [activeMasterServices]
+  );
 
   const contextValue = useMemo(() => {
     const value = {
+      // Raw data
       services,
+      masterServices,
+      serviceOfferings,
+      
+      // Processed data
+      activeServices,
+      activeMasterServices,
+      sortedServices,
+      sortedMasterServices,
+      
+      // Actions
       addService,
       updateService,
       deleteService,
-      masterServices,
       addMasterService,
       updateMasterService,
       deleteMasterService,
-      serviceOfferings,
       toggleServiceOffering,
       getProviderServices,
-      isLoading,
+      
+      // State
+      loadingState,
+      isLoading: loadingState.isLoading,
+      error: loadingState.error,
+      isEmpty: loadingState.isEmpty,
+      
+      // Utilities
+      refreshServices: loadServices,
     };
-    console.log('ServicesProvider: Context value created with getProviderServices:', !!value.getProviderServices);
+    console.log('ServicesProvider: Context value created with', {
+      servicesCount: services.length,
+      masterServicesCount: masterServices.length,
+      offeringsCount: serviceOfferings.length,
+      isLoading: loadingState.isLoading,
+      hasError: !!loadingState.error,
+    });
     return value;
   }, [
     services,
+    masterServices,
+    serviceOfferings,
+    activeServices,
+    activeMasterServices,
+    sortedServices,
+    sortedMasterServices,
     addService,
     updateService,
     deleteService,
-    masterServices,
     addMasterService,
     updateMasterService,
     deleteMasterService,
-    serviceOfferings,
     toggleServiceOffering,
     getProviderServices,
-    isLoading,
+    loadingState,
+    loadServices,
   ]);
 
   return contextValue;
