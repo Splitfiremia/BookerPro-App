@@ -8,22 +8,21 @@ export const [TeamManagementProvider, useTeamManagement] = createContextHook(() 
   const [shop, setShop] = useState<Shop | null>(null);
   const [masterServiceList, setMasterServiceList] = useState<Service[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Initialize data to prevent hydration issues
+  // Initialize data immediately to prevent loading delays
   useEffect(() => {
+    console.log('TeamManagementProvider: Initializing data immediately');
     try {
       setProviders(mockTeamProviders || []);
       setShop(mockShop || null);
       setMasterServiceList(mockMasterServiceList || []);
       setAppointments(mockProviderAppointments || []);
-      setIsLoading(false);
       console.log('TeamManagementProvider: Data initialized successfully');
     } catch (err) {
       console.error('TeamManagementProvider: Initialization error:', err);
       setError(err instanceof Error ? err.message : 'Failed to initialize team data');
-      setIsLoading(false);
     }
   }, []);
 

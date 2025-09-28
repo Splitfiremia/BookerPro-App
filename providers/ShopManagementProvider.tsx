@@ -97,124 +97,103 @@ export const [ShopManagementProvider, useShopManagement] = createContextHook(() 
 
   // Optimized shop data loading with immediate UI rendering
   useEffect(() => {
-    const loadShopData = async () => {
-      if (!user || user.role !== "owner") {
-        setIsLoading(false);
-        return;
-      }
-
-      // Set loading to false immediately and provide minimal data for instant UI
+    console.log('ShopManagementProvider: Initializing data immediately');
+    
+    if (!user || user.role !== "owner") {
       setIsLoading(false);
-      
-      try {
-        if (isDeveloperMode) {
-          // Provide minimal essential data immediately
-          const essentialShop: ShopSettings = {
-            id: "shop-1",
-            name: "Downtown Hair Studio",
-            address: "123 Main Street",
-            city: "New York",
-            state: "NY",
-            zip: "10001",
-            phone: "(212) 555-0123",
-            hours: [],
-            services: [],
-            photos: [],
-            holidaySchedule: [],
-            preferences: {
-              bookingAdvanceTime: 24,
-              cancellationPolicy: "24 hours notice required",
-              depositRequired: false,
-              autoConfirmBookings: false,
-              allowOnlineBooking: true,
-              requireClientNotes: false,
-            },
-            ownerId: user?.id || "",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
+      return;
+    }
 
-          const essentialMetrics: ShopMetrics = {
-            shopId: "shop-1",
-            totalRevenue: 45000,
-            monthlyRevenue: 12000,
-            weeklyRevenue: 3000,
-            totalAppointments: 180,
-            monthlyAppointments: 48,
-            weeklyAppointments: 12,
-            averageRating: 4.6,
-            totalReviews: 89,
-            stylistCount: 4,
-            chairUtilizationRate: 75,
-            averageTicketSize: 95,
-            topServices: [],
-            revenueByPeriod: [],
-          };
+    // Set loading to false immediately and provide data synchronously
+    setIsLoading(false);
+    
+    try {
+      if (isDeveloperMode) {
+        // Provide full data immediately - no delays
+        const fullShop: ShopSettings = {
+          id: "shop-1",
+          name: "Downtown Hair Studio",
+          address: "123 Main Street",
+          city: "New York",
+          state: "NY",
+          zip: "10001",
+          phone: "(212) 555-0123",
+          email: "info@downtownhairstudio.com",
+          website: "www.downtownhairstudio.com",
+          description: "Premium hair salon in the heart of downtown",
+          image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400",
+          hours: [
+            { day: "Monday", isOpen: false, openTime: "09:00", closeTime: "18:00" },
+            { day: "Tuesday", isOpen: true, openTime: "09:00", closeTime: "19:00" },
+            { day: "Wednesday", isOpen: true, openTime: "09:00", closeTime: "19:00" },
+            { day: "Thursday", isOpen: true, openTime: "09:00", closeTime: "20:00" },
+            { day: "Friday", isOpen: true, openTime: "09:00", closeTime: "20:00" },
+            { day: "Saturday", isOpen: true, openTime: "08:00", closeTime: "18:00" },
+            { day: "Sunday", isOpen: true, openTime: "10:00", closeTime: "17:00" },
+          ],
+          services: [
+            { id: "s1", name: "Haircut & Style", description: "Professional cut and styling", duration: 60, price: 85, category: "Hair", isActive: true },
+            { id: "s2", name: "Color & Highlights", description: "Full color service with highlights", duration: 120, price: 150, category: "Color", isActive: true },
+            { id: "s3", name: "Blowout", description: "Professional blowout styling", duration: 45, price: 55, category: "Styling", isActive: true },
+          ],
+          photos: [
+            { id: "p1", url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400", type: "interior", caption: "Main salon floor" },
+            { id: "p2", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400", type: "interior", caption: "Styling stations" },
+          ],
+          holidaySchedule: [],
+          preferences: {
+            bookingAdvanceTime: 24,
+            cancellationPolicy: "24 hours notice required",
+            depositRequired: false,
+            autoConfirmBookings: false,
+            allowOnlineBooking: true,
+            requireClientNotes: false,
+          },
+          ownerId: user?.id || "",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
 
-          // Set essential data immediately
-          setShops([essentialShop]);
-          setShopMetrics([essentialMetrics]);
-          setSelectedShopId("shop-1");
-          
-          // Load full data asynchronously in background
-          setTimeout(() => {
-            const fullShop: ShopSettings = {
-              ...essentialShop,
-              email: "info@downtownhairstudio.com",
-              website: "www.downtownhairstudio.com",
-              description: "Premium hair salon in the heart of downtown",
-              image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400",
-              hours: [
-                { day: "Monday", isOpen: false, openTime: "09:00", closeTime: "18:00" },
-                { day: "Tuesday", isOpen: true, openTime: "09:00", closeTime: "19:00" },
-                { day: "Wednesday", isOpen: true, openTime: "09:00", closeTime: "19:00" },
-                { day: "Thursday", isOpen: true, openTime: "09:00", closeTime: "20:00" },
-                { day: "Friday", isOpen: true, openTime: "09:00", closeTime: "20:00" },
-                { day: "Saturday", isOpen: true, openTime: "08:00", closeTime: "18:00" },
-                { day: "Sunday", isOpen: true, openTime: "10:00", closeTime: "17:00" },
-              ],
-              services: [
-                { id: "s1", name: "Haircut & Style", description: "Professional cut and styling", duration: 60, price: 85, category: "Hair", isActive: true },
-                { id: "s2", name: "Color & Highlights", description: "Full color service with highlights", duration: 120, price: 150, category: "Color", isActive: true },
-                { id: "s3", name: "Blowout", description: "Professional blowout styling", duration: 45, price: 55, category: "Styling", isActive: true },
-              ],
-              photos: [
-                { id: "p1", url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400", type: "interior", caption: "Main salon floor" },
-                { id: "p2", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400", type: "interior", caption: "Styling stations" },
-              ],
-            };
-            
-            const fullMetrics: ShopMetrics = {
-              ...essentialMetrics,
-              topServices: fullShop.services.slice(0, 2).map((service, sIndex) => ({
-                serviceId: service.id,
-                serviceName: service.name,
-                count: 25 - (sIndex * 5),
-                revenue: service.price * (25 - (sIndex * 5)),
-              })),
-              revenueByPeriod: [
-                { period: "Jan", revenue: 8000, appointments: 32 },
-                { period: "Feb", revenue: 9500, appointments: 38 },
-                { period: "Mar", revenue: 11000, appointments: 44 },
-                { period: "Apr", revenue: 12500, appointments: 50 },
-              ],
-            };
-            
-            // Update with full data
-            setShops([fullShop]);
-            setShopMetrics([fullMetrics]);
-          }, 50); // Very short delay for background loading
-        } else {
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Error loading shop data:", error);
+        const fullMetrics: ShopMetrics = {
+          shopId: "shop-1",
+          totalRevenue: 45000,
+          monthlyRevenue: 12000,
+          weeklyRevenue: 3000,
+          totalAppointments: 180,
+          monthlyAppointments: 48,
+          weeklyAppointments: 12,
+          averageRating: 4.6,
+          totalReviews: 89,
+          stylistCount: 4,
+          chairUtilizationRate: 75,
+          averageTicketSize: 95,
+          topServices: fullShop.services.slice(0, 2).map((service, sIndex) => ({
+            serviceId: service.id,
+            serviceName: service.name,
+            count: 25 - (sIndex * 5),
+            revenue: service.price * (25 - (sIndex * 5)),
+          })),
+          revenueByPeriod: [
+            { period: "Jan", revenue: 8000, appointments: 32 },
+            { period: "Feb", revenue: 9500, appointments: 38 },
+            { period: "Mar", revenue: 11000, appointments: 44 },
+            { period: "Apr", revenue: 12500, appointments: 50 },
+          ],
+        };
+        
+        // Set all data immediately - no async operations
+        setShops([fullShop]);
+        setShopMetrics([fullMetrics]);
+        setSelectedShopId("shop-1");
+        
+        console.log('ShopManagementProvider: Data loaded immediately');
+      } else {
         setIsLoading(false);
       }
-    };
-
-    // Execute immediately without timeout to prevent any delay
-    loadShopData();
+    } catch (error) {
+      console.error("Error loading shop data:", error);
+      setIsLoading(false);
+    }
   }, [user, isDeveloperMode]);
 
   // Add a new shop

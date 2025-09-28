@@ -1,12 +1,14 @@
 import { Stack } from "expo-router";
 import { COLORS } from "@/constants/theme";
-import { FlatProviders } from "@/providers/LazyProviders";
+import { ShopOwnerProviders } from "@/providers/LazyProviders";
 import { ProviderErrorBoundary, FeatureErrorBoundary } from "@/components/SpecializedErrorBoundaries";
 
 export default function ShopOwnerLayout() {
+  console.log('ShopOwnerLayout: Rendering with optimized providers');
+  
   return (
     <ProviderErrorBoundary providerName="Shop Owner Providers">
-      <FlatProviders>
+      <ShopOwnerProviders>
         <FeatureErrorBoundary featureName="Shop Owner Navigation">
           <Stack
             screenOptions={{
@@ -19,7 +21,7 @@ export default function ShopOwnerLayout() {
             <Stack.Screen name="provider/[id]" options={{ headerShown: false }} />
           </Stack>
         </FeatureErrorBoundary>
-      </FlatProviders>
+      </ShopOwnerProviders>
     </ProviderErrorBoundary>
   );
 }

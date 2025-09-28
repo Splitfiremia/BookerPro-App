@@ -74,7 +74,7 @@ const ManagementProviders = lazy(() =>
 function ProviderLoadingFallback() {
   return (
     <View style={styles.loadingContainer}>
-      <Text style={styles.loadingText}>Loading providers...</Text>
+      <Text style={styles.loadingText}>Initializing dashboard...</Text>
     </View>
   );
 }
@@ -137,6 +137,23 @@ export function FlatProviders({ children }: LazyProvidersProps) {
             </ServicesProvider>
           </PaymentProvider>
         </AppointmentProvider>
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+// Optimized provider structure for Shop Owner Dashboard - loads only essential providers
+export function ShopOwnerProviders({ children }: LazyProvidersProps) {
+  return (
+    <ErrorBoundary fallback={<ProviderErrorFallback />}>
+      <Suspense fallback={<ProviderLoadingFallback />}>
+        <ShopManagementProvider>
+          <TeamManagementProvider>
+            <AppointmentProvider>
+              {children}
+            </AppointmentProvider>
+          </TeamManagementProvider>
+        </ShopManagementProvider>
       </Suspense>
     </ErrorBoundary>
   );
