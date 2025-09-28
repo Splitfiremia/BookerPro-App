@@ -29,6 +29,39 @@ export default function LandingScreen() {
     console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode, 'isInitialized:', isInitialized);
   }, [isAuthenticated, user, isDeveloperMode, isInitialized]);
 
+  // Auto-redirect authenticated users to their role-specific dashboard
+  useEffect(() => {
+    if (isInitialized && isAuthenticated && user && !isDeveloperMode) {
+      console.log('Index: Auto-redirecting authenticated user to role-specific dashboard');
+      
+      const redirectToRoleDashboard = () => {
+        try {
+          switch (user.role) {
+            case "client":
+              router.replace("/(app)/(client)/(tabs)/home");
+              break;
+            case "provider":
+              router.replace("/(app)/(provider)/(tabs)/schedule");
+              break;
+            case "owner":
+              router.replace("/(app)/(shop-owner)/(tabs)/dashboard");
+              break;
+            default:
+              console.warn('Unknown user role:', user.role);
+              router.replace("/(app)/(client)/(tabs)/home");
+              break;
+          }
+        } catch (error) {
+          console.error('Auto-redirect navigation error:', error);
+        }
+      };
+      
+      // Small delay to prevent redirect loops
+      const timeoutId = setTimeout(redirectToRoleDashboard, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isInitialized, isAuthenticated, user, isDeveloperMode]);
+
   // Show loading state while initializing to prevent hydration mismatch
   if (!isInitialized) {
     return (

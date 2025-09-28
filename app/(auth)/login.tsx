@@ -78,12 +78,15 @@ export default function LoginScreen() {
       }
       
       // Login will trigger the redirection in the root layout
-      await login(email, formData.password);
+      const result = await login(email, formData.password);
       
-      // Navigate to root and let the root layout handle role-based redirection
-      // This ensures onboarding checks are properly performed
-      console.log('Login successful, redirecting to root for proper routing');
-      router.replace("/");
+      if (result.success) {
+        // Navigate to root and let the auto-redirect logic handle role-based redirection
+        console.log('Login successful, redirecting to root for proper routing');
+        router.replace("/");
+      } else {
+        throw new Error(result.error || 'Login failed');
+      }
     } catch (err) {
       console.error("Login error:", err);
       const errorMessage = err instanceof Error ? err.message : "Invalid credentials. Please check your email and password.";
