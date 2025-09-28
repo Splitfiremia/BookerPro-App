@@ -24,13 +24,14 @@ interface SettingItem {
 export default function SettingsScreen() {
   const router = useRouter();
   const { logout } = useAuth();
+  const servicesContext = useServices();
   const {
-    masterServices,
+    masterServices = [],
     addMasterService,
     updateMasterService,
     deleteMasterService,
-    isLoading: servicesLoading,
-  } = useServices();
+    isLoading: servicesLoading = true,
+  } = servicesContext || {};
   const {
     shops,
     selectedShop,
@@ -72,10 +73,13 @@ export default function SettingsScreen() {
 
   const handleSaveService = async (serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      if (editingService) {
+      if (editingService && updateMasterService) {
         await updateMasterService(editingService.id, serviceData);
-      } else {
+      } else if (addMasterService) {
         await addMasterService(serviceData);
+      } else {
+        console.error('Service functions not available');
+        throw new Error('Service functions not available');
       }
     } catch (error) {
       console.error('Error saving service:', error);
@@ -85,7 +89,11 @@ export default function SettingsScreen() {
 
   const handleDeleteService = async (serviceId: string) => {
     try {
-      await deleteMasterService(serviceId);
+      if (deleteMasterService) {
+        await deleteMasterService(serviceId);
+      } else {
+        console.error('Delete service function not available');
+      }
     } catch (error) {
       console.error('Error deleting service:', error);
     }

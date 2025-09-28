@@ -147,13 +147,15 @@ export function ShopOwnerProviders({ children }: LazyProvidersProps) {
   return (
     <ErrorBoundary fallback={<ProviderErrorFallback />}>
       <Suspense fallback={<ProviderLoadingFallback />}>
-        <ShopManagementProvider>
-          <TeamManagementProvider>
-            <AppointmentProvider>
-              {children}
-            </AppointmentProvider>
-          </TeamManagementProvider>
-        </ShopManagementProvider>
+        <ServicesProvider>
+          <ShopManagementProvider>
+            <TeamManagementProvider>
+              <AppointmentProvider>
+                {children}
+              </AppointmentProvider>
+            </TeamManagementProvider>
+          </ShopManagementProvider>
+        </ServicesProvider>
       </Suspense>
     </ErrorBoundary>
   );
