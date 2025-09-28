@@ -1,8 +1,9 @@
 import { Stack, router } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { COLORS } from "@/constants/theme";
+import { CoreProviderWrapper } from "@/providers/OptimizedProviders";
 
 export default function AppLayout() {
   const { isLoading, isAuthenticated, user, isInitialized } = useAuth();
@@ -47,11 +48,20 @@ export default function AppLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(client)" />
-      <Stack.Screen name="(provider)" />
-      <Stack.Screen name="(shop-owner)" />
-    </Stack>
+    <CoreProviderWrapper>
+      <Suspense fallback={
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Loading app features...</Text>
+        </View>
+      }>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(client)" />
+          <Stack.Screen name="(provider)" />
+          <Stack.Screen name="(shop-owner)" />
+        </Stack>
+      </Suspense>
+    </CoreProviderWrapper>
   );
 }
 

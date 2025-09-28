@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Star, CreditCard } from 'lucide-react-native';
 import ImageWithFallback from '@/components/ImageWithFallback';
@@ -19,11 +19,33 @@ interface ProviderCardProps {
   provider: Provider;
 }
 
-export const ProviderCard: React.FC<ProviderCardProps> = ({ provider }) => {
+// Memoized portfolio image component
+const PortfolioImage = memo<{ item: { id: string; image: string } }>(({ item }) => (
+  <ImageWithFallback
+    source={{ uri: item.image }}
+    style={styles.portfolioImage}
+    fallbackIcon="camera"
+  />
+));
+
+PortfolioImage.displayName = 'PortfolioImage';
+
+export const ProviderCard = memo<ProviderCardProps>(({ provider }) => {
+  console.log('ProviderCard: Rendering for provider', provider.id);
+  
+  const handlePress = useCallback(() => {
+    router.push(`/(app)/(client)/provider/${provider.id}`);
+  }, [provider.id]);
+
+  const handleBookPress = useCallback(() => {
+    console.log('Book appointment for provider:', provider.id);
+  }, [provider.id]);
+
   return (
     <TouchableOpacity 
       style={styles.providerCard}
-      onPress={() => router.push(`/(app)/(client)/provider/${provider.id}`)}
+      onPress={handlePress}
+      testID={`provider-card-${provider.id}`}
     >
       <View style={styles.providerHeader}>
         <ImageWithFallback
@@ -43,29 +65,35 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({ provider }) => {
         </View>
       </View>
       
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.portfolioContainer}>
-        {provider.portfolio?.slice(0, 4).map((portfolioItem) => (
-          <ImageWithFallback
-            key={portfolioItem.id}
-            source={{ uri: portfolioItem.image }}
-            style={styles.portfolioImage}
-            fallbackIcon="camera"
-          />
-        ))}
-      </ScrollView>
+      {provider.portfolio && provider.portfolio.length > 0 && (
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={styles.portfolioContainer}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={4}
+          windowSize={4}
+        >
+          {provider.portfolio.slice(0, 4).map((portfolioItem) => (
+            <PortfolioImage key={portfolioItem.id} item={portfolioItem} />
+          ))}
+        </ScrollView>
+      )}
       
       <View style={styles.providerFooter}>
         <View style={styles.acceptsCards}>
           <CreditCard size={16} color={COLORS.white} />
           <Text style={styles.acceptsText}>Accepts cards</Text>
         </View>
-        <TouchableOpacity style={styles.bookButton}>
+        <TouchableOpacity style={styles.bookButton} onPress={handleBookPress}>
           <Text style={styles.bookButtonText}>BOOK APPOINTMENT</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
-};
+});
+
+ProviderCard.displayName = 'ProviderCard';
 
 const styles = StyleSheet.create({
   providerCard: {

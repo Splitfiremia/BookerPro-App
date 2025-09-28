@@ -1,24 +1,25 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   FlatList,
   StatusBar,
-  Animated,
-  Modal,
 } from 'react-native';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS, GLASS_STYLES } from '@/constants/theme';
-import { Search, MapPin, Filter, Star, CreditCard, Heart, X, Clock, TrendingUp } from 'lucide-react-native';
+import { MapPin, Filter, Star, Heart, Clock } from 'lucide-react-native';
 import { mockProviders } from '@/mocks/providers';
-import { useSocial } from '@/providers/SocialProvider';
 import { router } from 'expo-router';
 import { FeatureErrorBoundary } from '@/components/SpecializedErrorBoundaries';
+import { SearchContainer } from '@/components/home/SearchContainer';
+import { SearchSuggestions } from '@/components/home/SearchSuggestions';
+import { ProviderCard } from '@/components/home/ProviderCard';
+
+
 
 interface Shop {
   id: string;
@@ -86,42 +87,130 @@ const recentSearches = [
 
 
 
-export default function HomeScreen() {
+// Memoized filter bar component
+const FilterBar = React.memo<{
+  filterOptions: { id: string; label: string; icon: any }[];
+  selectedFilter: string;
+  onFilterSelect: (filterId: string) => void;
+}>(({ filterOptions, selectedFilter, onFilterSelect }) => {
+  console.log('FilterBar: Rendering');
+  
+  return (
+    <ScrollView 
+      horizontal 
+      showsHorizontalScrollIndicator={false} 
+      style={styles.filtersContainer}
+      contentContainerStyle={styles.filtersContent}
+    >
+      {filterOptions.map((filter) => {
+        const IconComponent = filter.icon;
+        return (
+          <TouchableOpacity
+            key={filter.id}
+            style={[
+              styles.filterButton,
+              selectedFilter === filter.id && styles.filterButtonActive
+            ]}
+            onPress={() => onFilterSelect(filter.id)}
+          >
+            {IconComponent && (
+              <IconComponent 
+                size={14} 
+                color={selectedFilter === filter.id ? COLORS.background : COLORS.lightGray} 
+              />
+            )}
+            <Text style={[
+              styles.filterText,
+              selectedFilter === filter.id && styles.filterTextActive
+            ]}>
+              {filter.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
+  );
+});
+
+FilterBar.displayName = 'FilterBar';
+
+// Memoized shop card component
+const ShopCard = React.memo<{ item: Shop }>(({ item }) => (
+  <TouchableOpacity style={styles.shopCard}>
+    <ImageWithFallback
+      source={{ uri: item.image }}
+      style={styles.shopImage}
+      fallbackIcon="image"
+    />
+    <View style={styles.shopInfo}>
+      <Text style={styles.shopName} numberOfLines={2}>{item.name}</Text>
+      <Text style={styles.shopDescription} numberOfLines={1}>{item.description}</Text>
+      <Text style={styles.shopType}>{item.type}</Text>
+    </View>
+  </TouchableOpacity>
+));
+
+ShopCard.displayName = 'ShopCard';
+
+// Memoized header component
+const HomeHeader = React.memo<{
+  searchText: string;
+  onSearchChange: (text: string) => void;
+  onSearchFocus: () => void;
+  onSearchBlur: () => void;
+  followedCount: number;
+  insets: any;
+}>(({ searchText, onSearchChange, onSearchFocus, onSearchBlur, followedCount, insets }) => {
+  console.log('HomeHeader: Rendering');
+  
+  return (
+    <View style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
+      <SearchContainer
+        searchText={searchText}
+        onSearchChange={onSearchChange}
+        onFocus={onSearchFocus}
+        onBlur={onSearchBlur}
+      />
+      
+      <View style={styles.headerActions}>
+        <TouchableOpacity style={styles.locationContainer}>
+          <MapPin size={16} color={COLORS.lightGray} />
+          <Text style={styles.locationText}>Current Location</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.followingButton}
+          onPress={() => router.push('/(app)/(client)/following')}
+        >
+          <Heart size={16} color={COLORS.accent} />
+          {followedCount > 0 && (
+            <View style={styles.followingBadge}>
+              <Text style={styles.followingBadgeText}>{followedCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+});
+
+HomeHeader.displayName = 'HomeHeader';
+
+// Main home screen content component
+const HomeScreenContent = React.memo(() => {
   const [searchText, setSearchText] = useState<string>('');
   const [selectedFilter, setSelectedFilter] = useState<string>('nearby');
   const [locationEnabled, setLocationEnabled] = useState<boolean>(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState<boolean>(false);
-  const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
-  const { getFollowedCount } = useSocial();
-  const searchInputRef = useRef<TextInput>(null);
-  const searchAnimation = useRef(new Animated.Value(0)).current;
-  const suggestionAnimation = useRef(new Animated.Value(0)).current;
+  
+  // Mock followed count for now
+  const followedCount = 0;
 
   // Simulate location permission check
   useEffect(() => {
-    // In a real app, you would check location permissions here
-    // For now, we'll show the location unavailable state
     setLocationEnabled(false);
   }, []);
-
-  // Animate search focus
-  useEffect(() => {
-    Animated.timing(searchAnimation, {
-      toValue: isSearchFocused ? 1 : 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  }, [isSearchFocused]); // Remove searchAnimation dependency to prevent infinite loop
-
-  // Animate suggestions
-  useEffect(() => {
-    Animated.timing(suggestionAnimation, {
-      toValue: showSearchSuggestions ? 1 : 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [showSearchSuggestions]); // Remove suggestionAnimation dependency to prevent infinite loop
 
   // Enhanced autocomplete suggestions
   const autocompleteSuggestions = useMemo(() => {
@@ -204,182 +293,45 @@ export default function HomeScreen() {
   }, [searchText]);
 
   const handleSearchFocus = useCallback(() => {
-    setIsSearchFocused(true);
     setShowSearchSuggestions(true);
   }, []);
 
   const handleSearchBlur = useCallback(() => {
-    setIsSearchFocused(false);
     setTimeout(() => setShowSearchSuggestions(false), 200);
   }, []);
 
   const handleSuggestionPress = useCallback((suggestion: string) => {
-    setSearchText(suggestion);
+    if (!suggestion?.trim()) return;
+    if (suggestion.length > 100) return;
+    const sanitized = suggestion.trim();
+    setSearchText(sanitized);
     setShowSearchSuggestions(false);
-    searchInputRef.current?.blur();
   }, []);
 
-  const clearSearch = useCallback(() => {
-    setSearchText('');
-    searchInputRef.current?.focus();
-  }, []);
+  const renderShopCard = useCallback(({ item }: { item: Shop }) => (
+    <ShopCard item={item} />
+  ), []);
 
-  const renderShopCard = ({ item }: { item: Shop }) => (
-    <TouchableOpacity style={styles.shopCard}>
-      <ImageWithFallback
-        source={{ uri: item.image }}
-        style={styles.shopImage}
-        fallbackIcon="image"
-      />
-      <View style={styles.shopInfo}>
-        <Text style={styles.shopName} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.shopDescription} numberOfLines={1}>{item.description}</Text>
-        <Text style={styles.shopType}>{item.type}</Text>
-      </View>
-    </TouchableOpacity>
-  );
 
-  const renderProviderCard = ({ item }: { item: typeof mockProviders[0] }) => (
-    <TouchableOpacity 
-      style={styles.providerCard}
-      onPress={() => router.push(`/(app)/(client)/provider/${item.id}`)}
-    >
-      <View style={styles.providerHeader}>
-        <ImageWithFallback
-          source={{ uri: item.profileImage }}
-          style={styles.providerAvatar}
-          fallbackIcon="user"
-        />
-        <View style={styles.providerInfo}>
-          <Text style={styles.providerName}>{item.name}</Text>
-          <Text style={styles.providerService}>Free Advice</Text>
-          <View style={styles.ratingContainer}>
-            <Star size={14} color={COLORS.accent} fill={COLORS.accent} />
-            <Text style={styles.rating}>{item.rating} ({item.reviewCount})</Text>
-            <Text style={styles.distance}>{item.distanceText}</Text>
-          </View>
-          <Text style={styles.location}>New York, NY • $</Text>
-        </View>
-      </View>
-      
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.portfolioContainer}>
-        {item.portfolio?.slice(0, 4).map((portfolioItem) => (
-          <ImageWithFallback
-            key={portfolioItem.id}
-            source={{ uri: portfolioItem.image }}
-            style={styles.portfolioImage}
-            fallbackIcon="camera"
-          />
-        ))}
-      </ScrollView>
-      
-      <View style={styles.providerFooter}>
-        <View style={styles.acceptsCards}>
-          <CreditCard size={16} color={COLORS.white} />
-          <Text style={styles.acceptsText}>Accepts cards</Text>
-        </View>
-        <TouchableOpacity style={styles.bookButton}>
-          <Text style={styles.bookButtonText}>BOOK APPOINTMENT</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
       
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
-        <Animated.View 
-          style={[
-            styles.searchContainer,
-            {
-              borderColor: searchAnimation.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['transparent', COLORS.accent],
-              }),
-              borderWidth: searchAnimation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 2],
-              }),
-            }
-          ]}
-        >
-          <Search size={20} color={COLORS.lightGray} style={styles.searchIcon} />
-          <TextInput
-            ref={searchInputRef}
-            style={styles.searchInput}
-            placeholder="Search services, providers, shops..."
-            placeholderTextColor={COLORS.lightGray}
-            value={searchText}
-            onChangeText={setSearchText}
-            onFocus={handleSearchFocus}
-            onBlur={handleSearchBlur}
-            returnKeyType="search"
-            testID="search-input"
-          />
-          {searchText.length > 0 && (
-            <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-              <X size={18} color={COLORS.lightGray} />
-            </TouchableOpacity>
-          )}
-        </Animated.View>
-        
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.locationContainer}>
-            <MapPin size={16} color={COLORS.lightGray} />
-            <Text style={styles.locationText}>Current Location</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.followingButton}
-            onPress={() => router.push('/(app)/(client)/following')}
-          >
-            <Heart size={16} color={COLORS.accent} />
-            {getFollowedCount() > 0 && (
-              <View style={styles.followingBadge}>
-                <Text style={styles.followingBadgeText}>{getFollowedCount()}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+      <HomeHeader
+        searchText={searchText}
+        onSearchChange={setSearchText}
+        onSearchFocus={handleSearchFocus}
+        onSearchBlur={handleSearchBlur}
+        followedCount={followedCount}
+        insets={insets}
+      />
 
-      {/* Filter Options */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
-        style={styles.filtersContainer}
-        contentContainerStyle={styles.filtersContent}
-      >
-        {filterOptions.map((filter) => {
-          const IconComponent = filter.icon;
-          return (
-            <TouchableOpacity
-              key={filter.id}
-              style={[
-                styles.filterButton,
-                selectedFilter === filter.id && styles.filterButtonActive
-              ]}
-              onPress={() => setSelectedFilter(filter.id)}
-            >
-              {IconComponent && (
-                <IconComponent 
-                  size={14} 
-                  color={selectedFilter === filter.id ? COLORS.background : COLORS.lightGray} 
-                />
-              )}
-              <Text style={[
-                styles.filterText,
-                selectedFilter === filter.id && styles.filterTextActive
-              ]}>
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <FilterBar
+        filterOptions={filterOptions}
+        selectedFilter={selectedFilter}
+        onFilterSelect={setSelectedFilter}
+      />
 
       {/* Quick Book Section */}
       <View style={styles.quickBookContainer}>
@@ -393,85 +345,15 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Search Suggestions Modal */}
-      <Modal
+      <SearchSuggestions
         visible={showSearchSuggestions}
-        transparent
-        animationType="none"
-        onRequestClose={() => setShowSearchSuggestions(false)}
-      >
-        <TouchableOpacity 
-          style={styles.suggestionOverlay}
-          activeOpacity={1}
-          onPress={() => setShowSearchSuggestions(false)}
-        >
-          <Animated.View 
-            style={[
-              styles.suggestionsContainer,
-              {
-                opacity: suggestionAnimation,
-                transform: [{
-                  translateY: suggestionAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [-20, 0],
-                  })
-                }]
-              }
-            ]}
-          >
-            {/* Autocomplete suggestions when typing */}
-            {searchText.trim() && autocompleteSuggestions.length > 0 && (
-              <View style={styles.suggestionSection}>
-                <Text style={styles.suggestionSectionTitle}>Suggestions</Text>
-                {autocompleteSuggestions.map((suggestion, index) => (
-                  <TouchableOpacity
-                    key={`autocomplete-${index}`}
-                    style={styles.suggestionItem}
-                    onPress={() => handleSuggestionPress(suggestion)}
-                  >
-                    <Search size={16} color={COLORS.accent} />
-                    <Text style={styles.suggestionText}>{suggestion}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-            
-            {/* Recent searches when not typing */}
-            {!searchText.trim() && recentSearches.length > 0 && (
-              <View style={styles.suggestionSection}>
-                <Text style={styles.suggestionSectionTitle}>Recent Searches</Text>
-                {recentSearches.map((search, index) => (
-                  <TouchableOpacity
-                    key={`recent-${index}`}
-                    style={styles.suggestionItem}
-                    onPress={() => handleSuggestionPress(search)}
-                  >
-                    <Clock size={16} color={COLORS.lightGray} />
-                    <Text style={styles.suggestionText}>{search}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-            
-            {/* Popular services when not typing */}
-            {!searchText.trim() && (
-              <View style={styles.suggestionSection}>
-                <Text style={styles.suggestionSectionTitle}>Popular Services</Text>
-                {searchSuggestions.slice(0, 8).map((suggestion, index) => (
-                  <TouchableOpacity
-                    key={`suggestion-${index}`}
-                    style={styles.suggestionItem}
-                    onPress={() => handleSuggestionPress(suggestion)}
-                  >
-                    <TrendingUp size={16} color={COLORS.accent} />
-                    <Text style={styles.suggestionText}>{suggestion}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </Animated.View>
-        </TouchableOpacity>
-      </Modal>
+        searchText={searchText}
+        autocompleteSuggestions={autocompleteSuggestions}
+        recentSearches={recentSearches}
+        popularServices={searchSuggestions}
+        onSuggestionPress={handleSuggestionPress}
+        onClose={() => setShowSearchSuggestions(false)}
+      />
 
       {/* Content */}
       {!locationEnabled ? (
@@ -502,6 +384,9 @@ export default function HomeScreen() {
               <FlatList
                 data={filteredShops}
                 renderItem={renderShopCard}
+                removeClippedSubviews={true}
+                maxToRenderPerBatch={5}
+                windowSize={5}
                 keyExtractor={(item) => item.id}
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -522,9 +407,7 @@ export default function HomeScreen() {
                 PROVIDERS {searchText.trim() && `(${filteredProviders.length})`}
               </Text>
               {filteredProviders.slice(0, searchText.trim() ? filteredProviders.length : 3).map((provider) => (
-                <View key={provider.id}>
-                  {renderProviderCard({ item: provider })}
-                </View>
+                <ProviderCard key={provider.id} provider={provider} />
               ))}
               {filteredProviders.length === 0 && searchText.trim() && (
                 <Text style={styles.noResultsText}>No providers found</Text>
@@ -534,6 +417,27 @@ export default function HomeScreen() {
         </ScrollView>
       )}
     </View>
+  );
+});
+
+HomeScreenContent.displayName = 'HomeScreenContent';
+
+export default function HomeScreen() {
+  console.log('HomeScreen: Rendering');
+  
+  return (
+    <FeatureErrorBoundary featureName="HomeScreen">
+      <Suspense fallback={
+        <View style={styles.container}>
+          <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
+          <View style={styles.locationUnavailableContainer}>
+            <Text style={styles.locationUnavailableTitle}>Loading...</Text>
+          </View>
+        </View>
+      }>
+        <HomeScreenContent />
+      </Suspense>
+    </FeatureErrorBoundary>
   );
 }
 
