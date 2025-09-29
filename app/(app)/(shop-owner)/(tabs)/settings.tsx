@@ -60,6 +60,8 @@ export default function SettingsScreen() {
   const [editingService, setEditingService] = useState<Service | null>(null);
 
 
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
   const handleSignOut = () => {
     Alert.alert(
       "Sign Out",
@@ -75,20 +77,27 @@ export default function SettingsScreen() {
           onPress: async () => {
             try {
               console.log('Shop Owner Settings: Starting logout process');
-              // Set local loading state if needed
-              // setIsLoading(true); // Uncomment if you want to show loading state
+              // Set loading state to show feedback to user
+              setIsSigningOut(true);
               
               // Perform logout first to avoid redirect race conditions
               await logout();
               console.log('Shop Owner Settings: Logout completed, navigating to index');
               
+              // Add a small delay to ensure all state updates are processed
+              await new Promise(resolve => setTimeout(resolve, 300));
+              
               // Navigate after successful logout
               router.replace('/');
             } catch (error) {
               console.error('Shop Owner Settings: Logout error:', error);
-              // Even if logout fails, still try to navigate to home screen
-              // This ensures user isn't stuck in a logged-in UI state
-              router.replace('/');
+              // Show error to user
+              Alert.alert(
+                "Sign Out Error",
+                "There was a problem signing out. Please try again."
+              );
+              // Reset signing out state
+              setIsSigningOut(false);
             }
           },
         },
@@ -404,6 +413,11 @@ export default function SettingsScreen() {
         style={styles.settingItem}
         onPress={() => {
           console.log('Shop Owner Settings: Item pressed:', item.id);
+          // Prevent actions while signing out
+          if (isSigningOut && item.id === 'signout') {
+            console.log('Already signing out, ignoring tap');
+            return;
+          }
           try {
             if (item.onPress) {
               item.onPress();
@@ -415,17 +429,19 @@ export default function SettingsScreen() {
             Alert.alert('Error', 'Unable to perform this action');
           }
         }}
+        disabled={isSigningOut && item.id === 'signout'}
         testID={`setting-item-${item.id}`}
         accessibilityLabel={item.title}
       >
         <View style={styles.settingItemLeft}>
-          <item.icon size={20} color={item.id === 'signout' ? '#FF3B30' : '#666'} />
+          <item.icon size={20} color={item.id === 'signout' ? (isSigningOut ? '#999' : '#FF3B30') : '#666'} />
           <View style={styles.settingTextContainer}>
             <Text style={[
               styles.settingTitle,
-              item.id === 'signout' && styles.signOutText
+              item.id === 'signout' && styles.signOutText,
+              (isSigningOut && item.id === 'signout') && styles.disabledText
             ]}>
-              {item.title}
+              {item.id === 'signout' && isSigningOut ? 'Signing Out...' : item.title}
             </Text>
             {item.subtitle && (
               <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
@@ -573,6 +589,9 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     color: '#FF3B30',
+  },
+  disabledText: {
+    color: '#999',
   },
   footer: {
     alignItems: 'center',
