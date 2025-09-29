@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { COLORS, FONTS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { UserRole } from '@/models/database';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Lazy load dashboard components
 const ClientDashboard = lazy(() => import('@/app/(app)/(client)/(tabs)/home'));
@@ -93,11 +94,15 @@ export default function LazyDashboard({ userRole, userId }: LazyDashboardProps) 
       key={retryKey}
       fallback={<DashboardLoadingFallback userRole={userRole} />}
     >
-      <React.ErrorBoundary
+      <ErrorBoundary
         fallback={<DashboardErrorFallback userRole={userRole} onRetry={handleRetry} />}
+        level="critical"
+        onError={(error, errorInfo) => {
+          console.error('LazyDashboard ErrorBoundary:', error, errorInfo);
+        }}
       >
         {getDashboardComponent()}
-      </React.ErrorBoundary>
+      </ErrorBoundary>
     </Suspense>
   );
 }
@@ -113,7 +118,7 @@ const styles = StyleSheet.create({
   loadingText: {
     color: COLORS.white,
     fontSize: FONT_SIZES.lg,
-    fontFamily: FONTS.medium,
+    fontFamily: FONTS.regular,
     marginTop: SPACING.lg,
     textAlign: 'center',
   },
