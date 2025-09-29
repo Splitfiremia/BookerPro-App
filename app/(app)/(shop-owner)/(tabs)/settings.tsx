@@ -75,22 +75,20 @@ export default function SettingsScreen() {
           onPress: async () => {
             try {
               console.log('Shop Owner Settings: Starting logout process');
+              // Set local loading state if needed
+              // setIsLoading(true); // Uncomment if you want to show loading state
+              
               // Perform logout first to avoid redirect race conditions
               await logout();
               console.log('Shop Owner Settings: Logout completed, navigating to index');
-              // Ensure state propagation, then navigate
-              await new Promise((resolve) => setTimeout(resolve, 100));
+              
+              // Navigate after successful logout
               router.replace('/');
             } catch (error) {
               console.error('Shop Owner Settings: Logout error:', error);
-              try {
-                // Ensure user is cleared even if previous attempt failed
-                await logout();
-              } catch (inner) {
-                console.error('Shop Owner Settings: Secondary logout attempt failed:', inner);
-              } finally {
-                router.replace('/');
-              }
+              // Even if logout fails, still try to navigate to home screen
+              // This ensures user isn't stuck in a logged-in UI state
+              router.replace('/');
             }
           },
         },
