@@ -1,39 +1,31 @@
 import { Stack, router } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { COLORS } from "@/constants/theme";
 
 export default function AppLayout() {
   const { isLoading, isAuthenticated, user, isInitialized } = useAuth();
-  const [isReady, setIsReady] = useState(false);
-
-  // Initialize app state immediately to prevent hydration timeout
-  useEffect(() => {
-    setIsReady(true);
-  }, []);
 
   // Redirect to index if not authenticated, but only after initialization
   useEffect(() => {
-    if (isInitialized && !isLoading && !isAuthenticated && isReady) {
+    if (isInitialized && !isLoading && !isAuthenticated) {
       console.log('AppLayout: User not authenticated, redirecting to index');
-      console.log('AppLayout: Current user state:', user);
       
-      // Use a small delay to prevent redirect loops
-      const timeoutId = setTimeout(() => {
+      // Use requestAnimationFrame for smoother redirect
+      requestAnimationFrame(() => {
         try {
           router.replace("/");
           console.log('AppLayout: Successfully redirected to index');
         } catch (error) {
           console.error('AppLayout: Error redirecting to index:', error);
         }
-      }, 100);
-      return () => clearTimeout(timeoutId);
+      });
     }
-  }, [isInitialized, isLoading, isAuthenticated, user, isReady]);
+  }, [isInitialized, isLoading, isAuthenticated]);
 
-  // Show loading while not ready or auth is being determined
-  if (!isReady || !isInitialized || isLoading) {
+  // Show loading while auth is being determined
+  if (!isInitialized || isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />

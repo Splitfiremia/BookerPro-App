@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
+import React, { useEffect } from "react";
+import { StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -8,34 +8,6 @@ import { CriticalErrorBoundary } from "@/components/SpecializedErrorBoundaries";
 import OptimizedProviderTree from "@/providers/OptimizedProviderTree";
 import { COLORS } from "@/constants/theme";
 import { initializeDeepLinking, cleanupDeepLinking } from "@/utils/deepLinkHandler";
-
-
-
-// Hydration-safe loading fallback
-function LoadingFallback() {
-  return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={COLORS.primary} />
-      <Text style={styles.loadingText}>Loading...</Text>
-    </View>
-  );
-}
-
-// Hydration wrapper to prevent timeout
-function HydrationWrapper({ children }: { children: React.ReactNode }) {
-  const [isHydrated, setIsHydrated] = useState(false);
-  
-  useEffect(() => {
-    // Set hydrated immediately to prevent timeout
-    setIsHydrated(true);
-  }, []);
-  
-  if (!isHydrated) {
-    return <LoadingFallback />;
-  }
-  
-  return <>{children}</>;
-}
 
 function RootLayoutNav() {
   return (
@@ -54,9 +26,9 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  console.log('RootLayout: Rendering with hydration safety');
+  console.log('RootLayout: Rendering');
   
-  // Initialize deep linking with error handling
+  // Initialize deep linking after mount
   useEffect(() => {
     let mounted = true;
     
@@ -71,11 +43,12 @@ export default function RootLayout() {
       }
     };
     
-    // Use setTimeout to prevent blocking hydration
-    setTimeout(initializeApp, 100);
+    // Delay initialization to not block rendering
+    const timeoutId = setTimeout(initializeApp, 500);
     
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       try {
         console.log('RootLayout: Cleaning up deep linking');
         cleanupDeepLinking();
@@ -87,14 +60,12 @@ export default function RootLayout() {
   
   return (
     <GestureHandlerRootView style={styles.gestureHandler}>
-      <HydrationWrapper>
-        <CriticalErrorBoundary componentName="Root Application">
-          <OptimizedProviderTree>
-            <RootLayoutNav />
-            <ModeIndicator />
-          </OptimizedProviderTree>
-        </CriticalErrorBoundary>
-      </HydrationWrapper>
+      <CriticalErrorBoundary componentName="Root Application">
+        <OptimizedProviderTree>
+          <RootLayoutNav />
+          <ModeIndicator />
+        </OptimizedProviderTree>
+      </CriticalErrorBoundary>
     </GestureHandlerRootView>
   );
 }
@@ -102,15 +73,4 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   contentStyle: { backgroundColor: COLORS.background },
   gestureHandler: { flex: 1 },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: '500',
-  },
 });
