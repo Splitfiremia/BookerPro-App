@@ -42,6 +42,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     let isMounted = true;
     
     // Set initialized immediately with defaults to prevent hydration timeout
+    console.log('AuthProvider: Setting initialized to true immediately');
     setIsInitialized(true);
     
     // Load stored data asynchronously without blocking render
@@ -49,8 +50,15 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       if (!isMounted) return;
       
       try {
-        // Use batched read for better performance
-        const data = await multiGet(['user', 'developerMode']);
+        console.log('AuthProvider: Starting async data load');
+        
+        // Use timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Storage timeout')), 3000)
+        );
+        
+        const dataPromise = multiGet(['user', 'developerMode']);
+        const data = await Promise.race([dataPromise, timeoutPromise]) as any;
         
         if (!isMounted) return;
         
@@ -66,23 +74,25 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           setIsDeveloperMode(data.developerMode);
         }
         
+        console.log('AuthProvider: Async data load completed successfully');
+        
       } catch (error) {
         console.log('AuthProvider: Storage load failed, using defaults:', error instanceof Error ? error.message : 'Unknown error');
         // Continue with default values - app should still work
       }
     };
     
-    // Use setTimeout to defer loading and prevent blocking
-    setTimeout(() => {
+    // Use requestAnimationFrame for better performance
+    requestAnimationFrame(() => {
       if (isMounted) {
         loadStoredData();
       }
-    }, 0);
+    });
     
     return () => {
       isMounted = false;
     };
-  }, []); // Remove multiGet dependency to prevent infinite loop
+  }, [multiGet]); // Include multiGet dependency
 
   // Set developer mode with persistence
   const setDeveloperMode = useCallback(async (value: boolean) => {
@@ -292,8 +302,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   // Computed values
   const isAuthenticated = useMemo(() => user !== null, [user]);
 
-  // Return context value
-  return {
+  // Memoize context value to prevent unnecessary re-renders
+  return useMemo(() => ({
     user,
     isAuthenticated,
     isDeveloperMode,
@@ -305,5 +315,5 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     logout,
     register,
     updateProfile,
-  };
+  }), [user, isAuthenticated, isDeveloperMode, isLoading, isInitialized, setDeveloperMode, checkDeveloperMode, login, logout, register, updateProfile]);
 });

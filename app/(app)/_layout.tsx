@@ -1,16 +1,21 @@
 import { Stack, router } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
-import { useEffect, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { COLORS } from "@/constants/theme";
-import { CoreProviderWrapper } from "@/providers/OptimizedProviders";
 
 export default function AppLayout() {
   const { isLoading, isAuthenticated, user, isInitialized } = useAuth();
+  const [isReady, setIsReady] = useState(false);
+
+  // Initialize app state immediately to prevent hydration timeout
+  useEffect(() => {
+    setIsReady(true);
+  }, []);
 
   // Redirect to index if not authenticated, but only after initialization
   useEffect(() => {
-    if (isInitialized && !isLoading && !isAuthenticated) {
+    if (isInitialized && !isLoading && !isAuthenticated && isReady) {
       console.log('AppLayout: User not authenticated, redirecting to index');
       console.log('AppLayout: Current user state:', user);
       
@@ -25,10 +30,10 @@ export default function AppLayout() {
       }, 100);
       return () => clearTimeout(timeoutId);
     }
-  }, [isInitialized, isLoading, isAuthenticated, user]);
+  }, [isInitialized, isLoading, isAuthenticated, user, isReady]);
 
-  // Show loading while auth is being determined or not initialized
-  if (!isInitialized || isLoading) {
+  // Show loading while not ready or auth is being determined
+  if (!isReady || !isInitialized || isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
@@ -48,20 +53,11 @@ export default function AppLayout() {
   }
 
   return (
-    <CoreProviderWrapper>
-      <Suspense fallback={
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading app features...</Text>
-        </View>
-      }>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(client)" />
-          <Stack.Screen name="(provider)" />
-          <Stack.Screen name="(shop-owner)" />
-        </Stack>
-      </Suspense>
-    </CoreProviderWrapper>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(client)" />
+      <Stack.Screen name="(provider)" />
+      <Stack.Screen name="(shop-owner)" />
+    </Stack>
   );
 }
 

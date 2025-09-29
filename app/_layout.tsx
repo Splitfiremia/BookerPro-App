@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React, { Suspense, useEffect } from "react";
-import { StyleSheet, View, Text } from "react-native";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/providers/AuthProvider";
@@ -12,31 +12,48 @@ import { CriticalErrorBoundary } from "@/components/SpecializedErrorBoundaries";
 import { COLORS } from "@/constants/theme";
 import { initializeDeepLinking, cleanupDeepLinking } from "@/utils/deepLinkHandler";
 
-// Create QueryClient with optimized settings to prevent hydration issues
+// Create QueryClient with hydration-safe settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: false,
+      retry: 1,
       staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
       gcTime: 1000 * 60 * 10,
       refetchOnMount: false,
       refetchOnReconnect: false,
-      networkMode: 'offlineFirst',
+      networkMode: 'online',
     },
     mutations: {
-      networkMode: 'offlineFirst',
+      networkMode: 'online',
     },
   },
 });
 
-// Loading fallback component
+// Hydration-safe loading fallback
 function LoadingFallback() {
   return (
     <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color={COLORS.primary} />
       <Text style={styles.loadingText}>Loading...</Text>
     </View>
   );
+}
+
+// Hydration wrapper to prevent timeout
+function HydrationWrapper({ children }: { children: React.ReactNode }) {
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  useEffect(() => {
+    // Set hydrated immediately to prevent timeout
+    setIsHydrated(true);
+  }, []);
+  
+  if (!isHydrated) {
+    return <LoadingFallback />;
+  }
+  
+  return <>{children}</>;
 }
 
 function RootLayoutNav() {
@@ -56,40 +73,57 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  console.log('RootLayout: Rendering');
+  console.log('RootLayout: Rendering with hydration safety');
   
-  // Initialize deep linking on app start
+  // Initialize deep linking with error handling
   useEffect(() => {
-    console.log('RootLayout: Initializing deep linking');
-    initializeDeepLinking();
+    let mounted = true;
     
-    // Cleanup on unmount
+    const initializeApp = async () => {
+      try {
+        if (mounted) {
+          console.log('RootLayout: Initializing deep linking');
+          initializeDeepLinking();
+        }
+      } catch (error) {
+        console.error('RootLayout: Deep linking initialization failed:', error);
+      }
+    };
+    
+    // Use setTimeout to prevent blocking hydration
+    setTimeout(initializeApp, 100);
+    
     return () => {
-      console.log('RootLayout: Cleaning up deep linking');
-      cleanupDeepLinking();
+      mounted = false;
+      try {
+        console.log('RootLayout: Cleaning up deep linking');
+        cleanupDeepLinking();
+      } catch (error) {
+        console.error('RootLayout: Deep linking cleanup failed:', error);
+      }
     };
   }, []);
   
   return (
     <GestureHandlerRootView style={styles.gestureHandler}>
-      <CriticalErrorBoundary componentName="Root Application">
-        <QueryClientProvider client={queryClient}>
-          <ErrorBoundary level="critical" resetOnPropsChange={true}>
-            <WithSafeAreaDeviceProvider>
-              <ErrorBoundary level="warning" resetOnPropsChange={true}>
-                <AuthProvider>
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ErrorBoundary level="info" resetOnPropsChange={true}>
+      <HydrationWrapper>
+        <CriticalErrorBoundary componentName="Root Application">
+          <QueryClientProvider client={queryClient}>
+            <ErrorBoundary level="critical" resetOnPropsChange={false}>
+              <WithSafeAreaDeviceProvider>
+                <ErrorBoundary level="warning" resetOnPropsChange={false}>
+                  <AuthProvider>
+                    <ErrorBoundary level="info" resetOnPropsChange={false}>
                       <RootLayoutNav />
                     </ErrorBoundary>
-                  </Suspense>
-                  <ModeIndicator />
-                </AuthProvider>
-              </ErrorBoundary>
-            </WithSafeAreaDeviceProvider>
-          </ErrorBoundary>
-        </QueryClientProvider>
-      </CriticalErrorBoundary>
+                    <ModeIndicator />
+                  </AuthProvider>
+                </ErrorBoundary>
+              </WithSafeAreaDeviceProvider>
+            </ErrorBoundary>
+          </QueryClientProvider>
+        </CriticalErrorBoundary>
+      </HydrationWrapper>
     </GestureHandlerRootView>
   );
 }
