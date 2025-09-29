@@ -63,6 +63,12 @@ export default function SettingsScreen() {
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = () => {
+    // Prevent multiple sign out attempts
+    if (isSigningOut) {
+      console.log('Shop Owner Settings: Already signing out, ignoring request');
+      return;
+    }
+    
     Alert.alert(
       "Sign Out",
       "Are you sure you want to sign out?",
@@ -402,6 +408,7 @@ export default function SettingsScreen() {
             onValueChange={item.onPress}
             trackColor={{ false: '#e0e0e0', true: '#007AFF' }}
             thumbColor="#fff"
+            disabled={isSigningOut} // Disable all toggles during sign out
           />
         </View>
       );
@@ -410,11 +417,11 @@ export default function SettingsScreen() {
     return (
       <TouchableOpacity
         key={item.id}
-        style={styles.settingItem}
+        style={[styles.settingItem, (isSigningOut && item.id !== 'signout') && styles.disabledItem]}
         onPress={() => {
           console.log('Shop Owner Settings: Item pressed:', item.id);
           // Prevent actions while signing out
-          if (isSigningOut && item.id === 'signout') {
+          if (isSigningOut) {
             console.log('Already signing out, ignoring tap');
             return;
           }
@@ -429,7 +436,7 @@ export default function SettingsScreen() {
             Alert.alert('Error', 'Unable to perform this action');
           }
         }}
-        disabled={isSigningOut && item.id === 'signout'}
+        disabled={isSigningOut}
         testID={`setting-item-${item.id}`}
         accessibilityLabel={item.title}
       >
@@ -566,6 +573,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+  },
+  disabledItem: {
+    opacity: 0.5,
   },
   settingItemLeft: {
     flexDirection: 'row',
