@@ -28,6 +28,7 @@ export default function ClientTabsLayout() {
         name="home"
         options={{
           title: "Discover",
+          tabBarLabel: "Discover",
           headerShown: false,
           tabBarIcon: ({ color }) => <Search size={24} color={color} />,
         }}
@@ -37,6 +38,7 @@ export default function ClientTabsLayout() {
         name="appointments"
         options={{
           title: "Bookings",
+          tabBarLabel: "Bookings",
           tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
         }}
       />
@@ -45,6 +47,7 @@ export default function ClientTabsLayout() {
         name="profile"
         options={{
           title: "Profile",
+          tabBarLabel: "Profile",
           tabBarIcon: ({ color }) => <User size={24} color={color} />,
         }}
       />

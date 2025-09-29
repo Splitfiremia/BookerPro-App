@@ -480,6 +480,8 @@ export default function HomeScreen() {
   );
 }
 
+HomeScreen.displayName = 'Home';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
