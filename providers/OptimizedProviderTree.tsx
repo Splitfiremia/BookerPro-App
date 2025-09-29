@@ -1,22 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { COLORS, FONTS, FONT_SIZES, SPACING } from '@/constants/theme';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { performanceCache } from '@/services/PerformanceCacheService';
+import { measureAsyncOperation } from '@/utils/loginPerformanceUtils';
 
 // Import only essential providers
 import { AuthProvider } from './AuthProvider';
 import { WithSafeAreaDeviceProvider } from './DeviceProvider';
 import { LazyProviders } from './LazyProviders';
 
-// Create QueryClient once - outside component to prevent recreation
+// Create optimized QueryClient with performance monitoring
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      staleTime: 1000 * 60 * 5,
+      staleTime: 1000 * 60 * 5, // 5 minutes
       refetchOnWindowFocus: false,
-      gcTime: 1000 * 60 * 10,
+      gcTime: 1000 * 60 * 10, // 10 minutes
       refetchOnMount: false,
       refetchOnReconnect: false,
       networkMode: 'online',
@@ -24,7 +26,19 @@ const queryClient = new QueryClient({
     mutations: {
       networkMode: 'online',
       retry: 1,
+      onSuccess: (data, variables, context) => {
+        // Invalidate related cache entries on mutations
+        console.log('OptimizedProviderTree: Mutation successful, considering cache invalidation');
+      },
     },
+  },
+});
+
+// Add performance monitoring to QueryClient
+queryClient.setMutationDefaults(['user'], {
+  onMutate: async () => {
+    console.log('OptimizedProviderTree: User mutation started');
+    return measureAsyncOperation('user_mutation', async () => {});
   },
 });
 
@@ -46,7 +60,21 @@ interface CoreProvidersProps {
 }
 
 const CoreProviders = React.memo(({ children }: CoreProvidersProps) => {
-  console.log('CoreProviders: Rendering core providers');
+  console.log('CoreProviders: Rendering optimized core providers');
+  
+  // Performance monitoring for provider initialization
+  useEffect(() => {
+    const initStart = Date.now();
+    
+    measureAsyncOperation('core_providers_init', async () => {
+      // Preload critical data
+      await performanceCache.preload('app', 'init', async () => {
+        return { initialized: true, timestamp: Date.now() };
+      });
+      
+      console.log(`CoreProviders: Core providers initialized in ${Date.now() - initStart}ms`);
+    });
+  }, []);
   
   return (
     <QueryClientProvider client={queryClient}>

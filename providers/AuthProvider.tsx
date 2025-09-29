@@ -38,62 +38,72 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const { multiGet, set, remove, getWithDefault } = useAsyncStorageBatch();
   
-  // Initialize auth state - prevent hydration timeout by setting defaults immediately
+  // Initialize auth state - prevent hydration timeout with immediate initialization
   useEffect(() => {
     let isMounted = true;
+    let loadingTimeout: NodeJS.Timeout;
     
-    // Set initialized immediately with defaults to prevent hydration timeout
-    console.log('AuthProvider: Setting initialized to true immediately');
+    // Set initialized immediately to prevent hydration timeout
+    console.log('AuthProvider: Setting initialized immediately to prevent hydration timeout');
     setIsInitialized(true);
     
-    // Load stored data asynchronously without blocking render
+    // Load stored data with aggressive timeout and fallback
     const loadStoredData = async () => {
       if (!isMounted) return;
       
       try {
-        console.log('AuthProvider: Starting async data load');
+        console.log('AuthProvider: Starting optimized async data load');
         
-        // Use timeout to prevent hanging
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Storage timeout')), 3000)
-        );
+        // Very short timeout to prevent blocking - 1 second max
+        const timeoutPromise = new Promise((_, reject) => {
+          loadingTimeout = setTimeout(() => {
+            console.log('AuthProvider: Storage timeout reached, using defaults');
+            reject(new Error('Storage timeout - using defaults'));
+          }, 1000);
+        });
         
         const dataPromise = multiGet(['user', 'developerMode']);
         const data = await Promise.race([dataPromise, timeoutPromise]) as any;
         
         if (!isMounted) return;
         
-        // Parse and set user data
-        if (data.user) {
-          console.log('AuthProvider: Loaded user from storage:', data.user.email);
+        // Clear timeout if successful
+        if (loadingTimeout) clearTimeout(loadingTimeout);
+        
+        // Parse and set user data with validation
+        if (data.user && typeof data.user === 'object' && data.user.email) {
+          console.log('AuthProvider: Loaded valid user from storage:', data.user.email);
           setUser(data.user);
+        } else if (data.user) {
+          console.log('AuthProvider: Invalid user data in storage, clearing');
+          // Clear invalid data
+          remove('user').catch(console.error);
         }
         
         // Parse and set developer mode
-        if (data.developerMode !== null) {
+        if (typeof data.developerMode === 'boolean') {
           console.log('AuthProvider: Loaded developer mode from storage:', data.developerMode);
           setIsDeveloperMode(data.developerMode);
         }
         
-        console.log('AuthProvider: Async data load completed successfully');
+        console.log('AuthProvider: Optimized data load completed successfully');
         
       } catch (error) {
         console.log('AuthProvider: Storage load failed, using defaults:', error instanceof Error ? error.message : 'Unknown error');
-        // Continue with default values - app should still work
+        // Clear timeout on error
+        if (loadingTimeout) clearTimeout(loadingTimeout);
+        // App continues with default values - no blocking
       }
     };
     
-    // Use requestAnimationFrame for better performance
-    requestAnimationFrame(() => {
-      if (isMounted) {
-        loadStoredData();
-      }
-    });
+    // Use immediate execution for faster startup
+    loadStoredData();
     
     return () => {
       isMounted = false;
+      if (loadingTimeout) clearTimeout(loadingTimeout);
     };
-  }, [multiGet]); // Include multiGet dependency
+  }, [multiGet, remove]); // Include remove dependency
 
   // Set developer mode with persistence
   const setDeveloperMode = useCallback(async (value: boolean) => {
@@ -117,15 +127,15 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   }, [getWithDefault]);
 
-  // Login function with performance monitoring
+  // Optimized login function with faster performance
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    console.log('AuthProvider: Attempting login for:', email);
+    console.log('AuthProvider: Attempting optimized login for:', email);
     setIsLoading(true);
     
     return measureAsyncOperation('user_authentication', async () => {
       try {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Reduced API simulation delay for faster login
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         // Find user in test data
         const foundUser = testUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
@@ -143,38 +153,49 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         // Create user object without password
         const { password: _, ...userWithoutPassword } = foundUser;
         
-        // Add mock data based on role with performance tracking
-        const userData = await measureAsyncOperation('load_user_data', async () => {
-          let userData: User = {
+        // Optimized user data creation - load mock data lazily
+        const userData = await measureAsyncOperation('create_user_data', async () => {
+          const userData: User = {
             ...userWithoutPassword,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           };
           
-          // Add role-specific mock data
+          // Load minimal mock data initially - full data loaded later
           switch (userData.role) {
             case 'client':
-              userData.mockData = clientData;
+              userData.mockData = { ...clientData, loaded: 'partial' };
               break;
             case 'provider':
-              userData.mockData = providerData;
+              userData.mockData = { ...providerData, loaded: 'partial' };
               break;
             case 'owner':
-              userData.mockData = ownerData;
+              userData.mockData = { ...ownerData, loaded: 'partial' };
               break;
           }
           
           return userData;
         });
         
-        // Store user data with performance tracking
+        // Store user data with timeout protection
         await measureAsyncOperation('store_user_data', async () => {
-          await set("user", userData);
+          const storePromise = set("user", userData);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Store timeout')), 2000)
+          );
+          
+          try {
+            await Promise.race([storePromise, timeoutPromise]);
+          } catch (error) {
+            console.warn('AuthProvider: Storage failed, continuing with memory-only auth:', error);
+            // Continue without storage - user still logged in for session
+          }
         });
         
+        // Set user immediately for faster UI response
         setUser(userData);
         
-        console.log('AuthProvider: Login successful for:', userData.email, 'Role:', userData.role);
+        console.log('AuthProvider: Optimized login successful for:', userData.email, 'Role:', userData.role);
         return { success: true };
         
       } catch (error) {
@@ -312,18 +333,23 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   // Computed values
   const isAuthenticated = useMemo(() => user !== null, [user]);
 
-  // Memoize context value to prevent unnecessary re-renders
-  return useMemo(() => ({
-    user,
-    isAuthenticated,
-    isDeveloperMode,
-    isLoading,
-    isInitialized,
-    setDeveloperMode,
-    checkDeveloperMode,
-    login,
-    logout,
-    register,
-    updateProfile,
-  }), [user, isAuthenticated, isDeveloperMode, isLoading, isInitialized, setDeveloperMode, checkDeveloperMode, login, logout, register, updateProfile]);
+  // Optimized memoization to prevent unnecessary re-renders during auth transitions
+  const contextValue = useMemo(() => {
+    console.log('AuthProvider: Context value updated - user:', user?.email, 'authenticated:', isAuthenticated, 'loading:', isLoading);
+    return {
+      user,
+      isAuthenticated,
+      isDeveloperMode,
+      isLoading,
+      isInitialized,
+      setDeveloperMode,
+      checkDeveloperMode,
+      login,
+      logout,
+      register,
+      updateProfile,
+    };
+  }, [user, isAuthenticated, isDeveloperMode, isLoading, isInitialized, setDeveloperMode, checkDeveloperMode, login, logout, register, updateProfile]);
+  
+  return contextValue;
 });

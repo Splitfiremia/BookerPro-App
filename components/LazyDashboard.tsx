@@ -4,10 +4,10 @@ import { COLORS, FONTS, FONT_SIZES, SPACING } from '@/constants/theme';
 import { UserRole } from '@/models/database';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-// Lazy load dashboard components
-const ClientDashboard = lazy(() => import('@/app/(app)/(client)/(tabs)/home'));
-const ProviderDashboard = lazy(() => import('@/app/(app)/(provider)/(tabs)/home'));
-const ShopOwnerDashboard = lazy(() => import('@/app/(app)/(shop-owner)/(tabs)/dashboard'));
+// Lazy load dashboard layout components instead of individual pages
+const ClientLayout = lazy(() => import('@/app/(app)/(client)/_layout'));
+const ProviderLayout = lazy(() => import('@/app/(app)/(provider)/_layout'));
+const ShopOwnerLayout = lazy(() => import('@/app/(app)/(shop-owner)/_layout'));
 
 interface LazyDashboardProps {
   userRole: UserRole;
@@ -67,15 +67,15 @@ export default function LazyDashboard({ userRole, userId }: LazyDashboardProps) 
     setRetryKey(prev => prev + 1);
   };
   
-  // Select the appropriate dashboard component
+  // Select the appropriate dashboard layout
   const getDashboardComponent = () => {
     switch (userRole) {
       case 'client':
-        return <ClientDashboard />;
+        return <ClientLayout />;
       case 'provider':
-        return <ProviderDashboard />;
+        return <ProviderLayout />;
       case 'owner':
-        return <ShopOwnerDashboard />;
+        return <ShopOwnerLayout />;
       default:
         console.error('LazyDashboard: Unknown user role:', userRole);
         return (
