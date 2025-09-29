@@ -30,10 +30,13 @@ export default function LandingScreen() {
   }, [isAuthenticated, user, isDeveloperMode, isInitialized]);
 
   // Auto-redirect authenticated users to their role-specific dashboard
+  // Only redirect if user is authenticated and not in developer mode
+  // This prevents the app from auto-redirecting when user wants to stay on login page
   useEffect(() => {
-    // Only redirect if user is authenticated, initialized, not in developer mode, and not currently logging out
-    if (isInitialized && isAuthenticated && user && !isDeveloperMode) {
-      console.log('Index: Auto-redirecting authenticated user to role-specific dashboard');
+    // Only redirect if user is authenticated, initialized, and in developer mode with test login
+    // This prevents auto-redirect when user manually logs out or wants to stay on login page
+    if (isInitialized && isAuthenticated && user && isDeveloperMode) {
+      console.log('Index: Auto-redirecting authenticated user to role-specific dashboard (developer mode)');
       
       const redirectToRoleDashboard = () => {
         try {

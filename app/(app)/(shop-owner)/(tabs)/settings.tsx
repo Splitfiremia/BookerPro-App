@@ -75,28 +75,30 @@ export default function SettingsScreen() {
             try {
               console.log('Shop Owner Settings: Starting logout process');
               
-              // Navigate to index first to prevent auto-redirect loops
-              router.replace('/');
-              console.log('Shop Owner Settings: Navigation to index initiated');
-              
-              // Small delay to ensure navigation completes
-              await new Promise(resolve => setTimeout(resolve, 100));
-              
-              // Perform logout after navigation
+              // Perform logout first to clear user state
               await logout();
               console.log('Shop Owner Settings: Logout completed successfully');
+              
+              // Small delay to ensure logout state propagates
+              await new Promise(resolve => setTimeout(resolve, 200));
+              
+              // Navigate to index after logout
+              router.replace('/');
+              console.log('Shop Owner Settings: Navigation to index completed');
               
             } catch (error) {
               console.error('Shop Owner Settings: Logout error:', error);
               Alert.alert('Error', 'Failed to sign out. Please try again.');
               
-              // Force navigation to index even if logout fails
+              // Force logout and navigation even if there was an error
               try {
-                router.replace('/');
-                // Force logout even if there was an error
                 await logout();
+                await new Promise(resolve => setTimeout(resolve, 100));
+                router.replace('/');
               } catch (navError) {
                 console.error('Shop Owner Settings: Force logout error:', navError);
+                // Last resort - just navigate to index
+                router.replace('/');
               }
             }
           },
