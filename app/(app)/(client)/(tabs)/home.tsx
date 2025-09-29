@@ -244,41 +244,70 @@ const HomeScreenContent = React.memo(() => {
 
   // Filter data based on search and filters
   const filteredProviders = useMemo(() => {
-    let filtered = [...mockProviders];
-    
-    // Apply search filter
-    if (searchText.trim()) {
-      const query = searchText.toLowerCase();
-      filtered = filtered.filter(provider => 
-        provider.name.toLowerCase().includes(query) ||
-        provider.services?.some(service => 
-          service.name.toLowerCase().includes(query)
-        ) ||
-        provider.specialties?.some(specialty => 
-          specialty.toLowerCase().includes(query)
-        ) ||
-        provider.shopName?.toLowerCase().includes(query)
-      );
+    try {
+      // Validate mockProviders exists and is an array
+      if (!Array.isArray(mockProviders)) {
+        console.error('mockProviders is not an array:', mockProviders);
+        return [];
+      }
+
+      // Filter out providers with invalid data
+      const validProviders = mockProviders.filter(provider => {
+        if (!provider || typeof provider !== 'object') {
+          console.warn('Invalid provider object:', provider);
+          return false;
+        }
+        if (!provider.id || !provider.name) {
+          console.warn('Provider missing required fields:', provider);
+          return false;
+        }
+        // Ensure profileImage exists and is valid
+        if (!provider.profileImage || typeof provider.profileImage !== 'string') {
+          console.warn('Provider missing or invalid profileImage:', provider.id, provider.profileImage);
+          // Don't filter out, just log warning - ImageWithFallback will handle it
+        }
+        return true;
+      });
+
+      let filtered = [...validProviders];
+      
+      // Apply search filter
+      if (searchText.trim()) {
+        const query = searchText.toLowerCase();
+        filtered = filtered.filter(provider => 
+          provider.name.toLowerCase().includes(query) ||
+          provider.services?.some(service => 
+            service.name.toLowerCase().includes(query)
+          ) ||
+          provider.specialties?.some(specialty => 
+            specialty.toLowerCase().includes(query)
+          ) ||
+          provider.shopName?.toLowerCase().includes(query)
+        );
+      }
+      
+      // Apply additional filters
+      switch (selectedFilter) {
+        case 'rating':
+          filtered = filtered.filter(provider => provider.rating >= 4.5);
+          break;
+        case 'available':
+          // Filter for available providers (mock implementation)
+          filtered = filtered.filter(provider => provider.rating > 4.0);
+          break;
+        case 'price':
+          // Sort by rating as a proxy for price range
+          filtered = filtered.sort((a, b) => a.rating - b.rating);
+          break;
+        default:
+          break;
+      }
+      
+      return filtered;
+    } catch (error) {
+      console.error('Error filtering providers:', error);
+      return [];
     }
-    
-    // Apply additional filters
-    switch (selectedFilter) {
-      case 'rating':
-        filtered = filtered.filter(provider => provider.rating >= 4.5);
-        break;
-      case 'available':
-        // Filter for available providers (mock implementation)
-        filtered = filtered.filter(provider => provider.rating > 4.0);
-        break;
-      case 'price':
-        // Sort by rating as a proxy for price range
-        filtered = filtered.sort((a, b) => a.rating - b.rating);
-        break;
-      default:
-        break;
-    }
-    
-    return filtered;
   }, [searchText, selectedFilter]);
 
   const filteredShops = useMemo(() => {
@@ -406,11 +435,21 @@ const HomeScreenContent = React.memo(() => {
               <Text style={styles.sectionTitle}>
                 PROVIDERS {searchText.trim() && `(${filteredProviders.length})`}
               </Text>
-              {filteredProviders.slice(0, searchText.trim() ? filteredProviders.length : 3).map((provider) => (
-                <ProviderCard key={provider.id} provider={provider} />
-              ))}
-              {filteredProviders.length === 0 && searchText.trim() && (
-                <Text style={styles.noResultsText}>No providers found</Text>
+              {filteredProviders.length > 0 ? (
+                filteredProviders.slice(0, searchText.trim() ? filteredProviders.length : 3).map((provider) => {
+                  try {
+                    return <ProviderCard key={provider.id} provider={provider} />;
+                  } catch (error) {
+                    console.error('Error rendering provider card:', provider.id, error);
+                    return null;
+                  }
+                })
+              ) : (
+                searchText.trim() ? (
+                  <Text style={styles.noResultsText}>No providers found</Text>
+                ) : (
+                  <Text style={styles.noResultsText}>Failed to load providers</Text>
+                )
               )}
             </View>
           )}

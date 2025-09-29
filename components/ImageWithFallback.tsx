@@ -26,7 +26,11 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const handleError = useCallback(() => {
-    console.log('Image failed to load:', typeof source === 'object' ? source.uri : source);
+    const sourceUri = typeof source === 'object' ? source.uri : source;
+    console.log('Image failed to load:', sourceUri);
+    if (sourceUri === '' || sourceUri === null || sourceUri === undefined) {
+      console.warn('Empty or invalid URI passed to ImageWithFallback:', sourceUri);
+    }
     setHasError(true);
     setIsLoading(false);
   }, [source]);
@@ -46,7 +50,12 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     if (typeof source === 'number') return true; // Local image
     if (typeof source === 'object' && source.uri) {
       const uri = source.uri?.trim();
-      return uri && uri.length > 0 && uri !== 'undefined' && (uri.startsWith('http') || uri.startsWith('file://') || uri.startsWith('data:'));
+      return uri && 
+             uri.length > 0 && 
+             uri !== 'undefined' && 
+             uri !== 'null' && 
+             uri !== '' &&
+             (uri.startsWith('http') || uri.startsWith('file://') || uri.startsWith('data:'));
     }
     return false;
   };

@@ -31,15 +31,25 @@ const PortfolioImage = memo<{ item: { id: string; image: string } }>(({ item }) 
 PortfolioImage.displayName = 'PortfolioImage';
 
 export const ProviderCard = memo<ProviderCardProps>(({ provider }) => {
-  console.log('ProviderCard: Rendering for provider', provider.id);
+  console.log('ProviderCard: Rendering for provider', provider?.id || 'unknown');
   
   const handlePress = useCallback(() => {
-    router.push(`/(app)/(client)/provider/${provider.id}`);
-  }, [provider.id]);
+    if (provider?.id) {
+      router.push(`/(app)/(client)/provider/${provider.id}`);
+    }
+  }, [provider?.id]);
 
   const handleBookPress = useCallback(() => {
-    console.log('Book appointment for provider:', provider.id);
-  }, [provider.id]);
+    if (provider?.id) {
+      console.log('Book appointment for provider:', provider.id);
+    }
+  }, [provider?.id]);
+
+  // Validate provider data after hooks
+  if (!provider || !provider.id || !provider.name) {
+    console.error('Invalid provider data:', provider);
+    return null;
+  }
 
   return (
     <TouchableOpacity 
