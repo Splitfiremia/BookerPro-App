@@ -5,6 +5,7 @@ import { useAuth } from './AuthProvider';
 import { ServicesRepository, ServiceOfferingsRepository } from '@/repositories/ServicesRepository';
 import { LoadingState } from '@/components/LoadingStateManager';
 import { useMemoizedFilter, useMemoizedSort, usePerformanceMonitor } from '@/hooks/useMemoization';
+import { useProviderPerformanceTracking } from '@/utils/performanceUtils';
 
 
 
@@ -15,26 +16,35 @@ const serviceOfferingsRepository = new ServiceOfferingsRepository();
 export const [ServicesProvider, useServices] = createContextHook(() => {
   console.log('ServicesProvider: Initializing context...');
   usePerformanceMonitor('ServicesProvider');
+  const { trackOperation } = useProviderPerformanceTracking('ServicesProvider');
   
   const { user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
   const [masterServices, setMasterServices] = useState<Service[]>([]);
   const [serviceOfferings, setServiceOfferings] = useState<ProviderServiceOffering[]>([]);
   const [loadingState, setLoadingState] = useState<LoadingState>({
-    isLoading: false,
+    isLoading: true, // Start with loading true to prevent undefined errors
     error: null,
     isEmpty: false,
   });
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
   const loadServices = useCallback(async () => {
     if (!user) {
-      console.log('ServicesProvider: No user, skipping load');
+      console.log('ServicesProvider: No user, setting defaults');
+      setMasterServices([]);
+      setServices([]);
+      setServiceOfferings([]);
       setLoadingState({ isLoading: false, error: null, isEmpty: true });
+      setIsInitialized(true);
       return;
     }
     
     console.log('ServicesProvider: Loading services for user role:', user.role);
     setLoadingState({ isLoading: true, error: null, isEmpty: false });
+    
+    // Track the loading operation for performance monitoring
+    return trackOperation('loadServices', async () => {
     
     try {
       // Load based on user role and provider type
@@ -190,19 +200,42 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
       }
       
       setLoadingState({ isLoading: false, error: null, isEmpty: false });
+      setIsInitialized(true);
     } catch (error) {
       console.error('ServicesProvider: Error loading services:', error);
+      // Set defaults even on error to prevent undefined issues
+      setMasterServices([]);
+      setServices([]);
+      setServiceOfferings([]);
       setLoadingState({ isLoading: false, error: 'Failed to load services', isEmpty: false });
+      setIsInitialized(true);
+      throw error; // Re-throw for performance tracking
     }
-  }, [user]);
+    });
+  }, [user, trackOperation]);
 
-  // Load services immediately on mount
+  // Load services with debouncing to prevent multiple calls
   useEffect(() => {
     console.log('ServicesProvider: useEffect triggered, user:', !!user);
-    if (user) {
-      loadServices();
+    
+    // Set defaults immediately to prevent undefined errors
+    if (!isInitialized) {
+      if (user) {
+        // Defer loading to next tick to prevent blocking
+        const timeoutId = setTimeout(() => {
+          loadServices();
+        }, 0);
+        return () => clearTimeout(timeoutId);
+      } else {
+        // No user, set defaults immediately
+        setMasterServices([]);
+        setServices([]);
+        setServiceOfferings([]);
+        setLoadingState({ isLoading: false, error: null, isEmpty: true });
+        setIsInitialized(true);
+      }
     }
-  }, [user, loadServices]);
+  }, [user, loadServices, isInitialized]);
 
   // Independent provider service management
   const addService = useCallback(async (serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt' | 'providerId'>) => {
@@ -373,16 +406,16 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
 
   const contextValue = useMemo(() => {
     const value = {
-      // Raw data
-      services,
-      masterServices,
-      serviceOfferings,
+      // Raw data - always provide arrays to prevent undefined errors
+      services: services || [],
+      masterServices: masterServices || [],
+      serviceOfferings: serviceOfferings || [],
       
       // Processed data
-      activeServices,
-      activeMasterServices,
-      sortedServices,
-      sortedMasterServices,
+      activeServices: activeServices || [],
+      activeMasterServices: activeMasterServices || [],
+      sortedServices: sortedServices || [],
+      sortedMasterServices: sortedMasterServices || [],
       
       // Actions
       addService,
@@ -399,16 +432,18 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
       isLoading: loadingState.isLoading,
       error: loadingState.error,
       isEmpty: loadingState.isEmpty,
+      isInitialized,
       
       // Utilities
       refreshServices: loadServices,
     };
     console.log('ServicesProvider: Context value created with', {
-      servicesCount: services.length,
-      masterServicesCount: masterServices.length,
-      offeringsCount: serviceOfferings.length,
+      servicesCount: (services || []).length,
+      masterServicesCount: (masterServices || []).length,
+      offeringsCount: (serviceOfferings || []).length,
       isLoading: loadingState.isLoading,
       hasError: !!loadingState.error,
+      isInitialized,
     });
     return value;
   }, [
@@ -429,6 +464,7 @@ export const [ServicesProvider, useServices] = createContextHook(() => {
     getProviderServices,
     loadingState,
     loadServices,
+    isInitialized,
   ]);
 
   return contextValue;

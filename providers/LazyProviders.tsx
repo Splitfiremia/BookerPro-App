@@ -154,14 +154,33 @@ export function ShopOwnerProviders({ children }: LazyProvidersProps) {
   
   return (
     <ErrorBoundary fallback={<ProviderErrorFallback />}>
+      <Suspense fallback={<ProviderLoadingFallback />}>
+        <DirectServicesProvider>
+          <DirectShopManagementProvider>
+            <DirectTeamManagementProvider>
+              <DirectAppointmentProvider>
+                {children}
+              </DirectAppointmentProvider>
+            </DirectTeamManagementProvider>
+          </DirectShopManagementProvider>
+        </DirectServicesProvider>
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+// Ultra-fast provider for critical paths - minimal dependencies
+export function CriticalPathProviders({ children }: LazyProvidersProps) {
+  console.log('CriticalPathProviders: Loading essential providers only');
+  
+  return (
+    <ErrorBoundary fallback={<ProviderErrorFallback />}>
       <DirectServicesProvider>
-        <DirectShopManagementProvider>
-          <DirectTeamManagementProvider>
-            <DirectAppointmentProvider>
-              {children}
-            </DirectAppointmentProvider>
-          </DirectTeamManagementProvider>
-        </DirectShopManagementProvider>
+        <ErrorBoundary fallback={<ProviderErrorFallback />}>
+          <DirectShopManagementProvider>
+            {children}
+          </DirectShopManagementProvider>
+        </ErrorBoundary>
       </DirectServicesProvider>
     </ErrorBoundary>
   );

@@ -1,12 +1,11 @@
-import { useCallback, useRef, useEffect, useState, useMemo } from 'react';
-import React from "react";
+import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react';
 
 // Debounce hook for search and input operations
 export function useDebounce<T extends (...args: any[]) => any>(
   callback: T,
   delay: number
 ): T {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   
   const debouncedCallback = useCallback((...args: Parameters<T>) => {
     if (timeoutRef.current) {
@@ -37,7 +36,7 @@ export function useThrottle<T extends (...args: any[]) => any>(
   delay: number
 ): T {
   const lastCallRef = useRef<number>(0);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   
   const throttledCallback = useCallback((...args: Parameters<T>) => {
     const now = Date.now();
@@ -115,7 +114,7 @@ export function usePerformanceMonitor(componentName: string) {
 // Batch state updates utility
 export function useBatchedUpdates() {
   const batchRef = useRef<(() => void)[]>([]);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   
   const batchUpdate = useCallback((updateFn: () => void) => {
     if (typeof updateFn !== 'function') return;
@@ -208,5 +207,145 @@ export function useVirtualizedList<T>(
     endIndex: visibleRange.endIndex,
     handleScroll,
     totalHeight: data.length * itemHeight
+  };
+}
+
+// Advanced Performance Monitor for Provider Loading Bottlenecks
+export class ProviderPerformanceMonitor {
+  private static instance: ProviderPerformanceMonitor;
+  private providerLoadTimes: Map<string, number> = new Map();
+  private providerInitTimes: Map<string, number> = new Map();
+  private bottlenecks: Map<string, { count: number; totalTime: number }> = new Map();
+  private operationTimes: Map<string, number[]> = new Map();
+
+  static getInstance(): ProviderPerformanceMonitor {
+    if (!ProviderPerformanceMonitor.instance) {
+      ProviderPerformanceMonitor.instance = new ProviderPerformanceMonitor();
+    }
+    return ProviderPerformanceMonitor.instance;
+  }
+
+  trackProviderInit(providerName: string): () => void {
+    const startTime = Date.now();
+    this.providerInitTimes.set(providerName, startTime);
+    
+    return () => {
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      this.providerLoadTimes.set(providerName, duration);
+      
+      if (duration > 500) {
+        console.warn(`🐌 Provider bottleneck: ${providerName} took ${duration}ms to initialize`);
+        const bottleneck = this.bottlenecks.get(providerName) || { count: 0, totalTime: 0 };
+        bottleneck.count++;
+        bottleneck.totalTime += duration;
+        this.bottlenecks.set(providerName, bottleneck);
+      }
+      
+      console.log(`✅ Provider ${providerName} initialized in ${duration}ms`);
+    };
+  }
+
+  trackOperation(operationName: string, duration: number): void {
+    const existing = this.operationTimes.get(operationName) || [];
+    existing.push(duration);
+    this.operationTimes.set(operationName, existing);
+    
+    if (duration > 200) {
+      console.warn(`⚠️ Slow operation: ${operationName} took ${duration}ms`);
+    }
+  }
+
+  getBottlenecks(): Record<string, { count: number; avgTime: number; totalTime: number }> {
+    const result: Record<string, { count: number; avgTime: number; totalTime: number }> = {};
+    for (const [key, value] of this.bottlenecks) {
+      result[key] = {
+        ...value,
+        avgTime: value.totalTime / value.count,
+      };
+    }
+    return result;
+  }
+
+  getProviderLoadTimes(): Record<string, number> {
+    const result: Record<string, number> = {};
+    for (const [key, value] of this.providerLoadTimes) {
+      result[key] = value;
+    }
+    return result;
+  }
+
+  generateReport(): void {
+    console.group('🚀 Provider Performance Report');
+    
+    const loadTimes = this.getProviderLoadTimes();
+    const bottlenecks = this.getBottlenecks();
+    
+    console.log('Provider Load Times:', loadTimes);
+    console.log('Bottlenecks:', bottlenecks);
+    
+    // Identify the slowest providers
+    const slowProviders = Object.entries(loadTimes)
+      .filter(([, time]) => time > 300)
+      .sort(([, a], [, b]) => b - a);
+    
+    if (slowProviders.length > 0) {
+      console.warn('Slowest Providers:', slowProviders);
+    }
+    
+    console.groupEnd();
+  }
+
+  clear(): void {
+    this.providerLoadTimes.clear();
+    this.providerInitTimes.clear();
+    this.bottlenecks.clear();
+    this.operationTimes.clear();
+  }
+}
+
+// Hook for tracking provider performance
+export function useProviderPerformanceTracking(providerName: string) {
+  const monitor = ProviderPerformanceMonitor.getInstance();
+  const endTracking = useRef<(() => void) | null>(null);
+  
+  useEffect(() => {
+    endTracking.current = monitor.trackProviderInit(providerName);
+    
+    return () => {
+      if (endTracking.current) {
+        endTracking.current();
+      }
+    };
+  }, [providerName, monitor]);
+  
+  const trackOperation = useCallback((operationName: string, operation: () => Promise<any>) => {
+    const startTime = Date.now();
+    
+    return operation().finally(() => {
+      const duration = Date.now() - startTime;
+      monitor.trackOperation(`${providerName}_${operationName}`, duration);
+    });
+  }, [providerName, monitor]);
+  
+  return { trackOperation };
+}
+
+// Hook for detecting and reporting bottlenecks
+export function useBottleneckDetector(reportInterval: number = 10000) {
+  const monitor = ProviderPerformanceMonitor.getInstance();
+  
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      monitor.generateReport();
+    }, reportInterval);
+    
+    return () => clearInterval(intervalId);
+  }, [monitor, reportInterval]);
+  
+  return {
+    getBottlenecks: () => monitor.getBottlenecks(),
+    getProviderTimes: () => monitor.getProviderLoadTimes(),
+    clearMetrics: () => monitor.clear(),
   };
 }

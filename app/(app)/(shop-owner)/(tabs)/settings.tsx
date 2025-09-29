@@ -30,9 +30,12 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { logout } = useAuth();
   
-  // Safely get services context with fallbacks
+  // Safely get services context with fallbacks and loading check
   const servicesContext = useServices();
   console.log('SettingsScreen: Services context:', !!servicesContext);
+  
+  // Wait for services to initialize before destructuring
+  const isServicesReady = servicesContext?.isInitialized ?? false;
   
   const {
     masterServices = [],
@@ -40,8 +43,9 @@ export default function SettingsScreen() {
     addMasterService,
     updateMasterService,
     deleteMasterService,
-    loadingState,
+    loadingState = { isLoading: true, error: null, isEmpty: false },
     refreshServices,
+    isInitialized = false,
   } = servicesContext || {};
   
   console.log('SettingsScreen: Master services count:', masterServices.length);
@@ -113,6 +117,30 @@ export default function SettingsScreen() {
   };
 
   const renderMasterServices = () => {
+    // Show loading if services aren't initialized yet
+    if (!isInitialized || loadingState.isLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading services...</Text>
+        </View>
+      );
+    }
+    
+    // Show error state if there's an error
+    if (loadingState.error) {
+      return (
+        <View style={styles.errorFallback}>
+          <Text style={styles.errorText}>Failed to load services</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={refreshServices}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    
     const servicesToRender = sortedMasterServices.length > 0 ? sortedMasterServices : masterServices.filter(s => s.isActive);
     
     if (servicesToRender.length === 0) {
@@ -446,19 +474,7 @@ export default function SettingsScreen() {
               </View>
             }
           >
-            <LoadingStateManager
-              loadingState={loadingState || { isLoading: false, error: null, isEmpty: false }}
-              loadingComponent={<ListSkeleton count={3} />}
-              emptyComponent={
-                <View style={styles.emptyState}>
-                  <DollarSign size={48} color="#666" />
-                  <Text style={styles.emptyStateText}>No services added yet</Text>
-                  <Text style={styles.emptyStateSubtext}>Add your first service to get started</Text>
-                </View>
-              }
-            >
-              {renderMasterServices()}
-            </LoadingStateManager>
+            {renderMasterServices()}
           </FeatureErrorBoundary>
         </View>
       </View>
@@ -584,6 +600,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     paddingHorizontal: 20,
     paddingVertical: 16,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
   },
   loadingText: {
     textAlign: 'center',

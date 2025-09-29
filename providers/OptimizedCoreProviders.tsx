@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import createContextHook from '@nkzw/create-context-hook';
 import { COLORS } from '@/constants/theme';
@@ -14,23 +14,40 @@ interface CoreContextType {
   auth: ReturnType<typeof useAuth>;
   appointments: ReturnType<typeof useAppointments>;
   services: ReturnType<typeof useServices>;
+  isReady: boolean;
 }
 
-// Create focused core context
+// Create focused core context with initialization tracking
 export const [CoreProvider, useCoreContext] = createContextHook(() => {
   console.log('CoreProvider: Initializing core context');
   
+  const [isReady, setIsReady] = useState(false);
   const auth = useAuth();
   const appointments = useAppointments();
   const services = useServices();
+
+  // Track when all providers are ready
+  useEffect(() => {
+    const authReady = auth?.isInitialized ?? false;
+    const servicesReady = services?.isInitialized ?? false;
+    const appointmentsReady = appointments?.isInitialized ?? false;
+    
+    const allReady = authReady && servicesReady && appointmentsReady;
+    
+    if (allReady && !isReady) {
+      console.log('CoreProvider: All providers ready');
+      setIsReady(true);
+    }
+  }, [auth?.isInitialized, services?.isInitialized, appointments?.isInitialized, isReady]);
 
   const coreContext: CoreContextType = {
     auth,
     appointments,
     services,
+    isReady,
   };
 
-  console.log('CoreProvider: Core context created');
+  console.log('CoreProvider: Core context created, ready:', isReady);
   return coreContext;
 });
 
@@ -38,6 +55,7 @@ export const [CoreProvider, useCoreContext] = createContextHook(() => {
 export const useAuthContext = () => useCoreContext().auth;
 export const useAppointmentsContext = () => useCoreContext().appointments;
 export const useServicesContext = () => useCoreContext().services;
+export const useCoreReady = () => useCoreContext().isReady;
 
 // Loading fallback component
 function CoreProviderLoadingFallback() {
@@ -82,12 +100,13 @@ const styles = StyleSheet.create({
   },
 });
 
-// Wrapper component with error boundary
+// Wrapper component with error boundary and loading state
 interface CoreProviderWrapperProps {
   children: React.ReactNode;
+  showLoadingUntilReady?: boolean;
 }
 
-export function CoreProviderWrapper({ children }: CoreProviderWrapperProps) {
+export function CoreProviderWrapper({ children, showLoadingUntilReady = false }: CoreProviderWrapperProps) {
   return (
     <ErrorBoundary 
       fallback={<CoreProviderErrorFallback />}
@@ -96,11 +115,28 @@ export function CoreProviderWrapper({ children }: CoreProviderWrapperProps) {
     >
       <React.Suspense fallback={<CoreProviderLoadingFallback />}>
         <CoreProvider>
-          {children}
+          {showLoadingUntilReady ? (
+            <CoreReadyGate>
+              {children}
+            </CoreReadyGate>
+          ) : (
+            children
+          )}
         </CoreProvider>
       </React.Suspense>
     </ErrorBoundary>
   );
+}
+
+// Gate component that shows loading until all providers are ready
+function CoreReadyGate({ children }: { children: React.ReactNode }) {
+  const isReady = useCoreReady();
+  
+  if (!isReady) {
+    return <CoreProviderLoadingFallback />;
+  }
+  
+  return <>{children}</>;
 }
 
 // Feature-specific provider for shop management (lazy loaded)
