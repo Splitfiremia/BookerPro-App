@@ -75,29 +75,31 @@ export default function SettingsScreen() {
             try {
               console.log('Shop Owner Settings: Starting logout process');
               
-              // Perform logout first to clear user state
+              // Navigate to index first to prevent auto-redirect loops
+              console.log('Shop Owner Settings: Navigating to index before logout');
+              router.replace('/');
+              
+              // Small delay to ensure navigation completes
+              await new Promise(resolve => setTimeout(resolve, 100));
+              
+              // Then perform logout to clear user state
+              console.log('Shop Owner Settings: Performing logout');
               await logout();
               console.log('Shop Owner Settings: Logout completed successfully');
               
-              // Small delay to ensure logout state propagates
-              await new Promise(resolve => setTimeout(resolve, 200));
-              
-              // Navigate to index after logout
-              router.replace('/');
-              console.log('Shop Owner Settings: Navigation to index completed');
-              
             } catch (error) {
               console.error('Shop Owner Settings: Logout error:', error);
-              Alert.alert('Error', 'Failed to sign out. Please try again.');
               
               // Force logout and navigation even if there was an error
               try {
-                await logout();
-                await new Promise(resolve => setTimeout(resolve, 100));
+                console.log('Shop Owner Settings: Force logout attempt');
                 router.replace('/');
+                await new Promise(resolve => setTimeout(resolve, 100));
+                await logout();
+                console.log('Shop Owner Settings: Force logout completed');
               } catch (navError) {
                 console.error('Shop Owner Settings: Force logout error:', navError);
-                // Last resort - just navigate to index
+                // Last resort - just navigate to index and clear state
                 router.replace('/');
               }
             }

@@ -73,8 +73,8 @@ export default function LandingScreen() {
         }
       };
       
-      // Shorter delay for regular users, longer for developer mode to ensure logout operations complete
-      const delay = isDeveloperMode ? 500 : 100;
+      // Longer delay to ensure logout operations complete and prevent redirect loops
+      const delay = 800;
       const timeoutId = setTimeout(redirectToRoleDashboard, delay);
       return () => clearTimeout(timeoutId);
     }
