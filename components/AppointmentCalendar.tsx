@@ -1,8 +1,10 @@
-import React, { useState, useMemo, memo, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useMemo, memo, useCallback, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, InteractionManager } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import { useAppointments, APPOINTMENT_COLORS } from '@/providers/AppointmentProvider';
 import { AppointmentStatus } from '@/models/database';
+import { useDebounce, useThrottle, usePerformanceMonitor } from '@/utils/performanceUtils';
+import { OptimizedFlatList } from '@/components/OptimizedFlatList';
 
 import { COLORS, FONTS } from '@/constants/theme';
 
@@ -121,17 +123,37 @@ export const AppointmentCalendar = memo<AppointmentCalendarProps>(({
   onDateSelect,
   selectedDate
 }) => {
-  console.log('AppointmentCalendar: Rendering');
+  const { renderCount } = usePerformanceMonitor('AppointmentCalendar');
+  console.log('AppointmentCalendar: Rendering #', renderCount);
   
   const { getAppointmentsWithColors } = useAppointments();
-
+  const [isCalendarReady, setIsCalendarReady] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<AppointmentStatus[]>([
     'requested', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show', 'rescheduled'
   ]);
+  const markedDatesCache = useRef<{ [key: string]: any }>({});
+  const lastAppointmentsHash = useRef<string>('');
 
-  // Memoize appointments data to prevent unnecessary recalculations
+  // Initialize calendar after interactions complete
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      setIsCalendarReady(true);
+    });
+    return () => task.cancel();
+  }, []);
+
+  // Memoize appointments data with deep comparison to prevent unnecessary recalculations
   const appointmentsWithColors = useMemo(() => {
-    return getAppointmentsWithColors();
+    const appointments = getAppointmentsWithColors();
+    const appointmentsHash = JSON.stringify(appointments.map(apt => ({ id: apt.id, date: apt.date, status: apt.status })));
+    
+    // Only update if appointments actually changed
+    if (appointmentsHash !== lastAppointmentsHash.current) {
+      lastAppointmentsHash.current = appointmentsHash;
+      console.log('AppointmentCalendar: Appointments data updated');
+    }
+    
+    return appointments;
   }, [getAppointmentsWithColors]);
 
   // Filter appointments based on selected statuses
@@ -139,21 +161,37 @@ export const AppointmentCalendar = memo<AppointmentCalendarProps>(({
     return appointmentsWithColors.filter(apt => selectedStatuses.includes(apt.status));
   }, [appointmentsWithColors, selectedStatuses]);
 
-  // Create marked dates for calendar - optimized with better grouping
+  // Create marked dates for calendar with aggressive caching
   const markedDates = useMemo(() => {
+    const cacheKey = `${JSON.stringify(selectedStatuses)}_${selectedDate}_${lastAppointmentsHash.current}`;
+    
+    // Return cached result if available
+    if (markedDatesCache.current[cacheKey]) {
+      console.log('AppointmentCalendar: Using cached marked dates');
+      return markedDatesCache.current[cacheKey];
+    }
+
+    console.log('AppointmentCalendar: Computing marked dates');
     const marked: { [key: string]: any } = {};
 
-    // Group appointments by date more efficiently
+    // Group appointments by date using Map for better performance
     const appointmentsByDate = new Map<string, typeof filteredAppointments>();
     
-    filteredAppointments.forEach(apt => {
-      const existing = appointmentsByDate.get(apt.date) || [];
-      existing.push(apt);
-      appointmentsByDate.set(apt.date, existing);
-    });
+    // Use for loop for better performance than forEach
+    for (let i = 0; i < filteredAppointments.length; i++) {
+      const apt = filteredAppointments[i];
+      if (!apt || !apt.date) continue;
+      
+      const existing = appointmentsByDate.get(apt.date);
+      if (existing) {
+        existing.push(apt);
+      } else {
+        appointmentsByDate.set(apt.date, [apt]);
+      }
+    }
 
-    // Mark dates with appointments
-    appointmentsByDate.forEach((dayAppointments, date) => {
+    // Mark dates with appointments - limit to 3 dots for performance
+    for (const [date, dayAppointments] of appointmentsByDate) {
       const dots = dayAppointments.slice(0, 3).map(apt => ({
         color: apt.color,
         selectedDotColor: apt.color,
@@ -164,7 +202,7 @@ export const AppointmentCalendar = memo<AppointmentCalendarProps>(({
         selected: date === selectedDate,
         selectedColor: date === selectedDate ? COLORS.primary : undefined,
       };
-    });
+    }
 
     // Mark selected date even if no appointments
     if (selectedDate && !marked[selectedDate]) {
@@ -174,10 +212,21 @@ export const AppointmentCalendar = memo<AppointmentCalendarProps>(({
       };
     }
 
-    return marked;
-  }, [filteredAppointments, selectedDate]);
+    // Cache the result
+    markedDatesCache.current[cacheKey] = marked;
+    
+    // Clean old cache entries to prevent memory leaks
+    const cacheKeys = Object.keys(markedDatesCache.current);
+    if (cacheKeys.length > 10) {
+      const oldestKey = cacheKeys[0];
+      delete markedDatesCache.current[oldestKey];
+    }
 
-  const handleStatusToggle = useCallback((status: AppointmentStatus) => {
+    return marked;
+  }, [filteredAppointments, selectedDate, selectedStatuses]);
+
+  // Debounce status toggle to prevent rapid re-renders
+  const handleStatusToggleImmediate = useCallback((status: AppointmentStatus) => {
     setSelectedStatuses(prev => {
       if (prev.includes(status)) {
         return prev.filter(s => s !== status);
@@ -186,16 +235,63 @@ export const AppointmentCalendar = memo<AppointmentCalendarProps>(({
       }
     });
   }, []);
+  
+  const handleStatusToggle = useDebounce(handleStatusToggleImmediate, 150);
 
-  const handleDayPress = useCallback((day: DateData) => {
+  // Throttle day press to prevent rapid calendar updates
+  const handleDayPressImmediate = useCallback((day: DateData) => {
     onDateSelect?.(day.dateString);
   }, [onDateSelect]);
+  
+  const handleDayPress = useThrottle(handleDayPressImmediate, 100);
 
   // Get appointments for selected date
   const selectedDateAppointments = useMemo(() => {
     if (!selectedDate) return [];
     return filteredAppointments.filter(apt => apt.date === selectedDate);
   }, [filteredAppointments, selectedDate]);
+
+  // Memoize calendar theme to prevent recreation
+  const calendarTheme = useMemo(() => ({
+    backgroundColor: COLORS.background,
+    calendarBackground: COLORS.background,
+    textSectionTitleColor: COLORS.secondary,
+    selectedDayBackgroundColor: COLORS.primary,
+    selectedDayTextColor: COLORS.background,
+    todayTextColor: COLORS.primary,
+    dayTextColor: COLORS.text,
+    textDisabledColor: COLORS.secondary,
+    dotColor: COLORS.primary,
+    selectedDotColor: COLORS.background,
+    arrowColor: COLORS.primary,
+    disabledArrowColor: COLORS.secondary,
+    monthTextColor: COLORS.text,
+    indicatorColor: COLORS.primary,
+    textDayFontFamily: FONTS.regular,
+    textMonthFontFamily: FONTS.bold,
+    textDayHeaderFontFamily: FONTS.regular,
+    textDayFontWeight: '300' as const,
+    textMonthFontWeight: 'bold' as const,
+    textDayHeaderFontWeight: '300' as const,
+    textDayFontSize: 16,
+    textMonthFontSize: 16,
+    textDayHeaderFontSize: 13
+  }), []);
+
+  // Render appointment item for FlatList
+  const renderAppointmentItem = useCallback(({ item }: { item: any }) => (
+    <AppointmentItem appointment={item} />
+  ), []);
+
+  const keyExtractor = useCallback((item: any) => item.id, []);
+
+  if (!isCalendarReady) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <Text style={styles.loadingText}>Loading calendar...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -208,31 +304,16 @@ export const AppointmentCalendar = memo<AppointmentCalendarProps>(({
         onDayPress={handleDayPress}
         markedDates={markedDates}
         markingType={'multi-dot'}
-        theme={{
-          backgroundColor: COLORS.background,
-          calendarBackground: COLORS.background,
-          textSectionTitleColor: COLORS.secondary,
-          selectedDayBackgroundColor: COLORS.primary,
-          selectedDayTextColor: COLORS.background,
-          todayTextColor: COLORS.primary,
-          dayTextColor: COLORS.text,
-          textDisabledColor: COLORS.secondary,
-          dotColor: COLORS.primary,
-          selectedDotColor: COLORS.background,
-          arrowColor: COLORS.primary,
-          disabledArrowColor: COLORS.secondary,
-          monthTextColor: COLORS.text,
-          indicatorColor: COLORS.primary,
-          textDayFontFamily: FONTS.regular,
-          textMonthFontFamily: FONTS.bold,
-          textDayHeaderFontFamily: FONTS.regular,
-          textDayFontWeight: '300',
-          textMonthFontWeight: 'bold',
-          textDayHeaderFontWeight: '300',
-          textDayFontSize: 16,
-          textMonthFontSize: 16,
-          textDayHeaderFontSize: 13
-        }}
+        theme={calendarTheme}
+        // Performance optimizations
+        enableSwipeMonths={true}
+        hideExtraDays={true}
+        disableMonthChange={false}
+        firstDay={1}
+        showWeekNumbers={false}
+        disableArrowLeft={false}
+        disableArrowRight={false}
+        disableAllTouchEventsForDisabledDays={true}
       />
 
       {selectedDate && (
@@ -243,9 +324,16 @@ export const AppointmentCalendar = memo<AppointmentCalendarProps>(({
           {selectedDateAppointments.length === 0 ? (
             <Text style={styles.noAppointments}>No appointments for this date</Text>
           ) : (
-            selectedDateAppointments.map(apt => (
-              <AppointmentItem key={apt.id} appointment={apt} />
-            ))
+            <OptimizedFlatList
+              data={selectedDateAppointments}
+              renderItem={renderAppointmentItem}
+              keyExtractor={keyExtractor}
+              estimatedItemSize={80}
+              maxToRenderPerBatch={5}
+              windowSize={5}
+              removeClippedSubviews={true}
+              style={styles.appointmentsFlatList}
+            />
           )}
         </View>
       )}
@@ -294,6 +382,18 @@ const styles = StyleSheet.create({
     padding: 16,
     maxHeight: 300,
     backgroundColor: COLORS.background,
+  },
+  appointmentsFlatList: {
+    flex: 1,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: COLORS.text,
+    fontFamily: FONTS.regular,
   },
   appointmentsTitle: {
     fontSize: 18,

@@ -174,26 +174,43 @@ export function useLazyComponent<T>(
   };
 }
 
-// Memory usage optimization for large lists
+// Memory usage optimization for large lists with improved performance
 export function useVirtualizedList<T>(
   data: T[],
   itemHeight: number,
   containerHeight: number
 ) {
   const [scrollOffset, setScrollOffset] = useState(0);
+  const lastScrollOffset = useRef(0);
+  const visibleRangeCache = useRef<{
+    startIndex: number;
+    endIndex: number;
+    visibleItems: T[];
+  } | null>(null);
   
   const visibleRange = useMemo(() => {
+    // Use cached result if scroll offset hasn't changed significantly
+    if (visibleRangeCache.current && 
+        Math.abs(scrollOffset - lastScrollOffset.current) < itemHeight / 2) {
+      return visibleRangeCache.current;
+    }
+    
     const startIndex = Math.floor(scrollOffset / itemHeight);
     const endIndex = Math.min(
-      startIndex + Math.ceil(containerHeight / itemHeight) + 1,
+      startIndex + Math.ceil(containerHeight / itemHeight) + 2, // Increased buffer
       data.length
     );
     
-    return {
-      startIndex: Math.max(0, startIndex - 1), // Add buffer
+    const result = {
+      startIndex: Math.max(0, startIndex - 1),
       endIndex,
       visibleItems: data.slice(Math.max(0, startIndex - 1), endIndex)
     };
+    
+    visibleRangeCache.current = result;
+    lastScrollOffset.current = scrollOffset;
+    
+    return result;
   }, [data, itemHeight, containerHeight, scrollOffset]);
   
   const handleScroll = useThrottle((offset: number) => {
@@ -348,4 +365,178 @@ export function useBottleneckDetector(reportInterval: number = 10000) {
     getProviderTimes: () => monitor.getProviderLoadTimes(),
     clearMetrics: () => monitor.clear(),
   };
+}
+
+// Calendar-specific performance optimizations
+export function useCalendarPerformance<T>(
+  data: T[],
+  selectedStatuses: string[],
+  selectedDate?: string
+) {
+  const dataHashRef = useRef<string>('');
+  const cacheRef = useRef<Map<string, any>>(new Map());
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Memoize data hash for change detection
+  const dataHash = useMemo(() => {
+    return JSON.stringify({
+      dataLength: data.length,
+      selectedStatuses: selectedStatuses.sort(),
+      selectedDate,
+      dataIds: data.slice(0, 10).map((item: any) => item?.id || '').join(',')
+    });
+  }, [data, selectedStatuses, selectedDate]);
+  
+  // Check if data actually changed
+  const hasDataChanged = useMemo(() => {
+    const changed = dataHash !== dataHashRef.current;
+    if (changed) {
+      dataHashRef.current = dataHash;
+      console.log('Calendar data changed, invalidating cache');
+    }
+    return changed;
+  }, [dataHash]);
+  
+  // Cached computation with automatic cleanup
+  const getCachedResult = useCallback(<R>(key: string, computeFn: () => R): R => {
+    if (!hasDataChanged && cacheRef.current.has(key)) {
+      console.log(`Using cached result for: ${key}`);
+      return cacheRef.current.get(key);
+    }
+    
+    setIsProcessing(true);
+    const result = computeFn();
+    cacheRef.current.set(key, result);
+    setIsProcessing(false);
+    
+    // Clean old cache entries
+    if (cacheRef.current.size > 20) {
+      const firstKey = cacheRef.current.keys().next().value;
+      cacheRef.current.delete(firstKey);
+    }
+    
+    console.log(`Computed and cached result for: ${key}`);
+    return result;
+  }, [hasDataChanged]);
+  
+  // Batch operations for better performance
+  const batchProcess = useCallback(<R>(
+    items: T[],
+    processor: (batch: T[]) => R[],
+    batchSize: number = 50
+  ): R[] => {
+    const results: R[] = [];
+    
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      const batchResults = processor(batch);
+      results.push(...batchResults);
+      
+      // Yield control to prevent blocking
+      if (i % (batchSize * 4) === 0) {
+        setTimeout(() => {}, 0);
+      }
+    }
+    
+    return results;
+  }, []);
+  
+  return {
+    getCachedResult,
+    batchProcess,
+    isProcessing,
+    hasDataChanged,
+    clearCache: () => cacheRef.current.clear()
+  };
+}
+
+// Hook for optimizing appointment filtering
+export function useAppointmentFiltering<T extends { date: string; status: string }>(
+  appointments: T[],
+  selectedStatuses: string[],
+  selectedDate?: string
+) {
+  const { getCachedResult } = useCalendarPerformance(appointments, selectedStatuses, selectedDate || '');
+  
+  // Optimized filtering with caching
+  const filteredAppointments = useMemo(() => {
+    return getCachedResult('filtered', () => {
+      console.log('Filtering appointments:', appointments.length, 'items');
+      return appointments.filter(apt => selectedStatuses.includes(apt.status));
+    });
+  }, [appointments, selectedStatuses, getCachedResult]);
+  
+  // Optimized date grouping
+  const appointmentsByDate = useMemo(() => {
+    return getCachedResult('byDate', () => {
+      console.log('Grouping appointments by date');
+      const grouped = new Map<string, T[]>();
+      
+      for (const apt of filteredAppointments) {
+        const existing = grouped.get(apt.date);
+        if (existing) {
+          existing.push(apt);
+        } else {
+          grouped.set(apt.date, [apt]);
+        }
+      }
+      
+      return grouped;
+    });
+  }, [filteredAppointments, getCachedResult]);
+  
+  // Selected date appointments
+  const selectedDateAppointments = useMemo(() => {
+    if (!selectedDate) return [];
+    return appointmentsByDate.get(selectedDate) || [];
+  }, [appointmentsByDate, selectedDate]);
+  
+  return {
+    filteredAppointments,
+    appointmentsByDate,
+    selectedDateAppointments
+  };
+}
+
+// Hook for calendar marked dates optimization
+export function useCalendarMarkedDates<T extends { date: string; color: string }>(
+  appointmentsByDate: Map<string, T[]>,
+  selectedDate?: string
+) {
+  const { getCachedResult } = useCalendarPerformance(
+    Array.from(appointmentsByDate.entries()),
+    [],
+    selectedDate || ''
+  );
+  
+  return useMemo(() => {
+    return getCachedResult('markedDates', () => {
+      console.log('Computing marked dates for calendar');
+      const marked: { [key: string]: any } = {};
+      
+      // Process appointments by date
+      for (const [date, dayAppointments] of appointmentsByDate) {
+        const dots = dayAppointments.slice(0, 3).map(apt => ({
+          color: apt.color,
+          selectedDotColor: apt.color,
+        }));
+        
+        marked[date] = {
+          dots,
+          selected: date === selectedDate,
+          selectedColor: date === selectedDate ? '#2196F3' : undefined,
+        };
+      }
+      
+      // Mark selected date even if no appointments
+      if (selectedDate && !marked[selectedDate]) {
+        marked[selectedDate] = {
+          selected: true,
+          selectedColor: '#2196F3',
+        };
+      }
+      
+      return marked;
+    });
+  }, [appointmentsByDate, selectedDate, getCachedResult]);
 }
