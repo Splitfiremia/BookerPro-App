@@ -88,12 +88,14 @@ export default function SettingsScreen() {
               
               // Perform logout first to avoid redirect race conditions
               await logout();
-              console.log('Shop Owner Settings: Logout completed, navigating to index');
+              console.log('Shop Owner Settings: Logout completed');
               
-              // Add a small delay to ensure all state updates are processed
-              await new Promise(resolve => setTimeout(resolve, 300));
+              // Add a longer delay to ensure all state updates are processed
+              // This is critical to prevent the auth state race condition
+              await new Promise(resolve => setTimeout(resolve, 800));
               
-              // Navigate after successful logout
+              console.log('Shop Owner Settings: Auth state should be cleared, navigating to index');
+              // Navigate after successful logout and sufficient delay
               router.replace('/');
             } catch (error) {
               console.error('Shop Owner Settings: Logout error:', error);
