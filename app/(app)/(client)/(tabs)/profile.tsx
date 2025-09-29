@@ -50,11 +50,24 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log('Client Profile: Starting logout process');
               await logout();
-              console.log('Profile: Logout successful, navigating to home');
-              router.replace('/');
+              console.log('Client Profile: Logout completed, navigating to index');
+              
+              // Use a small delay to ensure auth state is updated before navigation
+              setTimeout(() => {
+                try {
+                  router.replace('/');
+                  console.log('Client Profile: Navigation to index completed');
+                } catch (navError) {
+                  console.error('Client Profile: Navigation error:', navError);
+                  // Force reload the app if navigation fails
+                  router.dismissAll();
+                  router.replace('/');
+                }
+              }, 100);
             } catch (error) {
-              console.error('Profile: Logout error:', error);
+              console.error('Client Profile: Logout error:', error);
               Alert.alert('Error', 'Failed to log out. Please try again.');
             }
           },

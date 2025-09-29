@@ -46,7 +46,19 @@ export default function ProviderProfileScreen() {
       console.log('Provider Profile: Starting logout process');
       await logout();
       console.log('Provider Profile: Logout completed, navigating to index');
-      router.replace('/');
+      
+      // Use a small delay to ensure auth state is updated before navigation
+      setTimeout(() => {
+        try {
+          router.replace('/');
+          console.log('Provider Profile: Navigation to index completed');
+        } catch (navError) {
+          console.error('Provider Profile: Navigation error:', navError);
+          // Force reload the app if navigation fails
+          router.dismissAll();
+          router.replace('/');
+        }
+      }, 100);
     } catch (error) {
       console.error('Error signing out:', error);
       setErrorMessage('Failed to sign out. Please try again.');
