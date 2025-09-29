@@ -31,6 +31,7 @@ export const useWebsiteBuilder = () => {
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [optimizationSuggestions, setOptimizationSuggestions] = useState<OptimizationSuggestion[]>([]);
   const [cacheStats, setCacheStats] = useState<{ templates: any; general: any } | null>(null);
+  const [slugAvailability, setSlugAvailability] = useState<{ isChecking: boolean; isAvailable: boolean | null; suggestions: string[] }>({ isChecking: false, isAvailable: null, suggestions: [] });
 
   useEffect(() => {
     const loadWebsiteData = async () => {
@@ -154,17 +155,81 @@ export const useWebsiteBuilder = () => {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to publish website. Please try again.';
-      Alert.alert('Error', message);
+      
+      // Check if it's a subdomain taken error and show suggestions
+      if (message.includes('subdomain is already taken')) {
+        const suggestions = await WebsiteBuilderService.suggestAlternativeSlugs(websiteData.subdomainSlug!, 3);
+        
+        if (suggestions.length > 0) {
+          Alert.alert(
+            'Subdomain Unavailable', 
+            `"${websiteData.subdomainSlug}" is already taken. Here are some alternatives:`,
+            [
+              ...suggestions.map(suggestion => ({
+                text: suggestion,
+                onPress: () => {
+                  handleDataChange('subdomainSlug', suggestion);
+                  Alert.alert('Updated', `Subdomain changed to "${suggestion}". You can now publish your website.`);
+                }
+              })),
+              { text: 'Choose Different', style: 'cancel' as const }
+            ]
+          );
+        } else {
+          Alert.alert('Error', message);
+        }
+      } else {
+        Alert.alert('Error', message);
+      }
     } finally {
       setIsPublishing(false);
     }
-  }, [websiteData]);
+  }, [websiteData, handleDataChange]);
 
   const copyWebsiteUrl = useCallback(() => {
     if (websiteData.subdomainSlug) {
       WebsiteBuilderService.copyWebsiteUrl(websiteData.subdomainSlug);
     }
   }, [websiteData.subdomainSlug]);
+
+  // Check subdomain availability in real-time
+  const checkSlugAvailability = useCallback(async (slug: string) => {
+    if (!slug || slug.length < 3) {
+      setSlugAvailability({ isChecking: false, isAvailable: null, suggestions: [] });
+      return;
+    }
+
+    setSlugAvailability(prev => ({ ...prev, isChecking: true }));
+    
+    try {
+      const isAvailable = await WebsiteBuilderService.checkSlugAvailability(slug);
+      
+      if (!isAvailable) {
+        // Get suggestions if not available
+        const suggestions = await WebsiteBuilderService.suggestAlternativeSlugs(slug, 3);
+        setSlugAvailability({ isChecking: false, isAvailable: false, suggestions });
+      } else {
+        setSlugAvailability({ isChecking: false, isAvailable: true, suggestions: [] });
+      }
+    } catch (error) {
+      console.error('Error checking slug availability:', error);
+      setSlugAvailability({ isChecking: false, isAvailable: null, suggestions: [] });
+    }
+  }, []);
+
+  // Debounced slug availability check
+  useEffect(() => {
+    if (!websiteData.subdomainSlug) {
+      setSlugAvailability({ isChecking: false, isAvailable: null, suggestions: [] });
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      checkSlugAvailability(websiteData.subdomainSlug!);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [websiteData.subdomainSlug, checkSlugAvailability]);
 
   // Export website
   const handleExport = useCallback(async (options: ExportOptions): Promise<ExportResult | null> => {
@@ -280,6 +345,7 @@ export const useWebsiteBuilder = () => {
     isLoading,
     isSaving,
     isExporting,
+    slugAvailability,
     
     // Computed values
     ...computedValues,
@@ -295,5 +361,6 @@ export const useWebsiteBuilder = () => {
     refreshOptimizationSuggestions,
     clearAllCaches,
     getWebsiteAnalytics,
+    checkSlugAvailability,
   };
 };

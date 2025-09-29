@@ -17,6 +17,7 @@ export default function WebsiteBuilderScreen() {
     selectedTemplate,
     hasUnsavedChanges,
     isPublishing,
+    slugAvailability,
     handleDataChange,
     handleTemplateChange,
     handleSave,
@@ -45,6 +46,7 @@ export default function WebsiteBuilderScreen() {
           selectedTemplate={selectedTemplate}
           onDataChange={handleDataChange}
           onTemplateChange={handleTemplateChange}
+          slugAvailability={slugAvailability}
         />
       </View>
 

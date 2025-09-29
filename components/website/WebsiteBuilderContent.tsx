@@ -13,6 +13,11 @@ interface WebsiteBuilderContentProps {
   selectedTemplate: WebsiteTemplate;
   onDataChange: (field: keyof ShopWebsite, value: any) => void;
   onTemplateChange: (template: WebsiteTemplate) => void;
+  slugAvailability?: {
+    isChecking: boolean;
+    isAvailable: boolean | null;
+    suggestions: string[];
+  };
 }
 
 export const WebsiteBuilderContent: React.FC<WebsiteBuilderContentProps> = React.memo(({
@@ -21,6 +26,7 @@ export const WebsiteBuilderContent: React.FC<WebsiteBuilderContentProps> = React
   selectedTemplate,
   onDataChange,
   onTemplateChange,
+  slugAvailability,
 }) => {
   const renderTabContent = () => {
     switch (activeTab) {
@@ -29,6 +35,7 @@ export const WebsiteBuilderContent: React.FC<WebsiteBuilderContentProps> = React
           <WebsiteSettingsForm
             websiteData={websiteData}
             onDataChange={onDataChange}
+            slugAvailability={slugAvailability}
           />
         );
 

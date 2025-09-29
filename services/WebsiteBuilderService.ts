@@ -696,7 +696,12 @@ export class WebsiteBuilderService {
       // Validate slug availability
       const slugAvailable = await this.checkSlugAvailability(websiteData.subdomainSlug);
       if (!slugAvailable) {
-        throw new Error('This subdomain is already taken. Please choose a different one.');
+        // Get alternative suggestions
+        const suggestions = await this.suggestAlternativeSlugs(websiteData.subdomainSlug, 3);
+        const suggestionText = suggestions.length > 0 
+          ? ` Try: ${suggestions.join(', ')}` 
+          : '';
+        throw new Error(`This subdomain is already taken. Please choose a different one.${suggestionText}`);
       }
 
       console.log('Publishing website:', websiteData);
@@ -908,11 +913,19 @@ export class WebsiteBuilderService {
         return cached;
       }
 
-      // For now, simulate availability check
-      const reservedSlugs = ['api', 'admin', 'www', 'app', 'mobile', 'web', 'help', 'support'];
-      const available = !reservedSlugs.includes(slug.toLowerCase());
+      // Check against reserved slugs
+      const reservedSlugs = ['api', 'admin', 'www', 'app', 'mobile', 'web', 'help', 'support', 'blog', 'shop', 'store', 'mail', 'email', 'ftp', 'cdn', 'assets', 'static', 'media', 'images', 'css', 'js', 'fonts'];
+      if (reservedSlugs.includes(slug.toLowerCase())) {
+        await cacheService.set(cacheKey, false, { ttl: 24 * 60 * 60 * 1000 }); // Cache for 24 hours
+        return false;
+      }
 
-      // Cache the result for 5 minutes
+      // Check against existing websites (simulate database check)
+      // In a real app, this would query the database for existing subdomains
+      const existingSlugs = await this.getExistingSlugs();
+      const available = !existingSlugs.includes(slug.toLowerCase());
+
+      // Cache the result for 5 minutes (shorter cache for existing slugs as they can change)
       await cacheService.set(cacheKey, available, { ttl: 5 * 60 * 1000 });
       
       return available;
@@ -920,6 +933,71 @@ export class WebsiteBuilderService {
       console.error('Error checking slug availability:', error);
       return false;
     }
+  }
+
+  /**
+   * Get existing slugs from storage/database
+   */
+  private static async getExistingSlugs(): Promise<string[]> {
+    try {
+      // In a real app, this would query the database
+      // For now, simulate with some existing slugs
+      const existingSlugs = ['demo', 'test', 'sample', 'example', 'myshop', 'barbershop', 'salon', 'spa'];
+      
+      // You could also check AsyncStorage for locally saved websites
+      // const savedWebsites = await AsyncStorage.getItem('saved_websites');
+      // if (savedWebsites) {
+      //   const websites = JSON.parse(savedWebsites) as ShopWebsite[];
+      //   existingSlugs.push(...websites.map(w => w.subdomainSlug).filter(Boolean));
+      // }
+      
+      return existingSlugs;
+    } catch (error) {
+      console.error('Error getting existing slugs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Suggest alternative slugs when the desired one is taken
+   */
+  static async suggestAlternativeSlugs(baseSlug: string, count: number = 3): Promise<string[]> {
+    const suggestions: string[] = [];
+    const cleanSlug = this.cleanSlug(baseSlug);
+    
+    // Try with numbers
+    for (let i = 1; i <= count + 2; i++) {
+      const suggestion = `${cleanSlug}${i}`;
+      const available = await this.checkSlugAvailability(suggestion);
+      if (available && suggestions.length < count) {
+        suggestions.push(suggestion);
+      }
+    }
+    
+    // Try with common suffixes if we don't have enough suggestions
+    if (suggestions.length < count) {
+      const suffixes = ['shop', 'store', 'biz', 'co', 'online', 'pro'];
+      for (const suffix of suffixes) {
+        if (suggestions.length >= count) break;
+        const suggestion = `${cleanSlug}${suffix}`;
+        const available = await this.checkSlugAvailability(suggestion);
+        if (available) {
+          suggestions.push(suggestion);
+        }
+      }
+    }
+    
+    return suggestions.slice(0, count);
+  }
+
+  /**
+   * Clean and format slug
+   */
+  private static cleanSlug(slug: string): string {
+    return slug
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .substring(0, 20); // Limit length
   }
 
   /**
