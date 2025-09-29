@@ -14,36 +14,72 @@ import {
 
 /**
  * Abstract Template Processor using Template Method Pattern
- * Defines the skeleton of template processing algorithm
+ * Defines the skeleton of template processing algorithm with performance optimizations
  */
 abstract class TemplateProcessor {
+  private static readonly PROCESSING_CACHE = new Map<string, { result: string; timestamp: number; ttl: number }>();
+  private static readonly CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+  private static readonly MAX_CACHE_SIZE = 100;
+  
   /**
-   * Template Method - defines the algorithm structure
+   * Template Method - defines the algorithm structure with caching
    */
   public async processTemplate(websiteData: Partial<ShopWebsite>, templateId: string): Promise<string> {
+    const startTime = performance.now();
+    const cacheKey = this.generateCacheKey(websiteData, templateId);
+    
     try {
       console.log(`Processing template ${templateId} with Template Method pattern`);
       
-      // Step 1: Load template
-      const template = await this.loadTemplate(templateId);
+      // Check cache first
+      const cached = this.getCachedResult(cacheKey);
+      if (cached) {
+        console.log(`Template ${templateId} served from cache in ${(performance.now() - startTime).toFixed(2)}ms`);
+        return cached;
+      }
+      
+      // Step 1: Load template with parallel data fetching
+      const [template, validationResult] = await Promise.all([
+        this.loadTemplate(templateId),
+        this.preValidateData(websiteData)
+      ]);
+      
       if (!template) {
         throw new Error(`Template ${templateId} not found`);
       }
       
-      // Step 2: Validate data
+      if (!validationResult.isValid) {
+        throw new Error(`Validation failed: ${validationResult.errors.join(', ')}`);
+      }
+      
+      // Step 2: Validate template-specific data
       await this.validateTemplateData(websiteData, template);
       
-      // Step 3: Prepare template variables
+      // Step 3: Prepare template variables with optimization
       const templateVars = await this.prepareTemplateVariables(websiteData, template);
       
       // Step 4: Process template content (abstract method)
       const processedContent = await this.processTemplateContent(template, templateVars);
       
-      // Step 5: Apply optimizations
-      const optimizedContent = await this.optimizeContent(processedContent, websiteData);
+      // Step 5: Apply optimizations in parallel
+      const [optimizedContent, performanceMetrics] = await Promise.all([
+        this.optimizeContent(processedContent, websiteData),
+        this.collectPerformanceMetrics(processedContent)
+      ]);
       
       // Step 6: Post-process (hook for subclasses)
-      return await this.postProcess(optimizedContent, websiteData, template);
+      const finalContent = await this.postProcess(optimizedContent, websiteData, template);
+      
+      // Cache the result
+      this.setCachedResult(cacheKey, finalContent);
+      
+      const processingTime = performance.now() - startTime;
+      console.log(`Template ${templateId} processed in ${processingTime.toFixed(2)}ms`);
+      
+      // Log performance metrics
+      this.logPerformanceMetrics(templateId, processingTime, performanceMetrics);
+      
+      return finalContent;
       
     } catch (error) {
       console.error('Template processing failed:', error);
@@ -52,10 +88,34 @@ abstract class TemplateProcessor {
   }
   
   /**
-   * Load template - can be overridden by subclasses
+   * Load template with caching - can be overridden by subclasses
    */
   protected async loadTemplate(templateId: string): Promise<WebsiteTemplate | null> {
-    return await WebsiteBuilderService.getTemplate(templateId);
+    return await templateCacheService.getTemplate(templateId) || await WebsiteBuilderService.getTemplate(templateId);
+  }
+  
+  /**
+   * Pre-validate data for early error detection
+   */
+  protected async preValidateData(websiteData: Partial<ShopWebsite>): Promise<{ isValid: boolean; errors: string[] }> {
+    const errors: string[] = [];
+    
+    if (!websiteData.siteTitle?.trim()) {
+      errors.push('Site title is required');
+    }
+    
+    if (websiteData.siteTitle && websiteData.siteTitle.length > 100) {
+      errors.push('Site title must be 100 characters or less');
+    }
+    
+    if (websiteData.primaryColor && !/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(websiteData.primaryColor)) {
+      errors.push('Primary color must be a valid hex color');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
   
   /**
@@ -69,14 +129,121 @@ abstract class TemplateProcessor {
   }
   
   /**
-   * Prepare template variables - can be overridden by subclasses
+   * Prepare template variables with optimization - can be overridden by subclasses
    */
   protected async prepareTemplateVariables(websiteData: Partial<ShopWebsite>, template: WebsiteTemplate): Promise<Record<string, any>> {
-    return {
+    // Use memoization for expensive computations
+    const baseVariables = {
       ...websiteData,
       templateId: template.id,
       processedAt: new Date().toISOString(),
+      bookNowUrl: websiteData.subdomainSlug ? `https://bookerpro.com/${websiteData.subdomainSlug}/book` : '#',
     };
+    
+    // Generate optimized HTML sections in parallel
+    const [servicesHtml, providersHtml, reviewsHtml] = await Promise.all([
+      this.generateServicesHtml(websiteData, template),
+      this.generateProvidersHtml(websiteData, template),
+      this.generateReviewsHtml(websiteData, template)
+    ]);
+    
+    return {
+      ...baseVariables,
+      servicesHtml,
+      providersHtml,
+      reviewsHtml,
+    };
+  }
+  
+  /**
+   * Generate services HTML section
+   */
+  protected async generateServicesHtml(websiteData: Partial<ShopWebsite>, template: WebsiteTemplate): Promise<string> {
+    if (!template.features.hasServicesGrid) return '';
+    
+    // Mock services data - in real app, this would come from the database
+    const services = [
+      { name: 'Haircut', price: '$30', duration: '30 min' },
+      { name: 'Hair Color', price: '$80', duration: '90 min' },
+      { name: 'Styling', price: '$40', duration: '45 min' },
+    ];
+    
+    return `
+      <section class="services" style="padding: 60px 20px; background: #f8f9fa;">
+        <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+          <h2 style="font-size: 2.5rem; margin-bottom: 40px; color: ${websiteData.primaryColor || '#333'};">Our Services</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+            ${services.map(service => `
+              <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h3 style="font-size: 1.5rem; margin-bottom: 10px; color: #333;">${service.name}</h3>
+                <p style="font-size: 1.2rem; color: ${websiteData.primaryColor || '#007AFF'}; font-weight: 600; margin-bottom: 5px;">${service.price}</p>
+                <p style="color: #666; font-size: 0.9rem;">${service.duration}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+    `;
+  }
+  
+  /**
+   * Generate providers HTML section
+   */
+  protected async generateProvidersHtml(websiteData: Partial<ShopWebsite>, template: WebsiteTemplate): Promise<string> {
+    if (!template.features.hasTeamSection) return '';
+    
+    // Mock providers data
+    const providers = [
+      { name: 'Sarah Johnson', role: 'Senior Stylist', image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face' },
+      { name: 'Mike Chen', role: 'Colorist', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face' },
+    ];
+    
+    return `
+      <section class="team" style="padding: 60px 20px;">
+        <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+          <h2 style="font-size: 2.5rem; margin-bottom: 40px; color: ${websiteData.primaryColor || '#333'};">Meet Our Team</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
+            ${providers.map(provider => `
+              <div style="text-align: center;">
+                <img src="${provider.image}" alt="${provider.name}" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin-bottom: 20px;" />
+                <h3 style="font-size: 1.3rem; margin-bottom: 5px; color: #333;">${provider.name}</h3>
+                <p style="color: #666;">${provider.role}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+    `;
+  }
+  
+  /**
+   * Generate reviews HTML section
+   */
+  protected async generateReviewsHtml(websiteData: Partial<ShopWebsite>, template: WebsiteTemplate): Promise<string> {
+    if (!template.features.hasReviewsCarousel) return '';
+    
+    // Mock reviews data
+    const reviews = [
+      { name: 'Emma Wilson', rating: 5, text: 'Amazing service! Sarah did an incredible job with my hair color.' },
+      { name: 'David Brown', rating: 5, text: 'Professional and friendly staff. Highly recommend!' },
+    ];
+    
+    return `
+      <section class="reviews" style="padding: 60px 20px; background: #f8f9fa;">
+        <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+          <h2 style="font-size: 2.5rem; margin-bottom: 40px; color: ${websiteData.primaryColor || '#333'};">What Our Clients Say</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+            ${reviews.map(review => `
+              <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="color: #ffd700; font-size: 1.2rem; margin-bottom: 15px;">${'★'.repeat(review.rating)}</div>
+                <p style="font-style: italic; margin-bottom: 20px; color: #555;">"${review.text}"</p>
+                <p style="font-weight: 600; color: #333;">- ${review.name}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+    `;
   }
   
   /**
@@ -100,6 +267,103 @@ abstract class TemplateProcessor {
    */
   protected async postProcess(content: string, websiteData: Partial<ShopWebsite>, template: WebsiteTemplate): Promise<string> {
     return content;
+  }
+  
+  /**
+   * Generate cache key for template processing
+   */
+  private generateCacheKey(websiteData: Partial<ShopWebsite>, templateId: string): string {
+    const keyData = {
+      templateId,
+      siteTitle: websiteData.siteTitle,
+      primaryColor: websiteData.primaryColor,
+      secondaryColor: websiteData.secondaryColor,
+      businessBio: websiteData.businessBio,
+      showTeamSection: websiteData.showTeamSection,
+      showServicesSection: websiteData.showServicesSection,
+      showReviewsSection: websiteData.showReviewsSection,
+    };
+    
+    return `template_${templateId}_${this.hashObject(keyData)}`;
+  }
+  
+  /**
+   * Simple hash function for cache keys
+   */
+  private hashObject(obj: any): string {
+    const str = JSON.stringify(obj);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(36);
+  }
+  
+  /**
+   * Get cached result if valid
+   */
+  private getCachedResult(cacheKey: string): string | null {
+    const cached = TemplateProcessor.PROCESSING_CACHE.get(cacheKey);
+    if (cached && Date.now() < cached.timestamp + cached.ttl) {
+      return cached.result;
+    }
+    
+    if (cached) {
+      TemplateProcessor.PROCESSING_CACHE.delete(cacheKey);
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Set cached result with TTL
+   */
+  private setCachedResult(cacheKey: string, result: string): void {
+    // Implement LRU eviction if cache is full
+    if (TemplateProcessor.PROCESSING_CACHE.size >= TemplateProcessor.MAX_CACHE_SIZE) {
+      const firstKey = TemplateProcessor.PROCESSING_CACHE.keys().next().value;
+      if (firstKey) {
+        TemplateProcessor.PROCESSING_CACHE.delete(firstKey);
+      }
+    }
+    
+    TemplateProcessor.PROCESSING_CACHE.set(cacheKey, {
+      result,
+      timestamp: Date.now(),
+      ttl: TemplateProcessor.CACHE_TTL
+    });
+  }
+  
+  /**
+   * Collect performance metrics
+   */
+  private async collectPerformanceMetrics(content: string): Promise<{ size: number; complexity: number }> {
+    return {
+      size: content.length,
+      complexity: (content.match(/</g) || []).length // Simple complexity metric based on HTML tags
+    };
+  }
+  
+  /**
+   * Log performance metrics
+   */
+  private logPerformanceMetrics(templateId: string, processingTime: number, metrics: { size: number; complexity: number }): void {
+    console.log(`Template ${templateId} metrics:`, {
+      processingTime: `${processingTime.toFixed(2)}ms`,
+      contentSize: `${(metrics.size / 1024).toFixed(2)}KB`,
+      complexity: metrics.complexity,
+      cacheSize: TemplateProcessor.PROCESSING_CACHE.size
+    });
+  }
+  
+  /**
+   * Clear processing cache
+   */
+  public static clearProcessingCache(): void {
+    TemplateProcessor.PROCESSING_CACHE.clear();
+    console.log('Template processing cache cleared');
   }
 }
 
@@ -919,5 +1183,197 @@ export class WebsiteBuilderService {
   }
 }
 
+/**
+ * Template Processing Performance Monitor
+ * Tracks and optimizes template processing performance
+ */
+class TemplatePerformanceMonitor {
+  private static readonly PERFORMANCE_METRICS = new Map<string, {
+    totalProcessingTime: number;
+    processCount: number;
+    averageTime: number;
+    lastProcessed: number;
+    cacheHitRate: number;
+    errors: number;
+  }>();
+  
+  private static readonly BOTTLENECK_THRESHOLD = 5000; // 5 seconds
+  private static readonly SLOW_TEMPLATE_THRESHOLD = 2000; // 2 seconds
+  
+  /**
+   * Record template processing metrics
+   */
+  static recordProcessing(templateId: string, processingTime: number, fromCache: boolean, error?: boolean): void {
+    const existing = this.PERFORMANCE_METRICS.get(templateId) || {
+      totalProcessingTime: 0,
+      processCount: 0,
+      averageTime: 0,
+      lastProcessed: 0,
+      cacheHitRate: 0,
+      errors: 0
+    };
+    
+    existing.totalProcessingTime += processingTime;
+    existing.processCount += 1;
+    existing.averageTime = existing.totalProcessingTime / existing.processCount;
+    existing.lastProcessed = Date.now();
+    existing.errors += error ? 1 : 0;
+    
+    // Calculate cache hit rate
+    const cacheHits = fromCache ? 1 : 0;
+    existing.cacheHitRate = ((existing.cacheHitRate * (existing.processCount - 1)) + cacheHits) / existing.processCount;
+    
+    this.PERFORMANCE_METRICS.set(templateId, existing);
+    
+    // Log performance warnings
+    if (processingTime > this.SLOW_TEMPLATE_THRESHOLD) {
+      console.warn(`Slow template processing detected: ${templateId} took ${processingTime.toFixed(2)}ms`);
+    }
+    
+    if (existing.averageTime > this.BOTTLENECK_THRESHOLD) {
+      console.error(`Performance bottleneck detected: ${templateId} average time ${existing.averageTime.toFixed(2)}ms`);
+    }
+  }
+  
+  /**
+   * Get performance metrics for a template
+   */
+  static getMetrics(templateId: string) {
+    return this.PERFORMANCE_METRICS.get(templateId);
+  }
+  
+  /**
+   * Get all performance metrics
+   */
+  static getAllMetrics() {
+    const metrics = Array.from(this.PERFORMANCE_METRICS.entries()).map(([templateId, data]) => ({
+      templateId,
+      ...data,
+      status: this.getPerformanceStatus(data.averageTime, data.cacheHitRate, data.errors / data.processCount)
+    }));
+    
+    return metrics.sort((a, b) => b.averageTime - a.averageTime);
+  }
+  
+  /**
+   * Get performance status
+   */
+  private static getPerformanceStatus(averageTime: number, cacheHitRate: number, errorRate: number): 'excellent' | 'good' | 'warning' | 'critical' {
+    if (errorRate > 0.1) return 'critical'; // More than 10% errors
+    if (averageTime > this.BOTTLENECK_THRESHOLD) return 'critical';
+    if (averageTime > this.SLOW_TEMPLATE_THRESHOLD) return 'warning';
+    if (cacheHitRate < 0.5) return 'warning'; // Less than 50% cache hit rate
+    if (averageTime < 500 && cacheHitRate > 0.8) return 'excellent';
+    return 'good';
+  }
+  
+  /**
+   * Get optimization recommendations
+   */
+  static getOptimizationRecommendations(): {
+    templateId: string;
+    issue: string;
+    recommendation: string;
+    priority: 'high' | 'medium' | 'low';
+  }[] {
+    const recommendations: {
+      templateId: string;
+      issue: string;
+      recommendation: string;
+      priority: 'high' | 'medium' | 'low';
+    }[] = [];
+    
+    for (const [templateId, metrics] of this.PERFORMANCE_METRICS.entries()) {
+      const errorRate = metrics.errors / metrics.processCount;
+      
+      if (errorRate > 0.1) {
+        recommendations.push({
+          templateId,
+          issue: `High error rate: ${(errorRate * 100).toFixed(1)}%`,
+          recommendation: 'Review template validation and error handling',
+          priority: 'high'
+        });
+      }
+      
+      if (metrics.averageTime > this.BOTTLENECK_THRESHOLD) {
+        recommendations.push({
+          templateId,
+          issue: `Slow processing: ${metrics.averageTime.toFixed(0)}ms average`,
+          recommendation: 'Optimize template complexity, add more caching, or break into smaller components',
+          priority: 'high'
+        });
+      }
+      
+      if (metrics.cacheHitRate < 0.3) {
+        recommendations.push({
+          templateId,
+          issue: `Low cache hit rate: ${(metrics.cacheHitRate * 100).toFixed(1)}%`,
+          recommendation: 'Increase cache TTL or improve cache key generation',
+          priority: 'medium'
+        });
+      }
+      
+      if (metrics.processCount > 100 && metrics.averageTime > 1000) {
+        recommendations.push({
+          templateId,
+          issue: `Frequently used slow template: ${metrics.processCount} uses, ${metrics.averageTime.toFixed(0)}ms average`,
+          recommendation: 'Consider pre-compiling or creating a faster variant',
+          priority: 'medium'
+        });
+      }
+    }
+    
+    return recommendations.sort((a, b) => {
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      return priorityOrder[b.priority] - priorityOrder[a.priority];
+    });
+  }
+  
+  /**
+   * Clear performance metrics
+   */
+  static clearMetrics(): void {
+    this.PERFORMANCE_METRICS.clear();
+    console.log('Template performance metrics cleared');
+  }
+  
+  /**
+   * Get performance summary
+   */
+  static getPerformanceSummary() {
+    const allMetrics = Array.from(this.PERFORMANCE_METRICS.values());
+    
+    if (allMetrics.length === 0) {
+      return {
+        totalTemplates: 0,
+        totalProcesses: 0,
+        averageProcessingTime: 0,
+        overallCacheHitRate: 0,
+        overallErrorRate: 0,
+        slowTemplates: 0,
+        criticalTemplates: 0
+      };
+    }
+    
+    const totalProcesses = allMetrics.reduce((sum, m) => sum + m.processCount, 0);
+    const totalProcessingTime = allMetrics.reduce((sum, m) => sum + m.totalProcessingTime, 0);
+    const totalErrors = allMetrics.reduce((sum, m) => sum + m.errors, 0);
+    const totalCacheHits = allMetrics.reduce((sum, m) => sum + (m.cacheHitRate * m.processCount), 0);
+    
+    const slowTemplates = allMetrics.filter(m => m.averageTime > this.SLOW_TEMPLATE_THRESHOLD).length;
+    const criticalTemplates = allMetrics.filter(m => m.averageTime > this.BOTTLENECK_THRESHOLD).length;
+    
+    return {
+      totalTemplates: allMetrics.length,
+      totalProcesses,
+      averageProcessingTime: totalProcessingTime / totalProcesses,
+      overallCacheHitRate: totalCacheHits / totalProcesses,
+      overallErrorRate: totalErrors / totalProcesses,
+      slowTemplates,
+      criticalTemplates
+    };
+  }
+}
+
 // Export the Template Processor classes for external use
-export { TemplateProcessor, HTMLTemplateProcessor, JSONTemplateProcessor, TemplateProcessorFactory };
+export { TemplateProcessor, HTMLTemplateProcessor, JSONTemplateProcessor, TemplateProcessorFactory, TemplatePerformanceMonitor };
