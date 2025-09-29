@@ -12,6 +12,336 @@ import {
   OptimizationSuggestion,
 } from '@/types/website';
 
+/**
+ * Abstract Template Processor using Template Method Pattern
+ * Defines the skeleton of template processing algorithm
+ */
+abstract class TemplateProcessor {
+  /**
+   * Template Method - defines the algorithm structure
+   */
+  public async processTemplate(websiteData: Partial<ShopWebsite>, templateId: string): Promise<string> {
+    try {
+      console.log(`Processing template ${templateId} with Template Method pattern`);
+      
+      // Step 1: Load template
+      const template = await this.loadTemplate(templateId);
+      if (!template) {
+        throw new Error(`Template ${templateId} not found`);
+      }
+      
+      // Step 2: Validate data
+      await this.validateTemplateData(websiteData, template);
+      
+      // Step 3: Prepare template variables
+      const templateVars = await this.prepareTemplateVariables(websiteData, template);
+      
+      // Step 4: Process template content (abstract method)
+      const processedContent = await this.processTemplateContent(template, templateVars);
+      
+      // Step 5: Apply optimizations
+      const optimizedContent = await this.optimizeContent(processedContent, websiteData);
+      
+      // Step 6: Post-process (hook for subclasses)
+      return await this.postProcess(optimizedContent, websiteData, template);
+      
+    } catch (error) {
+      console.error('Template processing failed:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Load template - can be overridden by subclasses
+   */
+  protected async loadTemplate(templateId: string): Promise<WebsiteTemplate | null> {
+    return await WebsiteBuilderService.getTemplate(templateId);
+  }
+  
+  /**
+   * Validate template data - can be overridden by subclasses
+   */
+  protected async validateTemplateData(websiteData: Partial<ShopWebsite>, template: WebsiteTemplate): Promise<void> {
+    // Default validation
+    if (!websiteData.siteTitle?.trim()) {
+      throw new Error('Site title is required for template processing');
+    }
+  }
+  
+  /**
+   * Prepare template variables - can be overridden by subclasses
+   */
+  protected async prepareTemplateVariables(websiteData: Partial<ShopWebsite>, template: WebsiteTemplate): Promise<Record<string, any>> {
+    return {
+      ...websiteData,
+      templateId: template.id,
+      processedAt: new Date().toISOString(),
+    };
+  }
+  
+  /**
+   * Abstract method - must be implemented by subclasses
+   */
+  protected abstract processTemplateContent(template: WebsiteTemplate, variables: Record<string, any>): Promise<string>;
+  
+  /**
+   * Optimize content - can be overridden by subclasses
+   */
+  protected async optimizeContent(content: string, websiteData: Partial<ShopWebsite>): Promise<string> {
+    // Default optimization: minify HTML
+    return content
+      .replace(/\s+/g, ' ')
+      .replace(/> </g, '><')
+      .trim();
+  }
+  
+  /**
+   * Post-process hook - can be overridden by subclasses
+   */
+  protected async postProcess(content: string, websiteData: Partial<ShopWebsite>, template: WebsiteTemplate): Promise<string> {
+    return content;
+  }
+}
+
+/**
+ * HTML Template Processor - handles HTML template processing
+ */
+class HTMLTemplateProcessor extends TemplateProcessor {
+  protected async processTemplateContent(template: WebsiteTemplate, variables: Record<string, any>): Promise<string> {
+    // Load HTML template content
+    const htmlContent = await this.loadHTMLContent(template.id as string);
+    
+    // Process Handlebars-style template
+    return this.processHandlebarsTemplate(htmlContent, variables);
+  }
+  
+  private async loadHTMLContent(templateId: string): Promise<string> {
+    // In a real app, this would load from file system or CDN
+    // For now, return mock HTML content based on template ID
+    const templateMap: Record<string, string> = {
+      'modern': await this.getModernTemplateHTML(),
+      'classic': await this.getClassicTemplateHTML(),
+      'creative': await this.getCreativeTemplateHTML(),
+    };
+    
+    return templateMap[templateId] || templateMap['modern'];
+  }
+  
+  private processHandlebarsTemplate(html: string, variables: Record<string, any>): string {
+    let processedHtml = html;
+    
+    // Process simple variables {{variable}}
+    Object.entries(variables).forEach(([key, value]) => {
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      processedHtml = processedHtml.replace(regex, String(value || ''));
+    });
+    
+    // Process conditional blocks {{#if condition}}...{{/if}}
+    processedHtml = this.processConditionals(processedHtml, variables);
+    
+    // Process loops {{#each array}}...{{/each}}
+    processedHtml = this.processLoops(processedHtml, variables);
+    
+    return processedHtml;
+  }
+  
+  private processConditionals(html: string, variables: Record<string, any>): string {
+    const conditionalRegex = /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g;
+    
+    return html.replace(conditionalRegex, (match, condition, content) => {
+      const value = variables[condition];
+      return value ? content : '';
+    });
+  }
+  
+  private processLoops(html: string, variables: Record<string, any>): string {
+    const loopRegex = /\{\{#each\s+(\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g;
+    
+    return html.replace(loopRegex, (match, arrayName, template) => {
+      const array = variables[arrayName];
+      if (!Array.isArray(array)) return '';
+      
+      return array.map(item => {
+        let itemHtml = template;
+        Object.entries(item).forEach(([key, value]) => {
+          const regex = new RegExp(`{{${key}}}`, 'g');
+          itemHtml = itemHtml.replace(regex, String(value || ''));
+        });
+        return itemHtml;
+      }).join('');
+    });
+  }
+  
+  private async getModernTemplateHTML(): Promise<string> {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{siteTitle}}</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+        .hero { background: linear-gradient(135deg, {{primaryColor}} 0%, {{secondaryColor}} 100%); color: white; padding: 100px 20px; text-align: center; }
+        .hero h1 { font-size: 3rem; margin-bottom: 20px; }
+        .hero p { font-size: 1.2rem; margin-bottom: 30px; }
+        .cta-button { background: white; color: {{primaryColor}}; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <h1>{{siteTitle}}</h1>
+        <p>{{businessBio}}</p>
+        <a href="{{bookNowUrl}}" class="cta-button">Book Now</a>
+    </section>
+    {{servicesHtml}}
+    {{providersHtml}}
+    {{reviewsHtml}}
+</body>
+</html>`;
+  }
+  
+  private async getClassicTemplateHTML(): Promise<string> {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{siteTitle}}</title>
+    <style>
+        body { font-family: 'Georgia', serif; margin: 0; padding: 0; background: #f8f8f8; }
+        .header { background: {{primaryColor}}; color: white; padding: 60px 20px; text-align: center; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 15px; }
+        .content { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        .cta-button { background: {{primaryColor}}; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>{{siteTitle}}</h1>
+        <p>{{businessBio}}</p>
+    </header>
+    <div class="content">
+        {{servicesHtml}}
+        {{providersHtml}}
+        <a href="{{bookNowUrl}}" class="cta-button">Schedule Appointment</a>
+    </div>
+</body>
+</html>`;
+  }
+  
+  private async getCreativeTemplateHTML(): Promise<string> {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{siteTitle}}</title>
+    <style>
+        body { font-family: 'Helvetica', sans-serif; margin: 0; padding: 0; background: #000; color: #fff; }
+        .hero { background: linear-gradient(45deg, {{primaryColor}}, {{secondaryColor}}); padding: 120px 20px; text-align: center; }
+        .hero h1 { font-size: 4rem; margin-bottom: 20px; font-weight: 300; }
+        .hero p { font-size: 1.3rem; margin-bottom: 40px; }
+        .cta-button { background: transparent; color: white; border: 2px solid white; padding: 15px 30px; border-radius: 0; text-decoration: none; font-weight: 400; transition: all 0.3s; }
+        .cta-button:hover { background: white; color: {{primaryColor}}; }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <h1>{{siteTitle}}</h1>
+        <p>{{businessBio}}</p>
+        <a href="{{bookNowUrl}}" class="cta-button">BOOK NOW</a>
+    </section>
+    {{servicesHtml}}
+    {{providersHtml}}
+</body>
+</html>`;
+  }
+  
+  protected async optimizeContent(content: string, websiteData: Partial<ShopWebsite>): Promise<string> {
+    let optimized = await super.optimizeContent(content, websiteData);
+    
+    // HTML-specific optimizations
+    optimized = optimized
+      .replace(/\s*\n\s*/g, ' ')  // Remove line breaks and extra spaces
+      .replace(/<!--[\s\S]*?-->/g, '')  // Remove HTML comments
+      .replace(/\s{2,}/g, ' ')  // Replace multiple spaces with single space
+      .trim();
+    
+    return optimized;
+  }
+}
+
+/**
+ * JSON Template Processor - handles JSON-based templates
+ */
+class JSONTemplateProcessor extends TemplateProcessor {
+  protected async processTemplateContent(template: WebsiteTemplate, variables: Record<string, any>): Promise<string> {
+    // Process JSON-based template configuration
+    const jsonConfig = {
+      template: template.id,
+      data: variables,
+      features: template.features,
+      colors: {
+        primary: variables.primaryColor || template.defaultColors.primary,
+        secondary: variables.secondaryColor || template.defaultColors.secondary,
+      },
+      sections: this.generateSections(variables, template),
+    };
+    
+    return JSON.stringify(jsonConfig, null, 2);
+  }
+  
+  private generateSections(variables: Record<string, any>, template: WebsiteTemplate): any[] {
+    const sections = [];
+    
+    // Hero section
+    sections.push({
+      type: 'hero',
+      title: variables.siteTitle,
+      subtitle: variables.businessBio,
+      backgroundImage: variables.heroImageUrl,
+      ctaText: 'Book Now',
+      ctaUrl: variables.bookNowUrl,
+    });
+    
+    // Services section
+    if (template.features.hasServicesGrid && variables.services) {
+      sections.push({
+        type: 'services',
+        title: 'Our Services',
+        items: variables.services,
+      });
+    }
+    
+    // Team section
+    if (template.features.hasTeamSection && variables.providers) {
+      sections.push({
+        type: 'team',
+        title: 'Meet Our Team',
+        members: variables.providers,
+      });
+    }
+    
+    return sections;
+  }
+}
+
+/**
+ * Template Factory - creates appropriate processor based on output format
+ */
+class TemplateProcessorFactory {
+  static createProcessor(outputFormat: 'html' | 'json' = 'html'): TemplateProcessor {
+    switch (outputFormat) {
+      case 'html':
+        return new HTMLTemplateProcessor();
+      case 'json':
+        return new JSONTemplateProcessor();
+      default:
+        return new HTMLTemplateProcessor();
+    }
+  }
+}
+
 export interface WebsiteBuilderConfig {
   apiBaseUrl: string;
   cdnUrl: string;
@@ -30,6 +360,18 @@ export class WebsiteBuilderService {
   };
 
   /**
+   * Process template using Template Method pattern
+   */
+  static async processTemplate(
+    websiteData: Partial<ShopWebsite>, 
+    templateId: string, 
+    outputFormat: 'html' | 'json' = 'html'
+  ): Promise<string> {
+    const processor = TemplateProcessorFactory.createProcessor(outputFormat);
+    return await processor.processTemplate(websiteData, templateId);
+  }
+
+  /**
    * Save website with caching and validation
    */
   static async saveWebsite(websiteData: Partial<ShopWebsite>): Promise<APIResponse<ShopWebsite>> {
@@ -42,19 +384,12 @@ export class WebsiteBuilderService {
 
       console.log('Saving website data:', websiteData);
       
-      // In a real app, this would be an API call
-      // const response = await fetch(`${this.config.apiBaseUrl}/websites`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(websiteData),
-      // });
-      
       // Simulate API response
       const savedWebsite: ShopWebsite = {
         id: websiteData.id || `website_${Date.now()}`,
         shopId: websiteData.shopId || 'default_shop',
         ...websiteData,
-        lastModified: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       } as ShopWebsite;
 
       // Cache the saved website
@@ -113,7 +448,7 @@ export class WebsiteBuilderService {
         ...optimizedData,
         isPublished: true,
         publishedAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       } as ShopWebsite;
 
       const liveUrl = this.generateWebsiteUrl(websiteData.subdomainSlug);
@@ -165,10 +500,6 @@ export class WebsiteBuilderService {
         return cached;
       }
 
-      // In a real app, this would fetch from API
-      // const response = await fetch(`${this.config.apiBaseUrl}/templates/${templateId}`);
-      // const template = await response.json();
-      
       // For now, return mock data
       const mockTemplate: WebsiteTemplate = {
         id: templateId as any,
@@ -313,10 +644,6 @@ export class WebsiteBuilderService {
         return cached;
       }
 
-      // In a real app, this would check with API
-      // const response = await fetch(`${this.config.apiBaseUrl}/websites/check-slug/${slug}`);
-      // const { available } = await response.json();
-      
       // For now, simulate availability check
       const reservedSlugs = ['api', 'admin', 'www', 'app', 'mobile', 'web', 'help', 'support'];
       const available = !reservedSlugs.includes(slug.toLowerCase());
@@ -591,3 +918,6 @@ export class WebsiteBuilderService {
     }
   }
 }
+
+// Export the Template Processor classes for external use
+export { TemplateProcessor, HTMLTemplateProcessor, JSONTemplateProcessor, TemplateProcessorFactory };
