@@ -112,30 +112,61 @@ export default function SettingsScreen() {
 
   const handleSaveService = async (serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      console.log('Shop Owner Settings: Saving service:', serviceData.name);
+      
       if (editingService && updateMasterService) {
+        console.log('Shop Owner Settings: Updating existing service:', editingService.id);
         await updateMasterService(editingService.id, serviceData);
       } else if (addMasterService) {
+        console.log('Shop Owner Settings: Adding new service');
         await addMasterService(serviceData);
       } else {
-        console.error('Service functions not available');
+        console.error('Shop Owner Settings: Service functions not available');
+        Alert.alert('Error', 'Service management functions are not available. Please try refreshing the app.');
         throw new Error('Service functions not available');
       }
+      
+      console.log('Shop Owner Settings: Service saved successfully');
     } catch (error) {
-      console.error('Error saving service:', error);
+      console.error('Shop Owner Settings: Error saving service:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save service';
+      Alert.alert('Error', `Failed to save service: ${errorMessage}`);
       throw error;
     }
   };
 
   const handleDeleteService = async (serviceId: string) => {
-    try {
-      if (deleteMasterService) {
-        await deleteMasterService(serviceId);
-      } else {
-        console.error('Delete service function not available');
-      }
-    } catch (error) {
-      console.error('Error deleting service:', error);
-    }
+    Alert.alert(
+      'Delete Service',
+      'Are you sure you want to delete this service? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('Shop Owner Settings: Deleting service:', serviceId);
+              
+              if (deleteMasterService) {
+                await deleteMasterService(serviceId);
+                console.log('Shop Owner Settings: Service deleted successfully');
+              } else {
+                console.error('Shop Owner Settings: Delete service function not available');
+                Alert.alert('Error', 'Delete function is not available. Please try refreshing the app.');
+              }
+            } catch (error) {
+              console.error('Shop Owner Settings: Error deleting service:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Failed to delete service';
+              Alert.alert('Error', `Failed to delete service: ${errorMessage}`);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const renderMasterServices = () => {
@@ -235,7 +266,7 @@ export default function SettingsScreen() {
               router.push('/shop-settings/new');
             } catch (error) {
               console.error('Shop Owner Settings: Navigation error:', error);
-              Alert.alert('Error', 'Unable to navigate to shop settings');
+              Alert.alert('Navigation Error', 'Unable to navigate to shop settings. Please try again.');
             }
           },
         },
@@ -262,7 +293,7 @@ export default function SettingsScreen() {
               router.push('/(app)/(shop-owner)/(tabs)/team');
             } catch (error) {
               console.error('Shop Owner Settings: Navigation error:', error);
-              Alert.alert('Error', 'Unable to navigate to team management');
+              Alert.alert('Navigation Error', 'Unable to navigate to team management. Please try again.');
             }
           },
         },
@@ -278,7 +309,7 @@ export default function SettingsScreen() {
               router.push('/(app)/(shop-owner)/(tabs)/website');
             } catch (error) {
               console.error('Shop Owner Settings: Navigation error:', error);
-              Alert.alert('Error', 'Unable to navigate to website builder');
+              Alert.alert('Navigation Error', 'Unable to navigate to website builder. Please try again.');
             }
           },
         },
@@ -337,7 +368,7 @@ export default function SettingsScreen() {
               router.push('/payout-settings');
             } catch (error) {
               console.error('Shop Owner Settings: Navigation error:', error);
-              Alert.alert('Error', 'Unable to navigate to payout settings');
+              Alert.alert('Navigation Error', 'Unable to navigate to payout settings. Please try again.');
             }
           },
         },

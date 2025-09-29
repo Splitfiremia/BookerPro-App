@@ -1,40 +1,72 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  Modal, 
-  StyleSheet, 
-  TouchableOpacity, 
-  TouchableWithoutFeedback 
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { COLORS, FONTS } from '@/constants/theme';
 
-type AlertModalProps = {
+interface AlertButton {
+  text: string;
+  style?: 'default' | 'cancel' | 'destructive';
+  onPress?: () => void;
+}
+
+interface AlertModalProps {
   visible: boolean;
   title: string;
   message: string;
+  buttons: AlertButton[];
   onClose: () => void;
-  type?: 'success' | 'error' | 'warning' | 'info';
-};
+}
 
-const AlertModal: React.FC<AlertModalProps> = ({
+export default function AlertModal({
   visible,
   title,
   message,
+  buttons,
   onClose,
-  type = 'info',
-}) => {
-  const getTypeColor = () => {
-    switch (type) {
-      case 'success':
-        return COLORS.success || '#10B981';
-      case 'error':
-        return COLORS.error || '#EF4444';
-      case 'warning':
-        return COLORS.warning || '#F59E0B';
-      case 'info':
+}: AlertModalProps) {
+  const handleButtonPress = (button: AlertButton) => {
+    // Validate button before processing
+    if (!button || typeof button !== 'object') {
+      console.warn('AlertModal: Invalid button object');
+      onClose();
+      return;
+    }
+    
+    if (button.onPress && typeof button.onPress === 'function') {
+      try {
+        button.onPress();
+      } catch (error) {
+        console.error('AlertModal: Error executing button onPress:', error);
+      }
+    }
+    onClose();
+  };
+
+  const getButtonStyle = (style?: string) => {
+    switch (style) {
+      case 'destructive':
+        return styles.destructiveButton;
+      case 'cancel':
+        return styles.cancelButton;
       default:
-        return COLORS.info || '#3B82F6';
+        return styles.defaultButton;
+    }
+  };
+
+  const getButtonTextStyle = (style?: string) => {
+    switch (style) {
+      case 'destructive':
+        return styles.destructiveButtonText;
+      case 'cancel':
+        return styles.cancelButtonText;
+      default:
+        return styles.defaultButtonText;
     }
   };
 
@@ -43,31 +75,47 @@ const AlertModal: React.FC<AlertModalProps> = ({
       visible={visible}
       transparent
       animationType="fade"
-      statusBarTranslucent
+      onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
-            <View style={styles.container}>
-              <View style={[styles.header, { backgroundColor: getTypeColor() }]}>
-                <Text style={styles.title}>{title}</Text>
-              </View>
-              <View style={styles.content}>
-                <Text style={styles.message}>{message}</Text>
-              </View>
-              <TouchableOpacity 
-                style={[styles.button, { backgroundColor: getTypeColor() }]} 
-                onPress={onClose}
-              >
-                <Text style={styles.buttonText}>OK</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableWithoutFeedback>
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          <View style={styles.content}>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.message}>{message}</Text>
+          </View>
+          
+          <View style={styles.buttonContainer}>
+            {buttons.map((button, index) => {
+              // Validate button text
+              const buttonText = button.text?.trim() || 'OK';
+              
+              return (
+                <TouchableOpacity
+                  key={`${buttonText}-${index}`}
+                  style={[
+                    styles.button,
+                    getButtonStyle(button.style),
+                    buttons.length === 1 && styles.singleButton,
+                    index === 0 && buttons.length > 1 && styles.firstButton,
+                    index === buttons.length - 1 && buttons.length > 1 && styles.lastButton,
+                  ]}
+                  onPress={() => handleButtonPress(button)}
+                >
+                  <Text style={[
+                    styles.buttonText,
+                    getButtonTextStyle(button.style)
+                  ]}>
+                    {buttonText}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
-      </TouchableWithoutFeedback>
+      </View>
     </Modal>
   );
-};
+}
 
 const styles = StyleSheet.create({
   overlay: {
@@ -75,46 +123,92 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   container: {
-    width: '80%',
-    maxWidth: 400,
-    backgroundColor: COLORS.background,
-    borderRadius: 8,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    minWidth: Platform.OS === 'web' ? 300 : 280,
+    maxWidth: Platform.OS === 'web' ? 400 : 320,
     overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      },
+    }),
   },
-  header: {
-    padding: 16,
+  content: {
+    padding: 20,
     alignItems: 'center',
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: COLORS.text,
     fontFamily: FONTS.bold,
-  },
-  content: {
-    padding: 16,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   message: {
-    fontSize: 16,
-    color: COLORS.text,
-    textAlign: 'center',
+    fontSize: 14,
+    color: COLORS.secondary,
     fontFamily: FONTS.regular,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
   },
   button: {
-    padding: 12,
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 8,
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  singleButton: {
+    borderRadius: 0,
+  },
+  firstButton: {
+    borderRightWidth: 1,
+    borderRightColor: COLORS.border,
+  },
+  lastButton: {
+    // No additional styles needed
+  },
+  defaultButton: {
+    backgroundColor: 'transparent',
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+  },
+  destructiveButton: {
+    backgroundColor: 'transparent',
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    fontFamily: FONTS.bold,
+    fontWeight: '500',
+    fontFamily: FONTS.regular,
+  },
+  defaultButtonText: {
+    color: COLORS.primary,
+  },
+  cancelButtonText: {
+    color: COLORS.secondary,
+  },
+  destructiveButtonText: {
+    color: '#FF3B30',
   },
 });
-
-export default AlertModal;

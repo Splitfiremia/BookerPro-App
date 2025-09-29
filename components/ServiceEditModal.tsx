@@ -38,8 +38,8 @@ export default function ServiceEditModal({
     if (service) {
       setName(service.name);
       setDescription(service.description || '');
-      setDuration(service.duration.toString());
-      setPrice(service.price.toString());
+      setDuration(service.baseDuration.toString());
+      setPrice(service.basePrice.toString());
     } else {
       setName('');
       setDescription('');
@@ -69,8 +69,8 @@ export default function ServiceEditModal({
       await onSave({
         name: name.trim(),
         description: description.trim(),
-        duration: Number(duration),
-        price: Number(price),
+        baseDuration: Number(duration),
+        basePrice: Number(price),
         isActive: true,
       });
       onClose();
