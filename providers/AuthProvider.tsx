@@ -250,20 +250,23 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   // Logout function
   const logout = useCallback(async () => {
-    console.log('AuthProvider: Logging out user');
+    console.log('AuthProvider: Starting logout process');
     setIsLoading(true);
     
     try {
-      // Clear user state immediately to prevent auto-redirect
+      // Clear user state immediately to prevent auto-redirect loops
+      console.log('AuthProvider: Clearing user state immediately');
       setUser(null);
-      console.log('AuthProvider: User state cleared immediately');
       
       // Clear user from storage
+      console.log('AuthProvider: Removing user from storage');
       await remove("user");
-      console.log('AuthProvider: User removed from storage');
       
-      // Ensure state propagation
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Additional delay to ensure all state updates propagate
+      console.log('AuthProvider: Waiting for state propagation');
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      console.log('AuthProvider: Logout completed successfully');
       
     } catch (error) {
       console.error('AuthProvider: Logout error:', error);
@@ -272,7 +275,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       console.log('AuthProvider: User state cleared despite storage error');
     } finally {
       setIsLoading(false);
-      console.log('AuthProvider: Logout process completed');
+      console.log('AuthProvider: Logout process finalized');
     }
   }, [remove]);
 

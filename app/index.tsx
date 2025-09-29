@@ -37,11 +37,19 @@ export default function LandingScreen() {
       
       const redirectToRoleDashboard = () => {
         try {
-          // Double-check authentication state before redirecting
+          // Double-check authentication state before redirecting to prevent logout race conditions
           if (!isAuthenticated || !user) {
             console.log('Index: User no longer authenticated, skipping redirect');
             return;
           }
+          
+          // Additional check to ensure user object is still valid
+          if (!user.role || !user.email) {
+            console.log('Index: Invalid user object, skipping redirect');
+            return;
+          }
+          
+          console.log('Index: Redirecting user with role:', user.role);
           
           switch (user.role) {
             case "client":
@@ -63,8 +71,8 @@ export default function LandingScreen() {
         }
       };
       
-      // Small delay to prevent redirect loops and allow logout to complete
-      const timeoutId = setTimeout(redirectToRoleDashboard, 200);
+      // Longer delay to ensure logout operations complete before redirect
+      const timeoutId = setTimeout(redirectToRoleDashboard, 500);
       return () => clearTimeout(timeoutId);
     }
   }, [isInitialized, isAuthenticated, user, isDeveloperMode]);
