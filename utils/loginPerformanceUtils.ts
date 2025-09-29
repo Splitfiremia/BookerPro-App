@@ -1,7 +1,6 @@
+import { useCallback, useRef, useEffect } from 'react';
 import { Platform } from 'react-native';
-import performanceCache from '../services/PerformanceCacheService';
 
-// Performance monitoring utilities
 interface PerformanceMetric {
   name: string;
   startTime: number;
@@ -12,8 +11,7 @@ interface PerformanceMetric {
 
 interface LoginPerformanceData {
   authenticationTime: number;
-  dataFetchTime: number;
-  providerLoadTime: number;
+  dataLoadingTime: number;
   dashboardRenderTime: number;
   totalLoginTime: number;
   userRole: string;
@@ -21,316 +19,286 @@ interface LoginPerformanceData {
 }
 
 class LoginPerformanceMonitor {
-  private metrics = new Map<string, PerformanceMetric>();
-  private loginSessions = new Map<string, Partial<LoginPerformanceData>>();
+  private metrics: Map<string, PerformanceMetric> = new Map();
+  private loginStartTime: number = 0;
+  private authCompleteTime: number = 0;
+  private dataLoadCompleteTime: number = 0;
+  private dashboardRenderCompleteTime: number = 0;
 
-  // Start timing a metric
-  startTiming(metricName: string, metadata?: Record<string, any>): string {
-    const id = `${metricName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // Start tracking login performance
+  startLoginTracking() {
+    console.log('LoginPerformanceMonitor: Starting login performance tracking');
+    this.loginStartTime = Date.now();
+    this.startMetric('total_login');
+  }
+
+  // Mark authentication completion
+  markAuthenticationComplete() {
+    console.log('LoginPerformanceMonitor: Authentication completed');
+    this.authCompleteTime = Date.now();
+    this.endMetric('authentication');
+  }
+
+  // Mark data loading completion
+  markDataLoadingComplete() {
+    console.log('LoginPerformanceMonitor: Data loading completed');
+    this.dataLoadCompleteTime = Date.now();
+    this.endMetric('data_loading');
+  }
+
+  // Mark dashboard render completion
+  markDashboardRenderComplete(userRole: string) {
+    console.log('LoginPerformanceMonitor: Dashboard render completed for role:', userRole);
+    this.dashboardRenderCompleteTime = Date.now();
+    this.endMetric('dashboard_render');
+    this.endMetric('total_login');
     
-    this.metrics.set(id, {
-      name: metricName,
-      startTime: performance.now(),
+    // Calculate and log performance summary
+    this.logPerformanceSummary(userRole);
+  }
+
+  // Start a performance metric
+  private startMetric(name: string, metadata?: Record<string, any>) {
+    const startTime = Date.now();
+    this.metrics.set(name, {
+      name,
+      startTime,
       metadata,
     });
-
-    console.log(`LoginPerformanceMonitor: Started timing ${metricName} (${id})`);
-    return id;
+    
+    if (Platform.OS === 'web' && performance.mark) {
+      performance.mark(`${name}_start`);
+    }
   }
 
-  // End timing a metric
-  endTiming(id: string): number | null {
-    const metric = this.metrics.get(id);
+  // End a performance metric
+  private endMetric(name: string) {
+    const metric = this.metrics.get(name);
     if (!metric) {
-      console.warn(`LoginPerformanceMonitor: Metric ${id} not found`);
-      return null;
-    }
-
-    const endTime = performance.now();
-    const duration = endTime - metric.startTime;
-
-    metric.endTime = endTime;
-    metric.duration = duration;
-
-    console.log(`LoginPerformanceMonitor: ${metric.name} took ${duration.toFixed(2)}ms`);
-
-    // Store in cache for analysis
-    this.storeMetric(metric);
-
-    return duration;
-  }
-
-  // Store metric for later analysis
-  private async storeMetric(metric: PerformanceMetric): Promise<void> {
-    try {
-      const key = `${metric.name}_${Date.now()}`;
-      await performanceCache.set('performance_metrics', key, metric);
-    } catch (error) {
-      console.warn('LoginPerformanceMonitor: Failed to store metric:', error);
-    }
-  }
-
-  // Start login session tracking
-  startLoginSession(sessionId: string, userRole: string): void {
-    this.loginSessions.set(sessionId, {
-      userRole,
-      timestamp: Date.now(),
-    });
-
-    console.log(`LoginPerformanceMonitor: Started login session ${sessionId} for role ${userRole}`);
-  }
-
-  // Update login session with timing data
-  updateLoginSession(sessionId: string, updates: Partial<LoginPerformanceData>): void {
-    const session = this.loginSessions.get(sessionId);
-    if (!session) {
-      console.warn(`LoginPerformanceMonitor: Session ${sessionId} not found`);
+      console.warn('LoginPerformanceMonitor: Metric not found:', name);
       return;
     }
 
-    Object.assign(session, updates);
-    this.loginSessions.set(sessionId, session);
+    const endTime = Date.now();
+    const duration = endTime - metric.startTime;
+    
+    metric.endTime = endTime;
+    metric.duration = duration;
+    
+    if (Platform.OS === 'web' && performance.mark && performance.measure) {
+      performance.mark(`${name}_end`);
+      performance.measure(name, `${name}_start`, `${name}_end`);
+    }
+    
+    console.log(`LoginPerformanceMonitor: ${name} took ${duration}ms`);
   }
 
-  // Complete login session and store results
-  async completeLoginSession(sessionId: string): Promise<LoginPerformanceData | null> {
-    const session = this.loginSessions.get(sessionId);
-    if (!session) {
-      console.warn(`LoginPerformanceMonitor: Session ${sessionId} not found`);
-      return null;
-    }
+  // Log comprehensive performance summary
+  private logPerformanceSummary(userRole: string) {
+    const authTime = this.authCompleteTime - this.loginStartTime;
+    const dataTime = this.dataLoadCompleteTime - this.authCompleteTime;
+    const renderTime = this.dashboardRenderCompleteTime - this.dataLoadCompleteTime;
+    const totalTime = this.dashboardRenderCompleteTime - this.loginStartTime;
 
-    // Calculate total login time
-    const totalLoginTime = (session.authenticationTime || 0) + 
-                          (session.dataFetchTime || 0) + 
-                          (session.providerLoadTime || 0) + 
-                          (session.dashboardRenderTime || 0);
-
-    const completeSession: LoginPerformanceData = {
-      authenticationTime: session.authenticationTime || 0,
-      dataFetchTime: session.dataFetchTime || 0,
-      providerLoadTime: session.providerLoadTime || 0,
-      dashboardRenderTime: session.dashboardRenderTime || 0,
-      totalLoginTime,
-      userRole: session.userRole || 'unknown',
-      timestamp: session.timestamp || Date.now(),
+    const performanceData: LoginPerformanceData = {
+      authenticationTime: authTime,
+      dataLoadingTime: dataTime,
+      dashboardRenderTime: renderTime,
+      totalLoginTime: totalTime,
+      userRole,
+      timestamp: Date.now(),
     };
 
-    // Store session data
-    try {
-      await performanceCache.set('login_sessions', sessionId, completeSession);
-      console.log(`LoginPerformanceMonitor: Completed login session ${sessionId}:`, completeSession);
-    } catch (error) {
-      console.warn('LoginPerformanceMonitor: Failed to store session:', error);
-    }
+    console.log('=== LOGIN PERFORMANCE SUMMARY ===');
+    console.log(`User Role: ${userRole}`);
+    console.log(`Authentication: ${authTime}ms`);
+    console.log(`Data Loading: ${dataTime}ms`);
+    console.log(`Dashboard Render: ${renderTime}ms`);
+    console.log(`Total Login Time: ${totalTime}ms`);
+    console.log('================================');
 
-    // Clean up
-    this.loginSessions.delete(sessionId);
-
-    // Log performance insights
-    this.logPerformanceInsights(completeSession);
-
-    return completeSession;
+    // Identify performance issues
+    this.identifyPerformanceIssues(performanceData);
+    
+    // Store performance data for analytics
+    this.storePerformanceData(performanceData);
   }
 
-  // Log performance insights
-  private logPerformanceInsights(session: LoginPerformanceData): void {
-    const insights: string[] = [];
+  // Identify potential performance issues
+  private identifyPerformanceIssues(data: LoginPerformanceData) {
+    const issues: string[] = [];
 
-    if (session.totalLoginTime > 3000) {
-      insights.push('⚠️ Slow login detected (>3s)');
+    if (data.authenticationTime > 2000) {
+      issues.push('Authentication is slow (>2s)');
     }
 
-    if (session.authenticationTime > 1500) {
-      insights.push('🔐 Authentication is slow (>1.5s)');
+    if (data.dataLoadingTime > 3000) {
+      issues.push('Data loading is slow (>3s)');
     }
 
-    if (session.dataFetchTime > 1000) {
-      insights.push('📊 Data fetching is slow (>1s)');
+    if (data.dashboardRenderTime > 1500) {
+      issues.push('Dashboard rendering is slow (>1.5s)');
     }
 
-    if (session.providerLoadTime > 800) {
-      insights.push('🔧 Provider loading is slow (>800ms)');
+    if (data.totalLoginTime > 5000) {
+      issues.push('Total login time is slow (>5s)');
     }
 
-    if (session.dashboardRenderTime > 500) {
-      insights.push('🎨 Dashboard rendering is slow (>500ms)');
-    }
-
-    if (insights.length > 0) {
-      console.warn('LoginPerformanceMonitor: Performance Issues Detected:');
-      insights.forEach(insight => console.warn(`  ${insight}`));
+    if (issues.length > 0) {
+      console.warn('LoginPerformanceMonitor: Performance issues detected:');
+      issues.forEach(issue => console.warn(`- ${issue}`));
     } else {
-      console.log('✅ LoginPerformanceMonitor: Good login performance!');
+      console.log('LoginPerformanceMonitor: Login performance is within acceptable limits');
     }
   }
 
-  // Get performance statistics
-  async getPerformanceStats(): Promise<{
-    averageLoginTime: number;
-    sessionCount: number;
-    slowSessions: number;
-    roleBreakdown: Record<string, { count: number; averageTime: number }>;
-  }> {
+  // Store performance data for future analysis
+  private async storePerformanceData(data: LoginPerformanceData) {
     try {
-      // This would typically fetch from a more persistent store
-      // For now, we'll return mock data structure
-      return {
-        averageLoginTime: 0,
-        sessionCount: 0,
-        slowSessions: 0,
-        roleBreakdown: {},
-      };
+      // In a real app, you would send this to your analytics service
+      // For now, we'll just store it locally for debugging
+      const storageKey = `login_performance_${data.timestamp}`;
+      
+      if (Platform.OS !== 'web') {
+        // Use dynamic import for AsyncStorage to avoid bundling issues
+        const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
+        await AsyncStorage.setItem(storageKey, JSON.stringify(data));
+      } else {
+        localStorage.setItem(storageKey, JSON.stringify(data));
+      }
+      
+      console.log('LoginPerformanceMonitor: Performance data stored for analysis');
     } catch (error) {
-      console.warn('LoginPerformanceMonitor: Failed to get stats:', error);
-      return {
-        averageLoginTime: 0,
-        sessionCount: 0,
-        slowSessions: 0,
-        roleBreakdown: {},
-      };
+      console.error('LoginPerformanceMonitor: Failed to store performance data:', error);
     }
   }
 
-  // Clear old performance data
-  async clearOldData(olderThanDays: number = 7): Promise<void> {
-    try {
-      await performanceCache.clearNamespace('performance_metrics');
-      await performanceCache.clearNamespace('login_sessions');
-      console.log(`LoginPerformanceMonitor: Cleared data older than ${olderThanDays} days`);
-    } catch (error) {
-      console.warn('LoginPerformanceMonitor: Failed to clear old data:', error);
-    }
+  // Get all metrics
+  getMetrics(): PerformanceMetric[] {
+    return Array.from(this.metrics.values());
+  }
+
+  // Clear all metrics
+  clearMetrics() {
+    this.metrics.clear();
+    this.loginStartTime = 0;
+    this.authCompleteTime = 0;
+    this.dataLoadCompleteTime = 0;
+    this.dashboardRenderCompleteTime = 0;
   }
 }
 
-// Singleton instance
-export const loginPerformanceMonitor = new LoginPerformanceMonitor();
+// Global performance monitor instance
+const loginPerformanceMonitor = new LoginPerformanceMonitor();
 
-// Performance optimization utilities
-export class PerformanceOptimizer {
-  // Debounce function calls
-  static debounce<T extends (...args: any[]) => any>(
-    func: T,
-    wait: number
-  ): (...args: Parameters<T>) => void {
-    let timeout: ReturnType<typeof setTimeout>;
-    
-    return (...args: Parameters<T>) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func(...args), wait);
+// Hook for using login performance monitoring
+export function useLoginPerformanceMonitor() {
+  const isTrackingRef = useRef(false);
+
+  const startLoginTracking = useCallback(() => {
+    if (!isTrackingRef.current) {
+      isTrackingRef.current = true;
+      loginPerformanceMonitor.startLoginTracking();
+    }
+  }, []);
+
+  const markAuthenticationComplete = useCallback(() => {
+    if (isTrackingRef.current) {
+      loginPerformanceMonitor.markAuthenticationComplete();
+    }
+  }, []);
+
+  const markDataLoadingComplete = useCallback(() => {
+    if (isTrackingRef.current) {
+      loginPerformanceMonitor.markDataLoadingComplete();
+    }
+  }, []);
+
+  const markDashboardRenderComplete = useCallback((userRole: string) => {
+    if (isTrackingRef.current) {
+      loginPerformanceMonitor.markDashboardRenderComplete(userRole);
+      isTrackingRef.current = false; // Reset tracking
+    }
+  }, []);
+
+  const clearMetrics = useCallback(() => {
+    isTrackingRef.current = false;
+    loginPerformanceMonitor.clearMetrics();
+  }, []);
+
+  return {
+    startLoginTracking,
+    markAuthenticationComplete,
+    markDataLoadingComplete,
+    markDashboardRenderComplete,
+    clearMetrics,
+    getMetrics: () => loginPerformanceMonitor.getMetrics(),
+  };
+}
+
+// Hook for component render performance tracking
+export function useRenderPerformanceTracking(componentName: string) {
+  const renderStartTime = useRef<number>(0);
+  const mountTime = useRef<number>(0);
+
+  useEffect(() => {
+    // Track component mount time
+    mountTime.current = Date.now();
+    console.log(`RenderPerformance: ${componentName} mounted at ${mountTime.current}`);
+
+    return () => {
+      const unmountTime = Date.now();
+      const lifespan = unmountTime - mountTime.current;
+      console.log(`RenderPerformance: ${componentName} unmounted after ${lifespan}ms`);
     };
-  }
+  }, [componentName]);
 
-  // Throttle function calls
-  static throttle<T extends (...args: any[]) => any>(
-    func: T,
-    limit: number
-  ): (...args: Parameters<T>) => void {
-    let inThrottle: boolean;
-    
-    return (...args: Parameters<T>) => {
-      if (!inThrottle) {
-        func(...args);
-        inThrottle = true;
-        setTimeout(() => inThrottle = false, limit);
-      }
-    };
-  }
+  const startRenderTracking = useCallback(() => {
+    renderStartTime.current = Date.now();
+  }, []);
 
-  // Batch async operations
-  static async batchAsync<T, R>(
-    items: T[],
-    processor: (item: T) => Promise<R>,
-    batchSize: number = 5
-  ): Promise<R[]> {
-    const results: R[] = [];
-    
-    for (let i = 0; i < items.length; i += batchSize) {
-      const batch = items.slice(i, i + batchSize);
-      const batchResults = await Promise.all(batch.map(processor));
-      results.push(...batchResults);
+  const endRenderTracking = useCallback(() => {
+    if (renderStartTime.current > 0) {
+      const renderTime = Date.now() - renderStartTime.current;
+      console.log(`RenderPerformance: ${componentName} render took ${renderTime}ms`);
       
-      // Small delay between batches to prevent overwhelming
-      if (i + batchSize < items.length) {
-        await new Promise(resolve => setTimeout(resolve, 10));
+      if (renderTime > 100) {
+        console.warn(`RenderPerformance: ${componentName} render is slow (${renderTime}ms)`);
       }
+      
+      renderStartTime.current = 0;
+    }
+  }, [componentName]);
+
+  return {
+    startRenderTracking,
+    endRenderTracking,
+  };
+}
+
+// Utility function to measure async operations
+export async function measureAsyncOperation<T>(
+  name: string,
+  operation: () => Promise<T>
+): Promise<T> {
+  const startTime = Date.now();
+  console.log(`AsyncOperation: Starting ${name}`);
+  
+  try {
+    const result = await operation();
+    const duration = Date.now() - startTime;
+    console.log(`AsyncOperation: ${name} completed in ${duration}ms`);
+    
+    if (duration > 1000) {
+      console.warn(`AsyncOperation: ${name} is slow (${duration}ms)`);
     }
     
-    return results;
-  }
-
-  // Preload critical resources
-  static async preloadCriticalData(userRole: string): Promise<void> {
-    const preloadTasks: Promise<void>[] = [];
-
-    // Common data for all roles
-    preloadTasks.push(
-      performanceCache.preload('services', 'common', async () => {
-        // Mock service data loading
-        return { services: [] };
-      })
-    );
-
-    // Role-specific preloading
-    switch (userRole) {
-      case 'client':
-        preloadTasks.push(
-          performanceCache.preload('providers', 'nearby', async () => {
-            // Mock nearby providers loading
-            return { providers: [] };
-          })
-        );
-        break;
-
-      case 'provider':
-        preloadTasks.push(
-          performanceCache.preload('appointments', 'today', async () => {
-            // Mock today's appointments loading
-            return { appointments: [] };
-          })
-        );
-        break;
-
-      case 'owner':
-        preloadTasks.push(
-          performanceCache.preload('analytics', 'dashboard', async () => {
-            // Mock dashboard analytics loading
-            return { metrics: {} };
-          })
-        );
-        break;
-    }
-
-    await Promise.all(preloadTasks);
-    console.log(`PerformanceOptimizer: Preloaded critical data for ${userRole}`);
-  }
-
-  // Optimize for platform
-  static getPlatformOptimizations() {
-    const isWeb = Platform.OS === 'web';
-    const isIOS = Platform.OS === 'ios';
-    const isAndroid = Platform.OS === 'android';
-
-    return {
-      // Reduce animations on web for better performance
-      shouldReduceAnimations: isWeb,
-      
-      // Use native optimizations on mobile
-      useNativeOptimizations: isIOS || isAndroid,
-      
-      // Batch size adjustments
-      batchSize: isWeb ? 3 : 5,
-      
-      // Cache size adjustments
-      cacheMultiplier: isWeb ? 0.7 : 1.0,
-      
-      // Debounce delays
-      debounceDelay: isWeb ? 300 : 200,
-    };
+    return result;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`AsyncOperation: ${name} failed after ${duration}ms:`, error);
+    throw error;
   }
 }
 
-// Export performance utilities
-export { performanceCache };
 export default loginPerformanceMonitor;

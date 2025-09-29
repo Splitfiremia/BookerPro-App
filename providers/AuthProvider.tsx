@@ -4,6 +4,7 @@ import { testUsers } from "@/mocks/users";
 import { clientData, providerData, ownerData } from "@/mocks/userSpecificData";
 import { UserRole } from "@/models/database";
 import { useAsyncStorageBatch } from "@/utils/asyncStorageUtils";
+import { measureAsyncOperation } from "@/utils/loginPerformanceUtils";
 
 export interface User {
   id?: string;
@@ -116,64 +117,73 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   }, [getWithDefault]);
 
-  // Login function
+  // Login function with performance monitoring
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     console.log('AuthProvider: Attempting login for:', email);
     setIsLoading(true);
     
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Find user in test data
-      const foundUser = testUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-      
-      if (!foundUser) {
-        console.log('AuthProvider: User not found');
-        return { success: false, error: 'User not found' };
+    return measureAsyncOperation('user_authentication', async () => {
+      try {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Find user in test data
+        const foundUser = testUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+        
+        if (!foundUser) {
+          console.log('AuthProvider: User not found');
+          return { success: false, error: 'User not found' };
+        }
+        
+        if (foundUser.password !== password) {
+          console.log('AuthProvider: Invalid password');
+          return { success: false, error: 'Invalid password' };
+        }
+        
+        // Create user object without password
+        const { password: _, ...userWithoutPassword } = foundUser;
+        
+        // Add mock data based on role with performance tracking
+        const userData = await measureAsyncOperation('load_user_data', async () => {
+          let userData: User = {
+            ...userWithoutPassword,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          
+          // Add role-specific mock data
+          switch (userData.role) {
+            case 'client':
+              userData.mockData = clientData;
+              break;
+            case 'provider':
+              userData.mockData = providerData;
+              break;
+            case 'owner':
+              userData.mockData = ownerData;
+              break;
+          }
+          
+          return userData;
+        });
+        
+        // Store user data with performance tracking
+        await measureAsyncOperation('store_user_data', async () => {
+          await set("user", userData);
+        });
+        
+        setUser(userData);
+        
+        console.log('AuthProvider: Login successful for:', userData.email, 'Role:', userData.role);
+        return { success: true };
+        
+      } catch (error) {
+        console.error('AuthProvider: Login error:', error);
+        return { success: false, error: 'Login failed' };
+      } finally {
+        setIsLoading(false);
       }
-      
-      if (foundUser.password !== password) {
-        console.log('AuthProvider: Invalid password');
-        return { success: false, error: 'Invalid password' };
-      }
-      
-      // Create user object without password
-      const { password: _, ...userWithoutPassword } = foundUser;
-      
-      // Add mock data based on role
-      let userData: User = {
-        ...userWithoutPassword,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
-      // Add role-specific mock data
-      switch (userData.role) {
-        case 'client':
-          userData.mockData = clientData;
-          break;
-        case 'provider':
-          userData.mockData = providerData;
-          break;
-        case 'owner':
-          userData.mockData = ownerData;
-          break;
-      }
-      
-      // Store user data
-      await set("user", userData);
-      setUser(userData);
-      
-      console.log('AuthProvider: Login successful for:', userData.email, 'Role:', userData.role);
-      return { success: true };
-      
-    } catch (error) {
-      console.error('AuthProvider: Login error:', error);
-      return { success: false, error: 'Login failed' };
-    } finally {
-      setIsLoading(false);
-    }
+    });
   }, [set]);
 
   // Register function

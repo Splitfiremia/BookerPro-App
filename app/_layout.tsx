@@ -1,34 +1,15 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { AuthProvider } from "@/providers/AuthProvider";
-import { WithSafeAreaDeviceProvider } from "@/providers/DeviceProvider";
 
 import { ModeIndicator } from "@/components/ModeIndicator";
-import ErrorBoundary from "@/components/ErrorBoundary";
 import { CriticalErrorBoundary } from "@/components/SpecializedErrorBoundaries";
+import OptimizedProviderTree from "@/providers/OptimizedProviderTree";
 import { COLORS } from "@/constants/theme";
 import { initializeDeepLinking, cleanupDeepLinking } from "@/utils/deepLinkHandler";
 
-// Create QueryClient with hydration-safe settings
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 1000 * 60 * 5,
-      refetchOnWindowFocus: false,
-      gcTime: 1000 * 60 * 10,
-      refetchOnMount: false,
-      refetchOnReconnect: false,
-      networkMode: 'online',
-    },
-    mutations: {
-      networkMode: 'online',
-    },
-  },
-});
+
 
 // Hydration-safe loading fallback
 function LoadingFallback() {
@@ -108,20 +89,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.gestureHandler}>
       <HydrationWrapper>
         <CriticalErrorBoundary componentName="Root Application">
-          <QueryClientProvider client={queryClient}>
-            <ErrorBoundary level="critical" resetOnPropsChange={false}>
-              <WithSafeAreaDeviceProvider>
-                <ErrorBoundary level="warning" resetOnPropsChange={false}>
-                  <AuthProvider>
-                    <ErrorBoundary level="info" resetOnPropsChange={false}>
-                      <RootLayoutNav />
-                    </ErrorBoundary>
-                    <ModeIndicator />
-                  </AuthProvider>
-                </ErrorBoundary>
-              </WithSafeAreaDeviceProvider>
-            </ErrorBoundary>
-          </QueryClientProvider>
+          <OptimizedProviderTree>
+            <RootLayoutNav />
+            <ModeIndicator />
+          </OptimizedProviderTree>
         </CriticalErrorBoundary>
       </HydrationWrapper>
     </GestureHandlerRootView>
