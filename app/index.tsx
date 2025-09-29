@@ -31,11 +31,18 @@ export default function LandingScreen() {
 
   // Auto-redirect authenticated users to their role-specific dashboard
   useEffect(() => {
+    // Only redirect if user is authenticated, initialized, not in developer mode, and not currently logging out
     if (isInitialized && isAuthenticated && user && !isDeveloperMode) {
       console.log('Index: Auto-redirecting authenticated user to role-specific dashboard');
       
       const redirectToRoleDashboard = () => {
         try {
+          // Double-check authentication state before redirecting
+          if (!isAuthenticated || !user) {
+            console.log('Index: User no longer authenticated, skipping redirect');
+            return;
+          }
+          
           switch (user.role) {
             case "client":
               router.replace("/(app)/(client)/(tabs)/home");
@@ -56,8 +63,8 @@ export default function LandingScreen() {
         }
       };
       
-      // Small delay to prevent redirect loops
-      const timeoutId = setTimeout(redirectToRoleDashboard, 100);
+      // Small delay to prevent redirect loops and allow logout to complete
+      const timeoutId = setTimeout(redirectToRoleDashboard, 200);
       return () => clearTimeout(timeoutId);
     }
   }, [isInitialized, isAuthenticated, user, isDeveloperMode]);

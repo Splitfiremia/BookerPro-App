@@ -254,16 +254,16 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     setIsLoading(true);
     
     try {
+      // Clear user state immediately to prevent auto-redirect
+      setUser(null);
+      console.log('AuthProvider: User state cleared immediately');
+      
       // Clear user from storage
       await remove("user");
       console.log('AuthProvider: User removed from storage');
       
-      // Clear user state immediately
-      setUser(null);
-      console.log('AuthProvider: User state cleared');
-      
-      // Small delay to ensure state propagation
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Ensure state propagation
+      await new Promise(resolve => setTimeout(resolve, 100));
       
     } catch (error) {
       console.error('AuthProvider: Logout error:', error);
