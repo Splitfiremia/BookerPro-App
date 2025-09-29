@@ -30,13 +30,12 @@ export default function LandingScreen() {
   }, [isAuthenticated, user, isDeveloperMode, isInitialized]);
 
   // Auto-redirect authenticated users to their role-specific dashboard
-  // Only redirect if user is authenticated and not in developer mode
-  // This prevents the app from auto-redirecting when user wants to stay on login page
+  // This handles both developer mode test logins and regular user sessions
   useEffect(() => {
-    // Only redirect if user is authenticated, initialized, and in developer mode with test login
-    // This prevents auto-redirect when user manually logs out or wants to stay on login page
-    if (isInitialized && isAuthenticated && user && isDeveloperMode) {
-      console.log('Index: Auto-redirecting authenticated user to role-specific dashboard (developer mode)');
+    // Only redirect if user is authenticated and initialized
+    // Skip redirect if user just logged out (to prevent redirect loops)
+    if (isInitialized && isAuthenticated && user) {
+      console.log('Index: Auto-redirecting authenticated user to role-specific dashboard');
       
       const redirectToRoleDashboard = () => {
         try {
@@ -74,8 +73,9 @@ export default function LandingScreen() {
         }
       };
       
-      // Longer delay to ensure logout operations complete before redirect
-      const timeoutId = setTimeout(redirectToRoleDashboard, 500);
+      // Shorter delay for regular users, longer for developer mode to ensure logout operations complete
+      const delay = isDeveloperMode ? 500 : 100;
+      const timeoutId = setTimeout(redirectToRoleDashboard, delay);
       return () => clearTimeout(timeoutId);
     }
   }, [isInitialized, isAuthenticated, user, isDeveloperMode]);
