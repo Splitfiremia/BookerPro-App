@@ -41,8 +41,6 @@ export default class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-
-
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     const errorDetails = {
       error: error.message,
@@ -55,9 +53,6 @@ export default class ErrorBoundary extends Component<Props, State> {
     };
     
     console.error('ErrorBoundary details:', errorDetails);
-    
-    // Store error info in state for display
-    this.setState({ errorInfo });
     
     // Call custom error handler if provided
     if (this.props.onError) {
@@ -83,9 +78,9 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   handleAutoRetry = () => {
     console.log('ErrorBoundary: Auto-retry in 3 seconds');
-    this.resetTimeoutId = window.setTimeout(() => {
+    this.resetTimeoutId = setTimeout(() => {
       this.handleRetry();
-    }, 3000);
+    }, 3000) as any;
   };
 
   componentWillUnmount() {
