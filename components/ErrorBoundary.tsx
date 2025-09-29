@@ -8,7 +8,6 @@ interface Props {
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
   level?: 'critical' | 'warning' | 'info';
-  resetKeys?: (string | number)[];
 }
 
 interface State {
@@ -20,7 +19,6 @@ interface State {
 
 export default class ErrorBoundary extends Component<Props, State> {
   private resetTimeoutId: number | null = null;
-  private previousResetKeys: (string | number)[] = [];
 
   constructor(props: Props) {
     super(props);
@@ -28,7 +26,6 @@ export default class ErrorBoundary extends Component<Props, State> {
       hasError: false, 
       errorId: this.generateErrorId() 
     };
-    this.previousResetKeys = props.resetKeys || [];
   }
 
   private generateErrorId(): string {
@@ -44,24 +41,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-  componentDidUpdate(prevProps: Props) {
-    const { resetKeys } = this.props;
-    const { hasError } = this.state;
-    
-    // Only reset if we have an error and resetKeys have actually changed
-    if (hasError && resetKeys && prevProps.resetKeys) {
-      const prevResetKeys = prevProps.resetKeys;
-      const hasResetKeyChanged = resetKeys.length !== prevResetKeys.length ||
-        resetKeys.some((key, index) => prevResetKeys[index] !== key);
-      
-      if (hasResetKeyChanged) {
-        this.setState({ hasError: false, error: undefined, errorInfo: undefined });
-      }
-    } else if (hasError && resetKeys && !prevProps.resetKeys) {
-      // Handle case where resetKeys were added
-      this.setState({ hasError: false, error: undefined, errorInfo: undefined });
-    }
-  }
+
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     const errorDetails = {
