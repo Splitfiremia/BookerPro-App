@@ -248,34 +248,44 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   }, [user, set]);
 
-  // Logout function
-  const logout = useCallback(async () => {
-    console.log('AuthProvider: Starting logout process');
-    setIsLoading(true);
+  // Logout function - completely rebuilt
+  const logout = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
+    console.log('AuthProvider: Starting fresh logout process');
     
     try {
-      // Clear user state immediately to prevent auto-redirect loops
-      console.log('AuthProvider: Clearing user state immediately');
+      setIsLoading(true);
+      
+      // Step 1: Clear user state immediately
+      console.log('AuthProvider: Clearing user state');
       setUser(null);
       
-      // Clear user from storage
-      console.log('AuthProvider: Removing user from storage');
+      // Step 2: Clear all stored authentication data
+      console.log('AuthProvider: Clearing stored authentication data');
       await remove("user");
       
-      // Additional delay to ensure all state updates propagate
-      console.log('AuthProvider: Waiting for state propagation');
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Step 3: Clear any other auth-related storage if needed
+      // Add any additional cleanup here (tokens, session data, etc.)
+      
+      // Step 4: Wait for state propagation
+      console.log('AuthProvider: Waiting for state updates to propagate');
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       console.log('AuthProvider: Logout completed successfully');
+      return { success: true };
       
     } catch (error) {
       console.error('AuthProvider: Logout error:', error);
-      // Even if AsyncStorage fails, ensure user state is cleared
+      
+      // Even if storage operations fail, ensure user state is cleared
       setUser(null);
-      console.log('AuthProvider: User state cleared despite storage error');
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.log('AuthProvider: User state cleared despite error:', errorMessage);
+      
+      return { success: false, error: errorMessage };
     } finally {
       setIsLoading(false);
-      console.log('AuthProvider: Logout process finalized');
+      console.log('AuthProvider: Logout process completed');
     }
   }, [remove]);
 

@@ -1,114 +1,65 @@
-import { router } from "expo-router";
-
-// Navigation utility for BookerPro app
-// This utility provides a consistent way to navigate between screens
-
-// Define params for routes that need them
-type NavigationParams = {
-  email?: string;
-  role?: "client" | "provider" | "owner";
-  id?: string | number;
-  status?: string;
-};
+import { router } from 'expo-router';
 
 /**
- * Navigate to a screen
- * @param path The path to navigate to
- * @param params Optional parameters to pass to the screen
+ * Handles navigation after successful logout
+ * Ensures consistent behavior across all screens
  */
-export const navigate = (path: string, params?: NavigationParams) => {
-  if (params) {
-    router.push({
-      pathname: path as any,
-      params: params as any,
-    });
-  } else {
-    router.push(path as any);
+export const handlePostLogoutNavigation = async (): Promise<void> => {
+  try {
+    console.log('Navigation: Starting post-logout navigation');
+    
+    // Clear the navigation stack and go to root
+    router.dismissAll();
+    
+    // Small delay to ensure navigation stack is cleared
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Navigate to the login/index screen
+    router.replace('/');
+    
+    console.log('Navigation: Post-logout navigation completed');
+  } catch (error) {
+    console.error('Navigation: Post-logout navigation error:', error);
+    
+    // Fallback: force navigation to root
+    try {
+      router.replace('/');
+    } catch (fallbackError) {
+      console.error('Navigation: Fallback navigation also failed:', fallbackError);
+    }
   }
 };
 
 /**
- * Navigate to a screen and replace the current screen in the history
- * @param path The path to navigate to
- * @param params Optional parameters to pass to the screen
+ * Performs a complete sign out process with proper error handling
+ * @param logout - The logout function from AuthProvider
+ * @returns Promise with success status and optional error message
  */
-export const navigateAndReplace = (path: string, params?: NavigationParams) => {
-  if (params) {
-    router.replace({
-      pathname: path as any,
-      params: params as any,
-    });
-  } else {
-    router.replace(path as any);
+export const performSignOut = async (
+  logout: () => Promise<{ success: boolean; error?: string }>
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    console.log('SignOut: Starting sign out process');
+    
+    // Step 1: Perform logout
+    const logoutResult = await logout();
+    
+    if (!logoutResult.success) {
+      console.error('SignOut: Logout failed:', logoutResult.error);
+      return logoutResult;
+    }
+    
+    console.log('SignOut: Logout successful, handling navigation');
+    
+    // Step 2: Handle navigation
+    await handlePostLogoutNavigation();
+    
+    console.log('SignOut: Sign out process completed successfully');
+    return { success: true };
+    
+  } catch (error) {
+    console.error('SignOut: Sign out process error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Sign out failed';
+    return { success: false, error: errorMessage };
   }
-};
-
-/**
- * Navigate back to the previous screen
- */
-export const goBack = () => {
-  if (router.canGoBack()) {
-    router.back();
-  } else {
-    // Fallback to home if no previous screen
-    router.replace("/");
-  }
-};
-
-/**
- * Navigate to the home screen
- */
-export const goHome = () => {
-  router.replace("/" as any);
-};
-
-/**
- * Navigate to the login screen
- */
-export const goToLogin = () => {
-  router.replace("/(auth)/login" as any);
-};
-
-/**
- * Navigate to the signup screen
- */
-export const goToSignup = (email: string, role: "client" | "provider" | "owner") => {
-  router.push({
-    pathname: "/(auth)/signup" as any,
-    params: { email, role } as any,
-  });
-};
-
-/**
- * Navigate to the role selection screen
- */
-export const goToRoleSelection = () => {
-  router.push("/(auth)/role-selection" as any);
-};
-
-/**
- * Navigate to the booking screen
- */
-export const goToBooking = () => {
-  router.push("/booking" as any);
-};
-
-/**
- * Navigate to the appointment details screen
- */
-export const goToAppointmentDetails = (id: string, status: string) => {
-  router.push({
-    pathname: "/appointment-details" as any,
-    params: { id, status } as any,
-  });
-};
-
-/**
- * Navigate to a provider's profile
- */
-export const goToProviderProfile = (id: string) => {
-  router.push({
-    pathname: "/provider/[id]" as any,
-    params: { id } as any,
-  });
 };

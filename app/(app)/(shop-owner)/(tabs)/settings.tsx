@@ -6,6 +6,7 @@ import { ChevronRight, Bell, Lock, CreditCard, HelpCircle, LogOut, Store, Users,
 import { useServices } from '@/providers/ServicesProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { useShopManagement } from '@/providers/ShopManagementProvider';
+import { performSignOut } from '@/utils/navigation';
 import ServiceEditModal from '@/components/ServiceEditModal';
 import { Service } from '@/models/database';
 import { COLORS, FONTS, GLASS_STYLES } from '@/constants/theme';
@@ -81,30 +82,26 @@ export default function SettingsScreen() {
           text: "Sign Out",
           style: "destructive",
           onPress: async () => {
+            setIsSigningOut(true);
+            
             try {
-              console.log('Shop Owner Settings: Starting logout process');
-              // Set loading state to show feedback to user
-              setIsSigningOut(true);
+              console.log('Shop Owner Settings: Starting sign out process');
+              const result = await performSignOut(logout);
               
-              // Perform logout first to avoid redirect race conditions
-              await logout();
-              console.log('Shop Owner Settings: Logout completed');
-              
-              // Add a longer delay to ensure all state updates are processed
-              // This is critical to prevent the auth state race condition
-              await new Promise(resolve => setTimeout(resolve, 800));
-              
-              console.log('Shop Owner Settings: Auth state should be cleared, navigating to index');
-              // Navigate after successful logout and sufficient delay
-              router.replace('/');
+              if (!result.success) {
+                console.error('Shop Owner Settings: Sign out failed:', result.error);
+                Alert.alert(
+                  "Sign Out Error",
+                  result.error || 'Failed to sign out. Please try again.'
+                );
+              }
             } catch (error) {
-              console.error('Shop Owner Settings: Logout error:', error);
-              // Show error to user
+              console.error('Shop Owner Settings: Unexpected sign out error:', error);
               Alert.alert(
                 "Sign Out Error",
-                "There was a problem signing out. Please try again."
+                'An unexpected error occurred. Please try again.'
               );
-              // Reset signing out state
+            } finally {
               setIsSigningOut(false);
             }
           },

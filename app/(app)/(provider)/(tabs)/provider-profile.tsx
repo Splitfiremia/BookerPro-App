@@ -5,6 +5,7 @@ import { COLORS } from '@/constants/theme';
 import { Clock, Settings, Edit, LogOut, CreditCard, Search, Users, Award, Store, QrCode, Gift, HelpCircle, Banknote, X, Plus, DollarSign, Trash2, Camera, Image as ImageIcon, Video, Star, Eye, Heart, Grid3X3, Upload, Palette, Scissors } from 'lucide-react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { useServices } from '@/providers/ServicesProvider';
+import { performSignOut } from '@/utils/navigation';
 import { router } from 'expo-router';
 import ServiceEditModal from '@/components/ServiceEditModal';
 import EditProviderModal from '@/components/EditProviderModal';
@@ -27,7 +28,7 @@ export default function ProviderProfileScreen() {
   } = useServices();
   const insets = useSafeAreaInsets();
 
-  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showServiceModal, setShowServiceModal] = useState(false);
@@ -37,34 +38,30 @@ export default function ProviderProfileScreen() {
   const [editingProvider, setEditingProvider] = useState<any>(null);
   const [activePortfolioTab, setActivePortfolioTab] = useState<'gallery' | 'stats' | 'achievements'>('gallery');
 
-  const handleSignOut = () => {
-    setShowSignOutModal(true);
-  };
+  const handleSignOut = async () => {
+    // Prevent multiple sign out attempts
+    if (isSigningOut) {
+      console.log('Provider Profile: Already signing out, ignoring request');
+      return;
+    }
 
-  const confirmSignOut = async () => {
+    setIsSigningOut(true);
+    
     try {
-      console.log('Provider Profile: Starting logout process');
-      await logout();
-      console.log('Provider Profile: Logout completed, navigating to index');
+      console.log('Provider Profile: Starting sign out process');
+      const result = await performSignOut(logout);
       
-      // Use a small delay to ensure auth state is updated before navigation
-      setTimeout(() => {
-        try {
-          router.replace('/');
-          console.log('Provider Profile: Navigation to index completed');
-        } catch (navError) {
-          console.error('Provider Profile: Navigation error:', navError);
-          // Force reload the app if navigation fails
-          router.dismissAll();
-          router.replace('/');
-        }
-      }, 100);
+      if (!result.success) {
+        console.error('Provider Profile: Sign out failed:', result.error);
+        setErrorMessage(result.error || 'Failed to sign out. Please try again.');
+        setShowErrorModal(true);
+      }
     } catch (error) {
-      console.error('Error signing out:', error);
-      setErrorMessage('Failed to sign out. Please try again.');
+      console.error('Provider Profile: Unexpected sign out error:', error);
+      setErrorMessage('An unexpected error occurred. Please try again.');
       setShowErrorModal(true);
     } finally {
-      setShowSignOutModal(false);
+      setIsSigningOut(false);
     }
   };
 
@@ -248,33 +245,7 @@ export default function ProviderProfileScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]} testID="provider-profile-screen">
-      {/* Sign Out Confirmation Modal */}
-      <Modal
-        visible={showSignOutModal}
-        transparent
-        animationType="fade"
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Sign Out</Text>
-            <Text style={styles.modalText}>Are you sure you want to sign out?</Text>
-            <View style={styles.modalButtonsContainer}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]} 
-                onPress={() => setShowSignOutModal(false)}
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.confirmButton]} 
-                onPress={confirmSignOut}
-              >
-                <Text style={styles.confirmButtonText}>Sign Out</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+
 
       {/* Error Modal */}
       <Modal
@@ -589,9 +560,15 @@ export default function ProviderProfileScreen() {
           </View>
         )}
 
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <LogOut size={20} color="#FFFFFF" />
-          <Text style={styles.signOutText}>Sign Out</Text>
+        <TouchableOpacity 
+          style={[styles.signOutButton, isSigningOut && styles.disabledSignOutButton]} 
+          onPress={handleSignOut}
+          disabled={isSigningOut}
+        >
+          <LogOut size={20} color={isSigningOut ? '#999' : '#FFFFFF'} />
+          <Text style={[styles.signOutText, isSigningOut && styles.disabledSignOutText]}>
+            {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+          </Text>
         </TouchableOpacity>
         
         {/* Bottom spacing for safe scrolling */}
@@ -1487,5 +1464,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.secondary,
     textAlign: 'center',
+  },
+  disabledSignOutButton: {
+    opacity: 0.6,
+  },
+  disabledSignOutText: {
+    color: '#999',
   },
 });

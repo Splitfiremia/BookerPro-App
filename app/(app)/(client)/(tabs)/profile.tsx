@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -23,7 +23,7 @@ import {
   Edit,
 } from 'lucide-react-native';
 import { useAuth } from '@/providers/AuthProvider';
-import { router } from 'expo-router';
+import { performSignOut } from '@/utils/navigation';
 
 interface MenuItem {
   id: string;
@@ -36,39 +36,48 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const insets = useSafeAreaInsets();
 
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
   const handleLogout = () => {
+    // Prevent multiple logout attempts
+    if (isSigningOut) {
+      console.log('Client Profile: Already signing out, ignoring request');
+      return;
+    }
+
     Alert.alert(
-      'Log Out',
-      'Are you sure you want to log out?',
+      'Sign Out',
+      'Are you sure you want to sign out?',
       [
         {
           text: 'Cancel',
           style: 'cancel',
         },
         {
-          text: 'Log Out',
+          text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
+            setIsSigningOut(true);
+            
             try {
-              console.log('Client Profile: Starting logout process');
-              await logout();
-              console.log('Client Profile: Logout completed, navigating to index');
+              console.log('Client Profile: Starting sign out process');
+              const result = await performSignOut(logout);
               
-              // Use a small delay to ensure auth state is updated before navigation
-              setTimeout(() => {
-                try {
-                  router.replace('/');
-                  console.log('Client Profile: Navigation to index completed');
-                } catch (navError) {
-                  console.error('Client Profile: Navigation error:', navError);
-                  // Force reload the app if navigation fails
-                  router.dismissAll();
-                  router.replace('/');
-                }
-              }, 100);
+              if (!result.success) {
+                console.error('Client Profile: Sign out failed:', result.error);
+                Alert.alert(
+                  'Sign Out Error',
+                  result.error || 'Failed to sign out. Please try again.'
+                );
+              }
             } catch (error) {
-              console.error('Client Profile: Logout error:', error);
-              Alert.alert('Error', 'Failed to log out. Please try again.');
+              console.error('Client Profile: Unexpected sign out error:', error);
+              Alert.alert(
+                'Sign Out Error',
+                'An unexpected error occurred. Please try again.'
+              );
+            } finally {
+              setIsSigningOut(false);
             }
           },
         },
@@ -207,14 +216,17 @@ export default function ProfileScreen() {
           {menuItems.map(renderMenuItem)}
         </View>
 
-        {/* Logout Button */}
+        {/* Sign Out Button */}
         <TouchableOpacity
-          style={styles.logoutButton}
+          style={[styles.logoutButton, isSigningOut && styles.disabledButton]}
           onPress={handleLogout}
+          disabled={isSigningOut}
           testID="logout-button"
         >
-          <LogOut size={20} color={COLORS.error} />
-          <Text style={styles.logoutText}>Log Out</Text>
+          <LogOut size={20} color={isSigningOut ? COLORS.secondary : COLORS.error} />
+          <Text style={[styles.logoutText, isSigningOut && styles.disabledText]}>
+            {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -327,5 +339,11 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md,
     fontFamily: FONTS.regular,
     marginLeft: SPACING.md,
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  disabledText: {
+    color: COLORS.secondary,
   },
 });

@@ -319,8 +319,12 @@ export default function LandingScreen() {
                   <TouchableOpacity
                     style={[styles.statusButton, { backgroundColor: 'rgba(255, 68, 68, 0.1)', borderColor: '#FF4444' }]}
                     onPress={async () => {
-                      await logout();
-                      console.log('Cleared stored authentication data');
+                      const result = await logout();
+                      if (result.success) {
+                        console.log('Cleared stored authentication data');
+                      } else {
+                        console.error('Failed to clear data:', result.error);
+                      }
                     }}
                     testID="clear-data-button"
                   >
@@ -338,8 +342,12 @@ export default function LandingScreen() {
                 <TouchableOpacity
                   style={styles.logoutButton}
                   onPress={async () => {
-                    await logout();
-                    console.log('User logged out');
+                    const result = await logout();
+                    if (result.success) {
+                      console.log('User logged out');
+                    } else {
+                      console.error('Logout failed:', result.error);
+                    }
                   }}
                   testID="logout-button"
                 >
