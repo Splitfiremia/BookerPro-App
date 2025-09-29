@@ -8,8 +8,7 @@ interface Props {
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
   level?: 'critical' | 'warning' | 'info';
-  resetOnPropsChange?: boolean;
-  resetKeys?: Array<string | number>;
+  resetKeys?: (string | number)[];
 }
 
 interface State {
@@ -21,7 +20,7 @@ interface State {
 
 export default class ErrorBoundary extends Component<Props, State> {
   private resetTimeoutId: number | null = null;
-  private previousResetKeys: Array<string | number> = [];
+  private previousResetKeys: (string | number)[] = [];
 
   constructor(props: Props) {
     super(props);
@@ -46,24 +45,11 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    const { resetKeys, resetOnPropsChange } = this.props;
+    const { resetKeys } = this.props;
     const { hasError } = this.state;
     
-    // Only reset if props actually changed and we have an error
-    if (hasError && resetOnPropsChange && prevProps !== this.props) {
-      // Check if any prop actually changed (shallow comparison)
-      const propsChanged = Object.keys(this.props).some(
-        key => prevProps[key as keyof Props] !== this.props[key as keyof Props]
-      );
-      
-      if (propsChanged) {
-        this.setState({ hasError: false, error: undefined, errorInfo: undefined });
-        return; // Prevent multiple setState calls in same update
-      }
-    }
-    
+    // Only handle resetKeys changes to avoid infinite loops
     if (hasError && resetKeys && prevProps.resetKeys !== resetKeys) {
-      // Reset error boundary when resetKeys change
       const prevResetKeys = prevProps.resetKeys || [];
       const hasResetKeyChanged = resetKeys.length !== prevResetKeys.length ||
         resetKeys.some((key, index) => prevResetKeys[index] !== key);
