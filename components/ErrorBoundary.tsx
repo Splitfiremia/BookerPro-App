@@ -8,6 +8,8 @@ interface Props {
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
   level?: 'critical' | 'warning' | 'info';
+  resetOnPropsChange?: boolean;
+  resetKeys?: string[];
 }
 
 interface State {
@@ -19,6 +21,7 @@ interface State {
 
 export default class ErrorBoundary extends Component<Props, State> {
   private resetTimeoutId: number | null = null;
+  private prevResetKeys: string[] = [];
 
   constructor(props: Props) {
     super(props);
@@ -26,6 +29,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       hasError: false, 
       errorId: this.generateErrorId() 
     };
+    this.prevResetKeys = props.resetKeys || [];
   }
 
   private generateErrorId(): string {
@@ -82,6 +86,46 @@ export default class ErrorBoundary extends Component<Props, State> {
       this.handleRetry();
     }, 3000) as any;
   };
+
+  componentDidUpdate(prevProps: Props) {
+    const { hasError } = this.state;
+    const { resetOnPropsChange, resetKeys } = this.props;
+    
+    // Only reset if we're currently in an error state
+    if (hasError) {
+      // Reset on props change if enabled
+      if (resetOnPropsChange && prevProps.children !== this.props.children) {
+        console.log('ErrorBoundary: Resetting due to children prop change');
+        this.setState({ 
+          hasError: false, 
+          error: undefined, 
+          errorInfo: undefined,
+          errorId: this.generateErrorId()
+        });
+        return;
+      }
+      
+      // Reset on resetKeys change if provided
+      if (resetKeys && resetKeys.length > 0) {
+        const keysChanged = resetKeys.some((key, index) => 
+          key !== this.prevResetKeys[index]
+        ) || resetKeys.length !== this.prevResetKeys.length;
+        
+        if (keysChanged) {
+          console.log('ErrorBoundary: Resetting due to resetKeys change');
+          this.setState({ 
+            hasError: false, 
+            error: undefined, 
+            errorInfo: undefined,
+            errorId: this.generateErrorId()
+          });
+        }
+      }
+    }
+    
+    // Update previous reset keys
+    this.prevResetKeys = resetKeys || [];
+  }
 
   componentWillUnmount() {
     if (this.resetTimeoutId) {
