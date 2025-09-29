@@ -411,8 +411,11 @@ export function useCalendarPerformance<T>(
     
     // Clean old cache entries
     if (cacheRef.current.size > 20) {
-      const firstKey = cacheRef.current.keys().next().value;
-      cacheRef.current.delete(firstKey);
+      const iterator = cacheRef.current.keys();
+      const firstKey = iterator.next().value;
+      if (typeof firstKey === 'string') {
+        cacheRef.current.delete(firstKey);
+      }
     }
     
     console.log(`Computed and cached result for: ${key}`);
