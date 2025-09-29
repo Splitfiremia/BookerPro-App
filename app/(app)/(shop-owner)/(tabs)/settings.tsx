@@ -62,50 +62,38 @@ export default function SettingsScreen() {
 
   const handleSignOut = () => {
     Alert.alert(
-      "Sign Out", 
-      "Are you sure you want to sign out?", 
+      "Sign Out",
+      "Are you sure you want to sign out?",
       [
         {
           text: "Cancel",
-          style: "cancel"
+          style: "cancel",
         },
         {
           text: "Sign Out",
+          style: "destructive",
           onPress: async () => {
             try {
               console.log('Shop Owner Settings: Starting logout process');
-              
-              // Navigate to index first to prevent auto-redirect loops
-              console.log('Shop Owner Settings: Navigating to index before logout');
-              router.replace('/');
-              
-              // Small delay to ensure navigation completes
-              await new Promise(resolve => setTimeout(resolve, 100));
-              
-              // Then perform logout to clear user state
-              console.log('Shop Owner Settings: Performing logout');
+              // Perform logout first to avoid redirect race conditions
               await logout();
-              console.log('Shop Owner Settings: Logout completed successfully');
-              
+              console.log('Shop Owner Settings: Logout completed, navigating to index');
+              // Ensure state propagation, then navigate
+              await new Promise((resolve) => setTimeout(resolve, 100));
+              router.replace('/');
             } catch (error) {
               console.error('Shop Owner Settings: Logout error:', error);
-              
-              // Force logout and navigation even if there was an error
               try {
-                console.log('Shop Owner Settings: Force logout attempt');
-                router.replace('/');
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // Ensure user is cleared even if previous attempt failed
                 await logout();
-                console.log('Shop Owner Settings: Force logout completed');
-              } catch (navError) {
-                console.error('Shop Owner Settings: Force logout error:', navError);
-                // Last resort - just navigate to index and clear state
+              } catch (inner) {
+                console.error('Shop Owner Settings: Secondary logout attempt failed:', inner);
+              } finally {
                 router.replace('/');
               }
             }
           },
-          style: "destructive"
-        }
+        },
       ]
     );
   };
@@ -429,6 +417,8 @@ export default function SettingsScreen() {
             Alert.alert('Error', 'Unable to perform this action');
           }
         }}
+        testID={`setting-item-${item.id}`}
+        accessibilityLabel={item.title}
       >
         <View style={styles.settingItemLeft}>
           <item.icon size={20} color={item.id === 'signout' ? '#FF3B30' : '#666'} />
