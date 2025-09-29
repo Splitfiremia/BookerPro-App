@@ -176,14 +176,24 @@ export class WebsiteBuilderService {
         description: 'A modern, responsive template',
         category: 'modern',
         previewImageUrl: `${this.config.cdnUrl}/templates/${templateId}/preview.jpg`,
-        content: '<html>...</html>',
         defaultColors: {
           primary: '#007AFF',
           secondary: '#5856D6',
         },
-        isPremium: false,
-        rating: 4.5,
-        usageCount: 150,
+        features: {
+          hasHeroSection: true,
+          hasAboutSection: true,
+          hasServicesGrid: true,
+          hasTeamSection: true,
+          hasPortfolioGallery: true,
+          hasReviewsCarousel: true,
+          hasContactSection: true,
+          hasBookingCTA: true
+        },
+        mobileOptimized: true,
+        tabletOptimized: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       // Cache the template
@@ -215,11 +225,21 @@ export class WebsiteBuilderService {
           description: 'Clean and modern design perfect for professional services',
           category: 'modern',
           previewImageUrl: `${this.config.cdnUrl}/templates/modern/preview.jpg`,
-          content: '<html>...</html>',
           defaultColors: { primary: '#007AFF', secondary: '#5856D6' },
-          isPremium: false,
-          rating: 4.8,
-          usageCount: 320,
+          features: {
+            hasHeroSection: true,
+            hasAboutSection: true,
+            hasServicesGrid: true,
+            hasTeamSection: true,
+            hasPortfolioGallery: true,
+            hasReviewsCarousel: true,
+            hasContactSection: true,
+            hasBookingCTA: true
+          },
+          mobileOptimized: true,
+          tabletOptimized: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         },
         {
           id: 'classic' as any,
@@ -227,11 +247,21 @@ export class WebsiteBuilderService {
           description: 'Timeless design with elegant typography',
           category: 'classic',
           previewImageUrl: `${this.config.cdnUrl}/templates/classic/preview.jpg`,
-          content: '<html>...</html>',
           defaultColors: { primary: '#8B4513', secondary: '#D2691E' },
-          isPremium: true,
-          rating: 4.6,
-          usageCount: 180,
+          features: {
+            hasHeroSection: true,
+            hasAboutSection: true,
+            hasServicesGrid: true,
+            hasTeamSection: false,
+            hasPortfolioGallery: true,
+            hasReviewsCarousel: true,
+            hasContactSection: true,
+            hasBookingCTA: true
+          },
+          mobileOptimized: true,
+          tabletOptimized: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         },
         {
           id: 'creative' as any,
@@ -239,11 +269,21 @@ export class WebsiteBuilderService {
           description: 'Creative and artistic design for unique businesses',
           category: 'creative',
           previewImageUrl: `${this.config.cdnUrl}/templates/creative/preview.jpg`,
-          content: '<html>...</html>',
           defaultColors: { primary: '#000000', secondary: '#666666' },
-          isPremium: false,
-          rating: 4.4,
-          usageCount: 95,
+          features: {
+            hasHeroSection: true,
+            hasAboutSection: true,
+            hasServicesGrid: true,
+            hasTeamSection: true,
+            hasPortfolioGallery: true,
+            hasReviewsCarousel: false,
+            hasContactSection: true,
+            hasBookingCTA: true
+          },
+          mobileOptimized: true,
+          tabletOptimized: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         },
       ];
 
@@ -397,7 +437,7 @@ export class WebsiteBuilderService {
       
       return {
         ...websiteData,
-        lastModified: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error optimizing website:', error);

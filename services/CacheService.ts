@@ -254,14 +254,12 @@ class TemplateCacheService extends CacheService {
     const urls: string[] = [];
     
     // Extract URLs from template preview
-    if (template.previewImage) {
-      urls.push(template.previewImage);
+    if (template.previewImageUrl) {
+      urls.push(template.previewImageUrl);
     }
     
-    // Extract URLs from template content (would need more sophisticated parsing in real app)
-    const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
-    const matches = template.htmlContent?.match(urlRegex) || [];
-    urls.push(...matches);
+    // For now, just return the preview image URL since WebsiteTemplate doesn't have htmlContent
+    // In a real app, you would extract URLs from the template's HTML content
     
     return [...new Set(urls)]; // Remove duplicates
   }

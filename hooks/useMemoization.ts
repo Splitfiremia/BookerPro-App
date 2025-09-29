@@ -54,10 +54,12 @@ export const useDebouncedCallback = <Args extends readonly unknown[]>(
     (...args: Args) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = undefined;
       }
 
       timeoutRef.current = setTimeout(() => {
         callback(...args);
+        timeoutRef.current = undefined;
       }, delay);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,11 +87,13 @@ export const useThrottledCallback = <Args extends readonly unknown[]>(
       } else {
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
+          timeoutRef.current = undefined;
         }
 
         timeoutRef.current = setTimeout(() => {
           lastCallRef.current = Date.now();
           callback(...args);
+          timeoutRef.current = undefined;
         }, delay - timeSinceLastCall);
       }
     },

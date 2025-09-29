@@ -391,3 +391,6 @@ export const VALIDATION_RULES = {
     maxLength: 160
   }
 } as const;
+
+// Export WebsiteAnalytics for use in other services
+export type { WebsiteAnalytics };

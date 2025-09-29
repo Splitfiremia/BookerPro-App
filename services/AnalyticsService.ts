@@ -353,13 +353,33 @@ class AnalyticsService {
           const date = new Date();
           date.setDate(date.getDate() - (29 - i));
           return {
+            id: `analytics_${i}`,
+            websiteId: shopId,
             date: date.toISOString().split('T')[0],
             pageViews: Math.floor(Math.random() * 200) + 50,
             uniqueVisitors: Math.floor(Math.random() * 100) + 20,
+            bounceRate: parseFloat((Math.random() * 30 + 20).toFixed(2)),
+            averageSessionDuration: Math.floor(Math.random() * 300) + 120,
             bookingClicks: Math.floor(Math.random() * 10) + 1,
             bookingConversions: Math.floor(Math.random() * 3),
-            averageSessionDuration: Math.floor(Math.random() * 300) + 120,
-            bounceRate: parseFloat((Math.random() * 30 + 20).toFixed(2)),
+            conversionRate: parseFloat((Math.random() * 10 + 5).toFixed(2)),
+            trafficSources: {
+              direct: Math.floor(Math.random() * 40) + 30,
+              organic: Math.floor(Math.random() * 30) + 25,
+              social: Math.floor(Math.random() * 20) + 15,
+              referral: Math.floor(Math.random() * 15) + 10,
+              paid: Math.floor(Math.random() * 10) + 5,
+            },
+            deviceTypes: {
+              mobile: Math.floor(Math.random() * 30) + 50,
+              desktop: Math.floor(Math.random() * 30) + 25,
+              tablet: Math.floor(Math.random() * 15) + 10,
+            },
+            topCountries: [
+              { country: 'United States', visitors: Math.floor(Math.random() * 500) + 200 },
+              { country: 'Canada', visitors: Math.floor(Math.random() * 200) + 50 },
+            ],
+            createdAt: date.toISOString(),
           };
         }),
         topPages: [
@@ -476,7 +496,6 @@ export const analyticsService = new AnalyticsService();
 
 // Export types
 export type {
-  WebsiteAnalyticsData,
   GetWebsiteAnalyticsRequest,
   TrackWebsiteEventRequest,
 };
