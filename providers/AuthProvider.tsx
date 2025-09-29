@@ -103,7 +103,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       isMounted = false;
       if (loadingTimeout) clearTimeout(loadingTimeout);
     };
-  }, [multiGet, remove]); // Include remove dependency
+  }, [multiGet, remove]); // Now safe to include dependencies with stable references
 
   // Set developer mode with persistence
   const setDeveloperMode = useCallback(async (value: boolean) => {

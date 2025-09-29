@@ -211,12 +211,15 @@ export const AsyncStorageUtils = {
 };
 
 // Hook for React components to use batched AsyncStorage
+// Create stable references to prevent infinite re-renders
+const stableBatchMethods = {
+  set: asyncStorageBatch.set.bind(asyncStorageBatch),
+  remove: asyncStorageBatch.remove.bind(asyncStorageBatch),
+  multiGet: asyncStorageBatch.multiGet.bind(asyncStorageBatch),
+  flush: asyncStorageBatch.flush.bind(asyncStorageBatch),
+  ...AsyncStorageUtils
+};
+
 export const useAsyncStorageBatch = () => {
-  return {
-    set: asyncStorageBatch.set.bind(asyncStorageBatch),
-    remove: asyncStorageBatch.remove.bind(asyncStorageBatch),
-    multiGet: asyncStorageBatch.multiGet.bind(asyncStorageBatch),
-    flush: asyncStorageBatch.flush.bind(asyncStorageBatch),
-    ...AsyncStorageUtils
-  };
+  return stableBatchMethods;
 };
