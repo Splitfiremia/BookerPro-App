@@ -10,6 +10,7 @@ import { measureAsyncOperation } from '@/utils/loginPerformanceUtils';
 import { AuthProvider } from './AuthProvider';
 import { WithSafeAreaDeviceProvider } from './DeviceProvider';
 import { LazyProviders } from './LazyProviders';
+import { NotificationProvider } from './NotificationProvider';
 
 // Create optimized QueryClient with performance monitoring
 const queryClient = new QueryClient({
@@ -66,13 +67,21 @@ const CoreProviders = React.memo(({ children }: CoreProvidersProps) => {
   useEffect(() => {
     const initStart = Date.now();
     
+    console.log('CoreProviders: Starting initialization');
+    
     measureAsyncOperation('core_providers_init', async () => {
-      // Preload critical data
-      await performanceCache.preload('app', 'init', async () => {
-        return { initialized: true, timestamp: Date.now() };
-      });
-      
-      console.log(`CoreProviders: Core providers initialized in ${Date.now() - initStart}ms`);
+      try {
+        // Preload critical data
+        await performanceCache.preload('app', 'init', async () => {
+          return { initialized: true, timestamp: Date.now() };
+        });
+        
+        console.log(`CoreProviders: Core providers initialized in ${Date.now() - initStart}ms`);
+      } catch (error) {
+        console.error('CoreProviders: Initialization error:', error);
+      }
+    }).catch(error => {
+      console.error('CoreProviders: measureAsyncOperation error:', error);
     });
   }, []);
   
@@ -82,15 +91,26 @@ const CoreProviders = React.memo(({ children }: CoreProvidersProps) => {
         level="critical" 
         resetOnPropsChange={false}
         fallback={<ProvidersErrorFallback />}
+        onError={(error) => console.error('CRITICAL: QueryClient/DeviceProvider error:', error)}
       >
         <WithSafeAreaDeviceProvider>
           <ErrorBoundary 
             level="warning" 
             resetOnPropsChange={false}
             fallback={<ProvidersErrorFallback />}
+            onError={(error) => console.error('WARNING: AuthProvider error:', error)}
           >
             <AuthProvider>
-              {children}
+              <ErrorBoundary 
+                level="info" 
+                resetOnPropsChange={false}
+                fallback={<ProvidersErrorFallback />}
+                onError={(error) => console.error('INFO: NotificationProvider error:', error)}
+              >
+                <NotificationProvider>
+                  {children}
+                </NotificationProvider>
+              </ErrorBoundary>
             </AuthProvider>
           </ErrorBoundary>
         </WithSafeAreaDeviceProvider>
