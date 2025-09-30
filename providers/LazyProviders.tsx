@@ -15,11 +15,12 @@ const WaitlistProvider = lazy(() => import('@/providers/WaitlistProvider').then(
 const TeamManagementProvider = lazy(() => import('@/providers/TeamManagementProvider').then(m => ({ default: m.TeamManagementProvider })));
 const ShopManagementProvider = lazy(() => import('@/providers/ShopManagementProvider').then(m => ({ default: m.ShopManagementProvider })));
 
-function ProviderErrorFallback() {
+function ProviderErrorFallback({ error }: { error?: string }) {
   return (
     <View style={styles.errorContainer}>
       <Text style={styles.errorTitle}>Service Loading Failed</Text>
       <Text style={styles.errorText}>Unable to initialize app services. Please restart the app.</Text>
+      {error && <Text style={styles.errorDetails}>{error}</Text>}
     </View>
   );
 }
@@ -42,10 +43,18 @@ interface StaggeredProvidersProps {
 }
 
 function StaggeredProviders({ children, stage }: StaggeredProvidersProps) {
+  console.log('StaggeredProviders: Rendering stage:', stage);
+  
   switch (stage) {
     case 'critical':
       return (
-        <ErrorBoundary fallback={<ProviderErrorFallback />} onError={(error) => console.error('Critical providers error:', error)}>
+        <ErrorBoundary 
+          fallback={<ProviderErrorFallback error="Critical providers (Appointment/Onboarding) failed" />} 
+          onError={(error) => {
+            console.error('❌ CRITICAL PROVIDERS ERROR:', error);
+            console.error('Failed providers: AppointmentProvider or OnboardingProvider');
+          }}
+        >
           <AppointmentProvider>
             <OnboardingProvider>
               {children}
@@ -57,7 +66,13 @@ function StaggeredProviders({ children, stage }: StaggeredProvidersProps) {
     case 'services':
       return (
         <Suspense fallback={<ProviderLoadingFallback stage="services" />}>
-          <ErrorBoundary fallback={<ProviderErrorFallback />} onError={(error) => console.error('Services providers error:', error)}>
+          <ErrorBoundary 
+            fallback={<ProviderErrorFallback error="Services providers (Services/Payment) failed" />} 
+            onError={(error) => {
+              console.error('❌ SERVICES PROVIDERS ERROR:', error);
+              console.error('Failed providers: ServicesProvider or PaymentProvider');
+            }}
+          >
             <ServicesProvider>
               <PaymentProvider>
                 <StaggeredProviders stage="critical">
@@ -72,7 +87,13 @@ function StaggeredProviders({ children, stage }: StaggeredProvidersProps) {
     case 'social':
       return (
         <Suspense fallback={<ProviderLoadingFallback stage="social features" />}>
-          <ErrorBoundary fallback={<ProviderErrorFallback />} onError={(error) => console.error('Social providers error:', error)}>
+          <ErrorBoundary 
+            fallback={<ProviderErrorFallback error="Social providers (Social/Waitlist) failed" />} 
+            onError={(error) => {
+              console.error('❌ SOCIAL PROVIDERS ERROR:', error);
+              console.error('Failed providers: SocialProvider or WaitlistProvider');
+            }}
+          >
             <SocialProvider>
               <WaitlistProvider>
                 <StaggeredProviders stage="services">
@@ -87,7 +108,13 @@ function StaggeredProviders({ children, stage }: StaggeredProvidersProps) {
     case 'management':
       return (
         <Suspense fallback={<ProviderLoadingFallback stage="management tools" />}>
-          <ErrorBoundary fallback={<ProviderErrorFallback />} onError={(error) => console.error('Management providers error:', error)}>
+          <ErrorBoundary 
+            fallback={<ProviderErrorFallback error="Management providers (Team/Shop) failed" />} 
+            onError={(error) => {
+              console.error('❌ MANAGEMENT PROVIDERS ERROR:', error);
+              console.error('Failed providers: TeamManagementProvider or ShopManagementProvider');
+            }}
+          >
             <TeamManagementProvider>
               <ShopManagementProvider>
                 <StaggeredProviders stage="social">
@@ -101,6 +128,7 @@ function StaggeredProviders({ children, stage }: StaggeredProvidersProps) {
     
     case 'complete':
     default:
+      console.log('StaggeredProviders: All stages complete, rendering final tree');
       return (
         <StaggeredProviders stage="management">
           {children}
@@ -157,7 +185,13 @@ export function LazyProviders({ children }: LazyProvidersProps) {
   }
   
   return (
-    <ErrorBoundary fallback={<ProviderErrorFallback />}>
+    <ErrorBoundary 
+      fallback={<ProviderErrorFallback />}
+      onError={(error) => {
+        console.error('LazyProviders: Critical error in provider initialization:', error);
+        console.error('LazyProviders: Current loading stage:', loadingStage);
+      }}
+    >
       <StaggeredProviders stage={loadingStage}>
         {children}
       </StaggeredProviders>
@@ -224,6 +258,14 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  errorDetails: {
+    color: COLORS.error,
+    fontSize: FONT_SIZES.sm,
+    fontFamily: FONTS.regular,
+    textAlign: 'center',
+    marginTop: SPACING.sm,
+    opacity: 0.8,
   },
   loadingContainer: {
     flex: 1,

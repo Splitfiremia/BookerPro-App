@@ -6,7 +6,13 @@ export default function ClientLayout() {
   console.log('ClientLayout: Rendering client navigation');
   
   return (
-    <FeatureErrorBoundary featureName="Client Navigation">
+    <FeatureErrorBoundary 
+      featureName="Client Navigation"
+      onError={(error, errorInfo) => {
+        console.error('ClientLayout: Error caught in FeatureErrorBoundary:', error);
+        console.error('ClientLayout: Error info:', errorInfo);
+      }}
+    >
       <Stack
         screenOptions={{
           headerShown: true,
