@@ -165,6 +165,44 @@ export function LazyProviders({ children }: LazyProvidersProps) {
   );
 }
 
+export function FlatProviders({ children }: LazyProvidersProps) {
+  console.log('FlatProviders: Rendering without staggered loading');
+  
+  return (
+    <ErrorBoundary fallback={<ProviderErrorFallback />}>
+      <AppointmentProvider>
+        <OnboardingProvider>
+          <Suspense fallback={<ProviderLoadingFallback stage="services" />}>
+            <ErrorBoundary fallback={<ProviderErrorFallback />}>
+              <ServicesProvider>
+                <PaymentProvider>
+                  <Suspense fallback={<ProviderLoadingFallback stage="social" />}>
+                    <ErrorBoundary fallback={<ProviderErrorFallback />}>
+                      <SocialProvider>
+                        <WaitlistProvider>
+                          <Suspense fallback={<ProviderLoadingFallback stage="management" />}>
+                            <ErrorBoundary fallback={<ProviderErrorFallback />}>
+                              <TeamManagementProvider>
+                                <ShopManagementProvider>
+                                  {children}
+                                </ShopManagementProvider>
+                              </TeamManagementProvider>
+                            </ErrorBoundary>
+                          </Suspense>
+                        </WaitlistProvider>
+                      </SocialProvider>
+                    </ErrorBoundary>
+                  </Suspense>
+                </PaymentProvider>
+              </ServicesProvider>
+            </ErrorBoundary>
+          </Suspense>
+        </OnboardingProvider>
+      </AppointmentProvider>
+    </ErrorBoundary>
+  );
+}
+
 const styles = StyleSheet.create({
   errorContainer: {
     flex: 1,
