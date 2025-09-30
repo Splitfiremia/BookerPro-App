@@ -162,21 +162,17 @@ interface LazyProvidersProps {
 }
 
 export function LazyProviders({ children }: LazyProvidersProps) {
-  const [loadingStage, setLoadingStage] = useState<LoadingStage>('critical');
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [loadingStage, setLoadingStage] = useState<LoadingStage>('complete');
   
-  console.log('LazyProviders: Initializing with staggered loading, stage:', loadingStage);
+  console.log('LazyProviders: Rendering all providers immediately to prevent hydration timeout');
   
   useEffect(() => {
-    // Prevent hydration timeout by setting hydrated immediately
-    setIsHydrated(true);
-    
-    // Stagger provider loading to prevent blocking
+    // Stagger provider loading AFTER initial render to prevent hydration timeout
     const stageTimings = [
-      { stage: 'services' as LoadingStage, delay: 100 },
-      { stage: 'social' as LoadingStage, delay: 300 },
-      { stage: 'management' as LoadingStage, delay: 400 },
-      { stage: 'complete' as LoadingStage, delay: 500 },
+      { stage: 'services' as LoadingStage, delay: 50 },
+      { stage: 'social' as LoadingStage, delay: 100 },
+      { stage: 'management' as LoadingStage, delay: 150 },
+      { stage: 'complete' as LoadingStage, delay: 200 },
     ];
     
     const timeouts: NodeJS.Timeout[] = [];
@@ -193,16 +189,6 @@ export function LazyProviders({ children }: LazyProvidersProps) {
       timeouts.forEach(clearTimeout);
     };
   }, []);
-  
-  // Show minimal loading during hydration
-  if (!isHydrated) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Initializing...</Text>
-      </View>
-    );
-  }
   
   return (
     <ErrorBoundary 

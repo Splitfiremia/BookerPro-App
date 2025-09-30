@@ -80,20 +80,8 @@ export default function LandingScreen() {
     }
   }, [isInitialized, isAuthenticated, user, isDeveloperMode]);
 
-  // Show loading state while initializing to prevent hydration mismatch
-  if (!isInitialized) {
-    return (
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#000000" />
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.logoSection}>
-            <Text style={styles.logo}>BookerPro</Text>
-            <Text style={styles.loadingText}>Initializing...</Text>
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
+  // Remove loading state check to prevent hydration timeout
+  // Auth will initialize in background without blocking render
 
   const validateEmail = (email: string): boolean => {
     if (!email || typeof email !== 'string') return false;
