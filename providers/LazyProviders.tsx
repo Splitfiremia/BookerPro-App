@@ -45,49 +45,57 @@ function StaggeredProviders({ children, stage }: StaggeredProvidersProps) {
   switch (stage) {
     case 'critical':
       return (
-        <AppointmentProvider>
-          <OnboardingProvider>
-            {children}
-          </OnboardingProvider>
-        </AppointmentProvider>
+        <ErrorBoundary fallback={<ProviderErrorFallback />} onError={(error) => console.error('Critical providers error:', error)}>
+          <AppointmentProvider>
+            <OnboardingProvider>
+              {children}
+            </OnboardingProvider>
+          </AppointmentProvider>
+        </ErrorBoundary>
       );
     
     case 'services':
       return (
         <Suspense fallback={<ProviderLoadingFallback stage="services" />}>
-          <ServicesProvider>
-            <PaymentProvider>
-              <StaggeredProviders stage="critical">
-                {children}
-              </StaggeredProviders>
-            </PaymentProvider>
-          </ServicesProvider>
+          <ErrorBoundary fallback={<ProviderErrorFallback />} onError={(error) => console.error('Services providers error:', error)}>
+            <ServicesProvider>
+              <PaymentProvider>
+                <StaggeredProviders stage="critical">
+                  {children}
+                </StaggeredProviders>
+              </PaymentProvider>
+            </ServicesProvider>
+          </ErrorBoundary>
         </Suspense>
       );
     
     case 'social':
       return (
         <Suspense fallback={<ProviderLoadingFallback stage="social features" />}>
-          <SocialProvider>
-            <WaitlistProvider>
-              <StaggeredProviders stage="services">
-                {children}
-              </StaggeredProviders>
-            </WaitlistProvider>
-          </SocialProvider>
+          <ErrorBoundary fallback={<ProviderErrorFallback />} onError={(error) => console.error('Social providers error:', error)}>
+            <SocialProvider>
+              <WaitlistProvider>
+                <StaggeredProviders stage="services">
+                  {children}
+                </StaggeredProviders>
+              </WaitlistProvider>
+            </SocialProvider>
+          </ErrorBoundary>
         </Suspense>
       );
     
     case 'management':
       return (
         <Suspense fallback={<ProviderLoadingFallback stage="management tools" />}>
-          <TeamManagementProvider>
-            <ShopManagementProvider>
-              <StaggeredProviders stage="social">
-                {children}
-              </StaggeredProviders>
-            </ShopManagementProvider>
-          </TeamManagementProvider>
+          <ErrorBoundary fallback={<ProviderErrorFallback />} onError={(error) => console.error('Management providers error:', error)}>
+            <TeamManagementProvider>
+              <ShopManagementProvider>
+                <StaggeredProviders stage="social">
+                  {children}
+                </StaggeredProviders>
+              </ShopManagementProvider>
+            </TeamManagementProvider>
+          </ErrorBoundary>
         </Suspense>
       );
     
