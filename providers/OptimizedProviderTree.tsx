@@ -78,9 +78,17 @@ const CoreProviders = React.memo(({ children }: CoreProvidersProps) => {
   
   return (
     <QueryClientProvider client={queryClient}>
-      <ErrorBoundary level="critical" resetOnPropsChange={false}>
+      <ErrorBoundary 
+        level="critical" 
+        resetOnPropsChange={false}
+        fallback={<ProvidersErrorFallback />}
+      >
         <WithSafeAreaDeviceProvider>
-          <ErrorBoundary level="warning" resetOnPropsChange={false}>
+          <ErrorBoundary 
+            level="warning" 
+            resetOnPropsChange={false}
+            fallback={<ProvidersErrorFallback />}
+          >
             <AuthProvider>
               {children}
             </AuthProvider>
