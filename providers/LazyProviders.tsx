@@ -37,11 +37,8 @@ function ManagementProvidersConditional({ children }: { children: React.ReactNod
   
   const needsManagementProviders = userRole === 'owner' || userRole === 'provider';
   
-  console.log('ManagementProvidersConditional: User role:', userRole, 'Loading management providers:', needsManagementProviders);
-  
-  // Skip management providers for clients
-  if (!needsManagementProviders) {
-    console.log('ManagementProvidersConditional: Skipping management providers for client');
+  // Skip management providers for clients or when no user yet
+  if (!needsManagementProviders || !userRole) {
     return <>{children}</>;
   }
   
@@ -52,7 +49,6 @@ function ManagementProvidersConditional({ children }: { children: React.ReactNod
         fallback={<ProviderErrorFallback error="Management providers (Team/Shop) failed" />} 
         onError={(error) => {
           console.error('❌ MANAGEMENT PROVIDERS ERROR:', error);
-          console.error('Failed providers: TeamManagementProvider or ShopManagementProvider');
         }}
       >
         <TeamManagementProvider>
@@ -70,19 +66,15 @@ interface LazyProvidersProps {
 }
 
 export function LazyProviders({ children }: LazyProvidersProps) {
-  console.log('LazyProviders: Initializing optimized provider tree');
-  
   return (
     <ErrorBoundary 
       fallback={<ProviderErrorFallback />}
       onError={(error) => {
-        console.error('LazyProviders: Critical error in provider initialization:', error);
+        console.error('LazyProviders: Critical error:', error);
       }}
     >
-      {/* Critical providers - always loaded */}
       <AppointmentProvider>
         <OnboardingProvider>
-          {/* Lazy-loaded providers with Suspense */}
           <Suspense fallback={null}>
             <ErrorBoundary fallback={<ProviderErrorFallback error="Services/Payment providers failed" />}>
               <ServicesProvider>
@@ -91,7 +83,6 @@ export function LazyProviders({ children }: LazyProvidersProps) {
                     <ErrorBoundary fallback={<ProviderErrorFallback error="Social/Waitlist providers failed" />}>
                       <SocialProvider>
                         <WaitlistProvider>
-                          {/* Conditionally load management providers */}
                           <ManagementProvidersConditional>
                             {children}
                           </ManagementProvidersConditional>

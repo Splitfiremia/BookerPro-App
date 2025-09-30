@@ -38,28 +38,26 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const { multiGet, set, remove, getWithDefault } = useAsyncStorageBatch();
   
-  // Initialize auth state - prevent hydration timeout with immediate initialization
+  // Initialize auth state - IMMEDIATE initialization to prevent hydration timeout
   useEffect(() => {
     let isMounted = true;
-    let loadingTimeout: NodeJS.Timeout;
     
-    // Set initialized immediately to prevent hydration timeout
-    console.log('AuthProvider: Setting initialized immediately to prevent hydration timeout');
+    // CRITICAL: Set initialized SYNCHRONOUSLY before any async operations
+    console.log('AuthProvider: IMMEDIATE initialization - no blocking');
     setIsInitialized(true);
     
-    // Load stored data with aggressive timeout and fallback
-    const loadStoredData = async () => {
+    // Load stored data in background - NEVER block render
+    const loadStoredDataInBackground = async () => {
       if (!isMounted) return;
       
       try {
-        console.log('AuthProvider: Starting optimized async data load');
+        console.log('AuthProvider: Background data load starting (non-blocking)');
         
-        // Very short timeout to prevent blocking - 1 second max
+        // Ultra-short timeout - 500ms max
         const timeoutPromise = new Promise((_, reject) => {
-          loadingTimeout = setTimeout(() => {
-            console.log('AuthProvider: Storage timeout reached, using defaults');
-            reject(new Error('Storage timeout - using defaults'));
-          }, 1000);
+          setTimeout(() => {
+            reject(new Error('Storage timeout'));
+          }, 500);
         });
         
         const dataPromise = multiGet(['user', 'developerMode']);
@@ -67,43 +65,32 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         
         if (!isMounted) return;
         
-        // Clear timeout if successful
-        if (loadingTimeout) clearTimeout(loadingTimeout);
-        
         // Parse and set user data with validation
         if (data.user && typeof data.user === 'object' && data.user.email) {
-          console.log('AuthProvider: Loaded valid user from storage:', data.user.email);
+          console.log('AuthProvider: Restored user from storage:', data.user.email);
           setUser(data.user);
-        } else if (data.user) {
-          console.log('AuthProvider: Invalid user data in storage, clearing');
-          // Clear invalid data
-          remove('user').catch(console.error);
         }
         
         // Parse and set developer mode
         if (typeof data.developerMode === 'boolean') {
-          console.log('AuthProvider: Loaded developer mode from storage:', data.developerMode);
           setIsDeveloperMode(data.developerMode);
         }
         
-        console.log('AuthProvider: Optimized data load completed successfully');
+        console.log('AuthProvider: Background data load completed');
         
       } catch (error) {
-        console.log('AuthProvider: Storage load failed, using defaults:', error instanceof Error ? error.message : 'Unknown error');
-        // Clear timeout on error
-        if (loadingTimeout) clearTimeout(loadingTimeout);
+        console.log('AuthProvider: Background load failed, using defaults');
         // App continues with default values - no blocking
       }
     };
     
-    // Use immediate execution for faster startup
-    loadStoredData();
+    // Fire and forget - don't await
+    loadStoredDataInBackground();
     
     return () => {
       isMounted = false;
-      if (loadingTimeout) clearTimeout(loadingTimeout);
     };
-  }, [multiGet, remove]); // Now safe to include dependencies with stable references
+  }, []); // Empty deps - run once only
 
   // Set developer mode with persistence
   const setDeveloperMode = useCallback(async (value: boolean) => {

@@ -43,14 +43,13 @@ export default function RootLayout() {
       }
     };
     
-    // Delay initialization significantly to not block startup
-    const timeoutId = setTimeout(initializeApp, 2000);
+    // Delay initialization to not block startup - reduced to 3 seconds
+    const timeoutId = setTimeout(initializeApp, 3000);
     
     return () => {
       mounted = false;
       clearTimeout(timeoutId);
       try {
-        console.log('RootLayout: Cleaning up deep linking');
         cleanupDeepLinking();
       } catch (error) {
         console.error('RootLayout: Deep linking cleanup failed:', error);

@@ -34,13 +34,9 @@ export default function AppLayout() {
   useEffect(() => {
     if (isAuthenticated && user && !dashboardReady) {
       console.log('AppLayout: Preparing dashboard for user role:', user.role);
-      // Small delay to ensure providers are ready
-      const timer = setTimeout(() => {
-        setDashboardReady(true);
-        console.log('AppLayout: Dashboard ready for role:', user.role);
-      }, 200);
-      
-      return () => clearTimeout(timer);
+      // Immediate dashboard ready - no delay
+      setDashboardReady(true);
+      console.log('AppLayout: Dashboard ready for role:', user.role);
     }
   }, [isAuthenticated, user, dashboardReady]);
 
