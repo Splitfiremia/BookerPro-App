@@ -1,10 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { COLORS, FONTS, FONT_SIZES, SPACING } from '@/constants/theme';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { performanceCache } from '@/services/PerformanceCacheService';
-import { measureAsyncOperation } from '@/utils/loginPerformanceUtils';
 
 // Import only essential providers
 import { AuthProvider } from './AuthProvider';
@@ -35,13 +33,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Add performance monitoring to QueryClient
-queryClient.setMutationDefaults(['user'], {
-  onMutate: async () => {
-    console.log('OptimizedProviderTree: User mutation started');
-    return measureAsyncOperation('user_mutation', async () => {});
-  },
-});
+
 
 // Error fallback for providers
 function ProvidersErrorFallback() {
@@ -62,28 +54,6 @@ interface CoreProvidersProps {
 
 const CoreProviders = React.memo(({ children }: CoreProvidersProps) => {
   console.log('CoreProviders: Rendering optimized core providers');
-  
-  // Performance monitoring for provider initialization
-  useEffect(() => {
-    const initStart = Date.now();
-    
-    console.log('CoreProviders: Starting initialization');
-    
-    measureAsyncOperation('core_providers_init', async () => {
-      try {
-        // Preload critical data
-        await performanceCache.preload('app', 'init', async () => {
-          return { initialized: true, timestamp: Date.now() };
-        });
-        
-        console.log(`CoreProviders: Core providers initialized in ${Date.now() - initStart}ms`);
-      } catch (error) {
-        console.error('CoreProviders: Initialization error:', error);
-      }
-    }).catch(error => {
-      console.error('CoreProviders: measureAsyncOperation error:', error);
-    });
-  }, []);
   
   return (
     <QueryClientProvider client={queryClient}>

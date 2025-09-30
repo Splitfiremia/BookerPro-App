@@ -28,14 +28,14 @@ function RootLayoutNav() {
 export default function RootLayout() {
   console.log('RootLayout: Rendering');
   
-  // Initialize deep linking after mount
+  // Initialize deep linking after mount - non-blocking
   useEffect(() => {
     let mounted = true;
     
     const initializeApp = async () => {
       try {
         if (mounted) {
-          console.log('RootLayout: Initializing deep linking');
+          console.log('RootLayout: Initializing deep linking (non-blocking)');
           initializeDeepLinking();
         }
       } catch (error) {
@@ -43,8 +43,8 @@ export default function RootLayout() {
       }
     };
     
-    // Delay initialization to not block rendering
-    const timeoutId = setTimeout(initializeApp, 500);
+    // Delay initialization significantly to not block startup
+    const timeoutId = setTimeout(initializeApp, 2000);
     
     return () => {
       mounted = false;
