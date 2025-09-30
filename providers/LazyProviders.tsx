@@ -2,6 +2,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { COLORS, FONTS, FONT_SIZES, SPACING } from '@/constants/theme';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { useAuth } from '@/providers/AuthProvider';
 
 // Critical providers - load immediately
 import { AppointmentProvider } from '@/providers/AppointmentProvider';
@@ -106,25 +107,7 @@ function StaggeredProviders({ children, stage }: StaggeredProvidersProps) {
       );
     
     case 'management':
-      return (
-        <Suspense fallback={<ProviderLoadingFallback stage="management tools" />}>
-          <ErrorBoundary 
-            fallback={<ProviderErrorFallback error="Management providers (Team/Shop) failed" />} 
-            onError={(error) => {
-              console.error('❌ MANAGEMENT PROVIDERS ERROR:', error);
-              console.error('Failed providers: TeamManagementProvider or ShopManagementProvider');
-            }}
-          >
-            <TeamManagementProvider>
-              <ShopManagementProvider>
-                <StaggeredProviders stage="social">
-                  {children}
-                </StaggeredProviders>
-              </ShopManagementProvider>
-            </TeamManagementProvider>
-          </ErrorBoundary>
-        </Suspense>
-      );
+      return <ManagementProvidersConditional>{children}</ManagementProvidersConditional>;
     
     case 'complete':
     default:
@@ -135,6 +118,43 @@ function StaggeredProviders({ children, stage }: StaggeredProvidersProps) {
         </StaggeredProviders>
       );
   }
+}
+
+function ManagementProvidersConditional({ children }: { children: React.ReactNode }) {
+  const auth = useAuth();
+  const userRole = auth?.user?.role;
+  
+  const needsManagementProviders = userRole === 'owner' || userRole === 'provider';
+  
+  console.log('ManagementProvidersConditional: User role:', userRole, 'Loading management providers:', needsManagementProviders);
+  
+  if (!needsManagementProviders) {
+    return (
+      <StaggeredProviders stage="social">
+        {children}
+      </StaggeredProviders>
+    );
+  }
+  
+  return (
+    <Suspense fallback={<ProviderLoadingFallback stage="management tools" />}>
+      <ErrorBoundary 
+        fallback={<ProviderErrorFallback error="Management providers (Team/Shop) failed" />} 
+        onError={(error) => {
+          console.error('❌ MANAGEMENT PROVIDERS ERROR:', error);
+          console.error('Failed providers: TeamManagementProvider or ShopManagementProvider');
+        }}
+      >
+        <TeamManagementProvider>
+          <ShopManagementProvider>
+            <StaggeredProviders stage="social">
+              {children}
+            </StaggeredProviders>
+          </ShopManagementProvider>
+        </TeamManagementProvider>
+      </ErrorBoundary>
+    </Suspense>
+  );
 }
 
 interface LazyProvidersProps {
@@ -155,8 +175,8 @@ export function LazyProviders({ children }: LazyProvidersProps) {
     const stageTimings = [
       { stage: 'services' as LoadingStage, delay: 100 },
       { stage: 'social' as LoadingStage, delay: 300 },
-      { stage: 'management' as LoadingStage, delay: 500 },
-      { stage: 'complete' as LoadingStage, delay: 700 },
+      { stage: 'management' as LoadingStage, delay: 400 },
+      { stage: 'complete' as LoadingStage, delay: 500 },
     ];
     
     const timeouts: NodeJS.Timeout[] = [];
