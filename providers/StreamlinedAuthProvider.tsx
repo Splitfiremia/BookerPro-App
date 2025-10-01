@@ -16,7 +16,7 @@ export interface User {
   updatedAt?: string;
 }
 
-export const [StreamlinedAuthProvider, useStreamlinedAuth] = createContextHook(() => {
+const [StreamlinedAuthProviderInternal, useStreamlinedAuthInternal] = createContextHook(() => {
   console.log('[PERF] StreamlinedAuthProvider: Initializing (optimized)');
   const initStartTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
   
@@ -216,3 +216,6 @@ export const [StreamlinedAuthProvider, useStreamlinedAuth] = createContextHook((
   
   return contextValue;
 });
+
+export const StreamlinedAuthProvider = StreamlinedAuthProviderInternal;
+export const useStreamlinedAuth = useStreamlinedAuthInternal;
