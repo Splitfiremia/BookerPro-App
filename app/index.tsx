@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -84,18 +84,15 @@ export default function LandingScreen() {
     };
   }, [isInitialized, isAuthenticated, user]);
 
-  // Remove loading state check to prevent hydration timeout
-  // Auth will initialize in background without blocking render
-
-  const validateEmail = (email: string): boolean => {
+  const validateEmail = useCallback((email: string): boolean => {
     if (!email || typeof email !== 'string') return false;
     const trimmedEmail = email.trim();
     if (trimmedEmail.length === 0 || trimmedEmail.length > 254) return false;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(trimmedEmail);
-  };
+  }, []);
 
-  const handleContinue = () => {
+  const handleContinue = useCallback(() => {
     if (!email.trim()) {
       setEmailError("Email is required");
       return;
@@ -108,7 +105,6 @@ export default function LandingScreen() {
 
     setEmailError(null);
     
-    // Navigate to login/signup with the email
     router.push({
       pathname: "/(auth)/login",
       params: { 
@@ -116,18 +112,17 @@ export default function LandingScreen() {
         role: "client"
       }
     });
-  };
+  }, [email, validateEmail]);
 
-  const handleBrowseProviders = () => {
-    // For now, redirect to login since browsing requires authentication
+  const handleBrowseProviders = useCallback(() => {
     router.push("/(auth)/login");
-  };
+  }, []);
 
-  const toggleDeveloperMode = () => {
+  const toggleDeveloperMode = useCallback(() => {
     setDeveloperMode(!isDeveloperMode);
-  };
+  }, [isDeveloperMode, setDeveloperMode]);
 
-  const handleTestLogin = async (userType: 'client' | 'provider' | 'owner') => {
+  const handleTestLogin = useCallback(async (userType: 'client' | 'provider' | 'owner') => {
     if (isLoggingIn) return;
     
     const testUser = testUsers.find(user => user.role === userType);
@@ -169,9 +164,9 @@ export default function LandingScreen() {
     } finally {
       setIsLoggingIn(false);
     }
-  };
+  }, [isLoggingIn, isDeveloperMode, setDeveloperMode, login]);
   
-  const handleTestOnboarding = async (type: 'client' | 'provider' | 'owner') => {
+  const handleTestOnboarding = useCallback(async (type: 'client' | 'provider' | 'owner') => {
     if (type === 'provider') {
       router.push('/provider-onboarding');
     } else if (type === 'owner') {
@@ -179,7 +174,56 @@ export default function LandingScreen() {
     } else if (type === 'client') {
       router.push('/client-onboarding/profile-type');
     }
-  };
+  }, []);
+
+  const shouldShowContent = useMemo(() => {
+    return !isAuthenticated && !isLoggingIn;
+  }, [isAuthenticated, isLoggingIn]);
+
+  const handleEmailChange = useCallback((text: string) => {
+    setEmail(text);
+    if (emailError) setEmailError(null);
+  }, [emailError]);
+
+  const handleLogout = useCallback(async () => {
+    const result = await logout();
+    if (result.success) {
+      console.log('User logged out');
+    } else {
+      console.error('Logout failed:', result.error);
+    }
+  }, [logout]);
+
+  const handleContinueToApp = useCallback(() => {
+    try {
+      switch (user?.role) {
+        case "client":
+          router.replace("/(app)/(client)/(tabs)/home");
+          break;
+        case "provider":
+          router.replace("/(app)/(provider)/(tabs)/schedule");
+          break;
+        case "owner":
+          router.replace("/(app)/(shop-owner)/(tabs)/dashboard");
+          break;
+        default:
+          router.replace("/(app)/(client)/(tabs)/home");
+          break;
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+      router.replace("/(auth)/login");
+    }
+  }, [user]);
+
+  const handleClearData = useCallback(async () => {
+    const result = await logout();
+    if (result.success) {
+      console.log('Cleared stored authentication data');
+    } else {
+      console.error('Failed to clear data:', result.error);
+    }
+  }, [logout]);
 
   return (
     <View style={styles.container}>
@@ -306,14 +350,7 @@ export default function LandingScreen() {
                 {(isAuthenticated || user) && (
                   <TouchableOpacity
                     style={[styles.statusButton, { backgroundColor: 'rgba(255, 68, 68, 0.1)', borderColor: '#FF4444' }]}
-                    onPress={async () => {
-                      const result = await logout();
-                      if (result.success) {
-                        console.log('Cleared stored authentication data');
-                      } else {
-                        console.error('Failed to clear data:', result.error);
-                      }
-                    }}
+                    onPress={handleClearData}
                     testID="clear-data-button"
                   >
                     <Text style={[styles.statusButtonText, { color: '#FF4444' }]}>Clear Stored Data & Logout</Text>
@@ -329,43 +366,14 @@ export default function LandingScreen() {
                 <Text style={styles.loggedInSubtext}>Role: {user.role}</Text>
                 <TouchableOpacity
                   style={styles.logoutButton}
-                  onPress={async () => {
-                    const result = await logout();
-                    if (result.success) {
-                      console.log('User logged out');
-                    } else {
-                      console.error('Logout failed:', result.error);
-                    }
-                  }}
+                  onPress={handleLogout}
                   testID="logout-button"
                 >
                   <Text style={styles.logoutButtonText}>LOGOUT</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.continueToAppButton}
-                  onPress={() => {
-                    // Navigate to role-specific home
-                    try {
-                      switch (user.role) {
-                        case "client":
-                          router.replace("/(app)/(client)/(tabs)/home");
-                          break;
-                        case "provider":
-                          router.replace("/(app)/(provider)/(tabs)/schedule");
-                          break;
-                        case "owner":
-                          router.replace("/(app)/(shop-owner)/(tabs)/dashboard");
-                          break;
-                        default:
-                          router.replace("/(app)/(client)/(tabs)/home");
-                          break;
-                      }
-                    } catch (error) {
-                      console.error('Navigation error:', error);
-                      // Fallback to auth screen if navigation fails
-                      router.replace("/(auth)/login");
-                    }
-                  }}
+                  onPress={handleContinueToApp}
                   testID="continue-to-app-button"
                 >
                   <Text style={styles.continueToAppButtonText}>CONTINUE TO APP</Text>
@@ -374,7 +382,7 @@ export default function LandingScreen() {
             )}
 
             {/* Content Section - only show if not authenticated */}
-            {!isAuthenticated && (
+            {shouldShowContent && (
               <View style={styles.contentSection}>
                 <View style={styles.formContainer}>
                 <View style={styles.inputContainer}>
@@ -384,10 +392,7 @@ export default function LandingScreen() {
                     placeholder="Enter your email to log in or sign up"
                     placeholderTextColor="#999999"
                     value={email}
-                    onChangeText={(text) => {
-                      setEmail(text);
-                      if (emailError) setEmailError(null);
-                    }}
+                    onChangeText={handleEmailChange}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
