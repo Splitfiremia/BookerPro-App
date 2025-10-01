@@ -16,6 +16,11 @@ import { useAuth } from "@/providers/AuthProvider";
 import { testUsers } from "@/mocks/users";
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from "@/constants/theme";
 
+interface LoginParams {
+  email: string;
+  role: string;
+}
+
 export default function LandingScreen() {
   const { isDeveloperMode, setDeveloperMode, login, logout, isAuthenticated, user, isInitialized } = useAuth();
   const [email, setEmail] = useState<string>("");
@@ -105,12 +110,14 @@ export default function LandingScreen() {
 
     setEmailError(null);
     
+    const params: LoginParams = { 
+      email: email.trim(),
+      role: "client"
+    };
+    
     router.push({
-      pathname: "/(auth)/login",
-      params: { 
-        email: email.trim(),
-        role: "client"
-      }
+      pathname: "/(auth)/login" as const,
+      params
     });
   }, [email, validateEmail]);
 
