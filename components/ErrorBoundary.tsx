@@ -45,24 +45,23 @@ export default class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-  componentDidUpdate(prevProps: Props) {
-    const { resetKeys, resetOnPropsChange } = this.props;
-    const { hasError } = this.state;
-    
-    if (hasError && resetOnPropsChange) {
-      // Reset error boundary when props change
-      this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+  componentDidUpdate(prevProps: Props, prevState: State) {
+    // Only process reset logic if we're transitioning FROM error state
+    // and resetKeys have actually changed
+    if (!prevState.hasError || this.state.hasError) {
+      // Either we weren't in error state before, or we still are - don't reset
+      return;
     }
     
-    if (hasError && resetKeys) {
-      // Reset error boundary when resetKeys change
-      const hasResetKeyChanged = resetKeys.some(
-        (key, index) => this.previousResetKeys[index] !== key
-      );
+    const { resetKeys } = this.props;
+    
+    // Only check resetKeys if they exist and have changed
+    if (resetKeys && prevProps.resetKeys) {
+      const hasResetKeyChanged = resetKeys.length !== prevProps.resetKeys.length ||
+        resetKeys.some((key, index) => prevProps.resetKeys![index] !== key);
       
       if (hasResetKeyChanged) {
         this.previousResetKeys = resetKeys;
-        this.setState({ hasError: false, error: undefined, errorInfo: undefined });
       }
     }
   }
