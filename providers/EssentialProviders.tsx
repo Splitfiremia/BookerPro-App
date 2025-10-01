@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WithSafeAreaDeviceProvider } from './DeviceProvider';
 import { StreamlinedAuthProvider } from './StreamlinedAuthProvider';
@@ -28,9 +28,13 @@ interface EssentialProvidersProps {
 export const EssentialProviders = React.memo(({ children }: EssentialProvidersProps) => {
   console.log('[PERF] EssentialProviders: Rendering (Tier 1 - Essential)');
   const startTime = performance.now();
-  const [isHydrated, setIsHydrated] = useState(false);
   
-  const content = useMemo(() => (
+  useEffect(() => {
+    const endTime = performance.now();
+    console.log(`[PERF] EssentialProviders: Mounted in ${(endTime - startTime).toFixed(2)}ms`);
+  }, [startTime]);
+  
+  return (
     <QueryClientProvider client={queryClient}>
       <WithSafeAreaDeviceProvider>
         <StreamlinedAuthProvider>
@@ -38,21 +42,7 @@ export const EssentialProviders = React.memo(({ children }: EssentialProvidersPr
         </StreamlinedAuthProvider>
       </WithSafeAreaDeviceProvider>
     </QueryClientProvider>
-  ), [children]);
-  
-  useEffect(() => {
-    console.log('[PERF] EssentialProviders: Hydration complete');
-    setIsHydrated(true);
-    const endTime = performance.now();
-    console.log(`[PERF] EssentialProviders: Hydrated in ${(endTime - startTime).toFixed(2)}ms`);
-  }, [startTime]);
-  
-  if (!isHydrated) {
-    console.log('[PERF] EssentialProviders: Waiting for hydration');
-    return null;
-  }
-  
-  return content;
+  );
 });
 
 EssentialProviders.displayName = 'EssentialProviders';

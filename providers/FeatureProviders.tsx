@@ -49,18 +49,7 @@ interface RoleBasedProvidersProps {
 
 const RoleBasedProviders = React.memo(({ children }: RoleBasedProvidersProps) => {
   const { user } = useAuth();
-  const [isHydrated, setIsHydrated] = useState(false);
   const needsManagementProviders = user?.role === 'owner' || user?.role === 'provider';
-  
-  useEffect(() => {
-    console.log('[PERF] RoleBasedProviders: Hydration complete');
-    setIsHydrated(true);
-  }, []);
-  
-  if (!isHydrated) {
-    console.log('[PERF] RoleBasedProviders: Waiting for hydration');
-    return null;
-  }
   
   if (!needsManagementProviders) {
     console.log('[PERF] RoleBasedProviders: Skipping management providers for client');
@@ -70,7 +59,7 @@ const RoleBasedProviders = React.memo(({ children }: RoleBasedProvidersProps) =>
   console.log('[PERF] RoleBasedProviders: Loading management providers for', user?.role);
   
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<>{children}</>}>
       <LazyTeamManagementProvider>
         <LazyShopManagementProvider>
           {children}
@@ -90,41 +79,36 @@ export const FeatureProviders = React.memo(({ children }: FeatureProvidersProps)
   console.log('[PERF] FeatureProviders: Rendering (Tier 3 - Feature Providers)');
   const startTime = performance.now();
   const { isAuthenticated, isInitialized } = useAuth();
-  const [isHydrated, setIsHydrated] = useState(false);
   const [tier, setTier] = useState(0);
   
   useEffect(() => {
-    console.log('[PERF] FeatureProviders: Hydration complete');
-    setIsHydrated(true);
-  }, []);
-  
-  useEffect(() => {
-    if (!isHydrated || !isInitialized) return;
+    if (!isInitialized) return;
     
     console.log('[PERF] FeatureProviders: Starting progressive load');
     
-    setTimeout(() => {
+    const timer1 = setTimeout(() => {
       console.log('[PERF] FeatureProviders: Loading Tier 3a (Enhancement providers)');
       setTier(1);
     }, 300);
     
-    setTimeout(() => {
+    const timer2 = setTimeout(() => {
       console.log('[PERF] FeatureProviders: Loading Tier 3b (Feature providers)');
       setTier(2);
     }, 800);
     
-    setTimeout(() => {
+    const timer3 = setTimeout(() => {
       console.log('[PERF] FeatureProviders: Loading Tier 3c (Role-based providers)');
       setTier(3);
       const endTime = performance.now();
       console.log(`[PERF] FeatureProviders: All tiers loaded in ${(endTime - startTime).toFixed(2)}ms`);
     }, 1500);
-  }, [isHydrated, isInitialized, startTime]);
-  
-  if (!isHydrated) {
-    console.log('[PERF] FeatureProviders: Waiting for hydration');
-    return null;
-  }
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, [isInitialized, startTime]);
   
   if (!isInitialized) {
     return <>{children}</>;
@@ -135,7 +119,7 @@ export const FeatureProviders = React.memo(({ children }: FeatureProvidersProps)
   }
   
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<>{children}</>}>
       {tier >= 1 && (
         <LazyOnboardingProvider>
           <LazyNotificationProvider>
