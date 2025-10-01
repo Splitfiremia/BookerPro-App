@@ -2,6 +2,8 @@ import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { useStreamlinedAuth as useAuth } from './StreamlinedAuthProvider';
 import { performanceMonitor } from '@/services/PerformanceMonitoringService';
 
+const FallbackComponent = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+
 const LazyOnboardingProvider = lazy(() => 
   import('./OnboardingProvider').then(m => ({ 
     default: m.OnboardingProvider 
@@ -153,7 +155,7 @@ export const FeatureProviders = React.memo(({ children }: FeatureProvidersProps)
   }
   
   return (
-    <Suspense fallback={<>{children}</>}>
+    <Suspense fallback={<FallbackComponent>{children}</FallbackComponent>}>
       {tier >= 1 && (
         <LazyOnboardingProvider>
           <LazyNotificationProvider>

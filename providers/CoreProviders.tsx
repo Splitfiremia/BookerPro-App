@@ -2,6 +2,8 @@ import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { useStreamlinedAuth as useAuth } from './StreamlinedAuthProvider';
 import { performanceMonitor } from '@/services/PerformanceMonitoringService';
 
+const FallbackComponent = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+
 const LazyAppointmentProvider = lazy(() => 
   import('./AppointmentProvider').then(m => ({ 
     default: m.AppointmentProvider 
@@ -82,7 +84,7 @@ export const CoreProviders = React.memo(({ children }: CoreProvidersProps) => {
   }
   
   return (
-    <Suspense fallback={<>{children}</>}>
+    <Suspense fallback={<FallbackComponent>{children}</FallbackComponent>}>
       <LazyAppointmentProvider>
         <LazyServicesProvider>
           {children}

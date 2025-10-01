@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import createContextHook from "@nkzw/create-context-hook";
 import { testUsers } from "@/mocks/users";
-import { UserRole } from "@/models/database";
+import type { UserRole } from "@/models/database";
 import { useAsyncStorageBatch } from "@/utils/asyncStorageUtils";
 
 export interface User {
@@ -18,7 +18,7 @@ export interface User {
 
 export const [StreamlinedAuthProvider, useStreamlinedAuth] = createContextHook(() => {
   console.log('[PERF] StreamlinedAuthProvider: Initializing (optimized)');
-  const initStartTime = performance.now();
+  const initStartTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
   
   const [user, setUser] = useState<User | null>(null);
   const [isDeveloperMode, setIsDeveloperMode] = useState<boolean>(false);
@@ -54,7 +54,7 @@ export const [StreamlinedAuthProvider, useStreamlinedAuth] = createContextHook((
           setIsDeveloperMode(data.developerMode);
         }
         
-        const initEndTime = performance.now();
+        const initEndTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
         console.log(`[PERF] StreamlinedAuthProvider: Background load completed in ${(initEndTime - initStartTime).toFixed(2)}ms`);
         
       } catch {
@@ -80,7 +80,7 @@ export const [StreamlinedAuthProvider, useStreamlinedAuth] = createContextHook((
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     console.log('[PERF] StreamlinedAuthProvider: Login started');
-    const loginStartTime = performance.now();
+    const loginStartTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
     setIsLoading(true);
     
     try {
@@ -106,7 +106,7 @@ export const [StreamlinedAuthProvider, useStreamlinedAuth] = createContextHook((
         console.warn('[PERF] StreamlinedAuthProvider: Storage failed, continuing with memory-only auth:', error);
       });
       
-      const loginEndTime = performance.now();
+      const loginEndTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
       console.log(`[PERF] StreamlinedAuthProvider: Login completed in ${(loginEndTime - loginStartTime).toFixed(2)}ms`);
       
       return { success: true };

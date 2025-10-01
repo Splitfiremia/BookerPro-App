@@ -34,17 +34,25 @@ export default function RootLayout() {
     if (isInitializedRef.current) return;
     isInitializedRef.current = true;
     
-    performanceMonitor.markStart('app-initialization');
-    console.log('[PERF] 🚀 App startup initiated');
+    try {
+      performanceMonitor.markStart('app-initialization');
+      console.log('[PERF] 🚀 App startup initiated');
+    } catch (error) {
+      console.warn('[PERF] Performance monitoring initialization failed:', error);
+    }
     
     return () => {
-      performanceMonitor.markEnd('app-initialization');
+      try {
+        performanceMonitor.markEnd('app-initialization');
+      } catch (error) {
+        console.warn('[PERF] Performance monitoring cleanup failed:', error);
+      }
     };
   }, []);
   
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     
     const initializeApp = async () => {
       try {

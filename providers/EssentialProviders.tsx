@@ -4,23 +4,30 @@ import { WithSafeAreaDeviceProvider } from './DeviceProvider';
 import { StreamlinedAuthProvider } from './StreamlinedAuthProvider';
 import { performanceMonitor } from '@/services/PerformanceMonitoringService';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 1000 * 60 * 5,
-      refetchOnWindowFocus: false,
-      gcTime: 1000 * 60 * 10,
-      refetchOnMount: false,
-      refetchOnReconnect: false,
-      networkMode: 'online',
-    },
-    mutations: {
-      networkMode: 'online',
-      retry: 1,
-    },
-  },
-});
+let queryClientInstance: QueryClient | null = null;
+
+function getQueryClient() {
+  if (!queryClientInstance) {
+    queryClientInstance = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: 1,
+          staleTime: 1000 * 60 * 5,
+          refetchOnWindowFocus: false,
+          gcTime: 1000 * 60 * 10,
+          refetchOnMount: false,
+          refetchOnReconnect: false,
+          networkMode: 'online',
+        },
+        mutations: {
+          networkMode: 'online',
+          retry: 1,
+        },
+      },
+    });
+  }
+  return queryClientInstance;
+}
 
 interface EssentialProvidersProps {
   children: React.ReactNode;
@@ -53,7 +60,7 @@ export const EssentialProviders = React.memo(({ children }: EssentialProvidersPr
   }
   
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={getQueryClient()}>
       <WithSafeAreaDeviceProvider>
         <StreamlinedAuthProvider>
           {children}

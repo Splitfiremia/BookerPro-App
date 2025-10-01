@@ -9,6 +9,7 @@ import {
   TextInput,
   StatusBar,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -16,21 +17,14 @@ import { useAuth } from "@/providers/AuthProvider";
 import { testUsers } from "@/mocks/users";
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from "@/constants/theme";
 
-interface LoginParams {
-  email: string;
-  role: string;
-}
-
-export default function LandingScreen() {
+function LandingScreenContent() {
   const { isDeveloperMode, setDeveloperMode, login, logout, isAuthenticated, user, isInitialized } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   
-  // Add startup logging
   console.log('LandingScreen: Component rendering, isInitialized:', isInitialized);
   
-  // Log auth state for debugging
   useEffect(() => {
     console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode, 'isInitialized:', isInitialized);
   }, [isAuthenticated, user, isDeveloperMode, isInitialized]);
@@ -110,14 +104,12 @@ export default function LandingScreen() {
 
     setEmailError(null);
     
-    const params: LoginParams = { 
-      email: email.trim(),
-      role: "client"
-    };
-    
     router.push({
-      pathname: "/(auth)/login" as const,
-      params
+      pathname: "/(auth)/login",
+      params: { 
+        email: email.trim(),
+        role: "client"
+      }
     });
   }, [email, validateEmail]);
 
@@ -236,7 +228,6 @@ export default function LandingScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <SafeAreaView style={styles.safeArea}>
-        {/* Developer Mode Toggle */}
         <TouchableOpacity
           style={styles.developerModeToggle}
           onPress={toggleDeveloperMode}
@@ -258,12 +249,10 @@ export default function LandingScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Logo Section */}
             <View style={styles.logoSection}>
               <Text style={styles.logo}>BookerPro</Text>
             </View>
 
-            {/* Developer Mode Test Login Section */}
             {isDeveloperMode && (
               <View style={styles.testLoginSection}>
                 <Text style={styles.testLoginTitle}>Quick Test Login</Text>
@@ -353,7 +342,6 @@ export default function LandingScreen() {
                   <Text style={styles.statusButtonText}>View Onboarding Status</Text>
                 </TouchableOpacity>
                 
-                {/* Clear stored data button */}
                 {(isAuthenticated || user) && (
                   <TouchableOpacity
                     style={[styles.statusButton, { backgroundColor: 'rgba(255, 68, 68, 0.1)', borderColor: '#FF4444' }]}
@@ -366,7 +354,6 @@ export default function LandingScreen() {
               </View>
             )}
 
-            {/* Show logout option if user is authenticated but not in developer mode */}
             {isAuthenticated && user && !isDeveloperMode && (
               <View style={styles.loggedInSection}>
                 <Text style={styles.loggedInText}>You are logged in as {user.email}</Text>
@@ -388,7 +375,6 @@ export default function LandingScreen() {
               </View>
             )}
 
-            {/* Content Section - only show if not authenticated */}
             {shouldShowContent && (
               <View style={styles.contentSection}>
                 <View style={styles.formContainer}>
@@ -412,7 +398,6 @@ export default function LandingScreen() {
                   <Text style={styles.errorText}>{emailError}</Text>
                 )}
 
-                {/* Quick Test Credentials */}
                 <View style={styles.quickTestContainer}>
                   <Text style={styles.quickTestLabel}>Quick test:</Text>
                   <View style={styles.quickTestButtons}>
@@ -454,7 +439,6 @@ export default function LandingScreen() {
               </View>
             )}
 
-            {/* Bottom Section */}
             <View style={styles.bottomSection}>
               <View style={styles.dividerContainer}>
                 <View style={styles.dividerLine} />
@@ -475,6 +459,21 @@ export default function LandingScreen() {
       </SafeAreaView>
     </View>
   );
+}
+
+export default function LandingScreen() {
+  const authContext = useAuth();
+  
+  if (!authContext) {
+    console.error('LandingScreen: Auth context is undefined');
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+  
+  return <LandingScreenContent />;
 }
 
 const styles = StyleSheet.create({
@@ -729,7 +728,6 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.xs,
     fontWeight: "600" as const,
   },
-
   disabledButton: {
     opacity: 0.5,
   },
