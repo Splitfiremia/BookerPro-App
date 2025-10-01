@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -28,8 +28,12 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   console.log('[PERF] RootLayout: Rendering');
+  const isInitializedRef = useRef(false);
   
   useEffect(() => {
+    if (isInitializedRef.current) return;
+    isInitializedRef.current = true;
+    
     performanceMonitor.markStart('app-initialization');
     console.log('[PERF] 🚀 App startup initiated');
     
@@ -40,6 +44,7 @@ export default function RootLayout() {
   
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
     
     const initializeApp = async () => {
       try {
@@ -52,12 +57,11 @@ export default function RootLayout() {
       }
     };
     
-    // Delay initialization to not block startup - reduced to 3 seconds
-    const timeoutId = setTimeout(initializeApp, 3000);
+    timeoutId = setTimeout(initializeApp, 3000);
     
     return () => {
       mounted = false;
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       try {
         cleanupDeepLinking();
       } catch (error) {

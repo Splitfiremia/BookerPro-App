@@ -1,57 +1,40 @@
 import { router, Slot } from "expo-router";
-import { useAuth } from "@/providers/AuthProvider";
+import { useStreamlinedAuth as useAuth } from "@/providers/StreamlinedAuthProvider";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { COLORS, FONTS, FONT_SIZES, SPACING } from "@/constants/theme";
 
 export default function AppLayout() {
   const { isLoading, isAuthenticated, user, isInitialized } = useAuth();
-  const [dashboardReady, setDashboardReady] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const hasRedirectedRef = useRef(false);
 
   useEffect(() => {
-    if (isInitialized && !isLoading && !isAuthenticated && !redirecting) {
-      console.log('AppLayout: User not authenticated, initiating redirect');
-      setRedirecting(true);
-      
-      const redirect = async () => {
-        try {
-          await router.replace("/");
-          console.log('AppLayout: Successfully redirected to index');
-        } catch (error) {
-          console.error('AppLayout: Error redirecting to index:', error);
-          setRedirecting(false);
-        }
-      };
-      
-      redirect();
-    }
-  }, [isInitialized, isLoading, isAuthenticated, redirecting]);
+    if (!isInitialized) return;
 
-  useEffect(() => {
-    if (isAuthenticated && user && !dashboardReady) {
-      console.log('AppLayout: Preparing dashboard for user role:', user.role);
-      setDashboardReady(true);
-      console.log('AppLayout: Dashboard ready for role:', user.role);
+    if (!isAuthenticated || !user) {
+      if (!hasRedirectedRef.current) {
+        console.log('AppLayout: User not authenticated, redirecting to index');
+        hasRedirectedRef.current = true;
+        
+        setTimeout(() => {
+          router.replace("/");
+        }, 100);
+      }
+      return;
     }
-  }, [isAuthenticated, user, dashboardReady]);
 
-  if (!isInitialized) {
+    if (isAuthenticated && user && !isReady) {
+      console.log('AppLayout: User authenticated, preparing dashboard for role:', user.role);
+      setIsReady(true);
+    }
+  }, [isInitialized, isAuthenticated, user, isReady]);
+
+  if (!isInitialized || isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Initializing app...</Text>
-      </View>
-    );
-  }
-
-  if (isLoading || redirecting) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>
-          {redirecting ? 'Redirecting...' : 'Authenticating...'}
-        </Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -60,19 +43,16 @@ export default function AppLayout() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Please wait...</Text>
+        <Text style={styles.loadingText}>Redirecting...</Text>
       </View>
     );
   }
 
-  if (!dashboardReady) {
+  if (!isReady) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Preparing your dashboard...</Text>
-        <Text style={styles.loadingSubtext}>
-          Setting up {user.role} workspace
-        </Text>
+        <Text style={styles.loadingText}>Preparing workspace...</Text>
       </View>
     );
   }
