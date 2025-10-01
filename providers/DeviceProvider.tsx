@@ -16,7 +16,7 @@ export interface DeviceInfo {
   hasNotchLikeInsets: boolean;
 }
 
-export const [DeviceContext, useDevice] = createContextHook<DeviceInfo>(() => {
+export const [DeviceContext, useDevice] = createContextHook(() => {
   const insets = useSafeAreaInsets();
   const window = Dimensions.get('window');
   const [isHydrated, setIsHydrated] = useState(false);
