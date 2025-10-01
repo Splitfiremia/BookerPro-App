@@ -5,6 +5,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { EssentialProviders } from './EssentialProviders';
 import { CoreProviders } from './CoreProviders';
 import { FeatureProviders } from './FeatureProviders';
+import { performanceMonitor } from '@/services/PerformanceMonitoringService';
 
 function ProvidersErrorFallback() {
   return (
@@ -23,11 +24,17 @@ interface OptimizedProviderTreeV2Props {
 
 export default function OptimizedProviderTreeV2({ children }: OptimizedProviderTreeV2Props) {
   console.log('[PERF] OptimizedProviderTreeV2: Starting provider tree initialization');
-  const [startTime] = React.useState(() => typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const [startTime] = React.useState(() => {
+    performanceMonitor.markStart('provider-tree-init');
+    return typeof performance !== 'undefined' ? performance.now() : Date.now();
+  });
   
   useEffect(() => {
     const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
     const totalTime = endTime - startTime;
+    
+    performanceMonitor.markEnd('provider-tree-init');
+    performanceMonitor.markStartupMilestone('firstRender');
     
     console.log(`[PERF] OptimizedProviderTreeV2: Provider tree mounted in ${totalTime.toFixed(2)}ms`);
     
@@ -45,6 +52,14 @@ export default function OptimizedProviderTreeV2({ children }: OptimizedProviderT
         console.log(`[PERF] Total app startup time: ${measure.duration.toFixed(2)}ms`);
       }
     }
+    
+    setTimeout(() => {
+      performanceMonitor.calculateStartupMetrics();
+      
+      if (__DEV__) {
+        console.log('\n[PERF] 📋 Export metrics:', performanceMonitor.exportMetrics());
+      }
+    }, 2000);
   }, [startTime]);
   
   return (

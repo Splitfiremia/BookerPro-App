@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WithSafeAreaDeviceProvider } from './DeviceProvider';
 import { StreamlinedAuthProvider } from './StreamlinedAuthProvider';
+import { performanceMonitor } from '@/services/PerformanceMonitoringService';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,12 +29,23 @@ interface EssentialProvidersProps {
 export const EssentialProviders = React.memo(({ children }: EssentialProvidersProps) => {
   console.log('[PERF] EssentialProviders: Rendering (Tier 1 - Essential)');
   const [isHydrated, setIsHydrated] = useState(false);
-  const [startTime] = useState(() => typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const [startTime] = useState(() => {
+    performanceMonitor.markStart('essential-providers');
+    return typeof performance !== 'undefined' ? performance.now() : Date.now();
+  });
   
   useEffect(() => {
     setIsHydrated(true);
     const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    console.log(`[PERF] EssentialProviders: Hydrated in ${(endTime - startTime).toFixed(2)}ms`);
+    const duration = endTime - startTime;
+    
+    performanceMonitor.markEnd('essential-providers');
+    performanceMonitor.markStartupMilestone('essentialsLoaded');
+    performanceMonitor.trackProvider('QueryClient', 'essential', duration * 0.3);
+    performanceMonitor.trackProvider('SafeArea+Device', 'essential', duration * 0.2);
+    performanceMonitor.trackProvider('Auth', 'essential', duration * 0.5);
+    
+    console.log(`[PERF] EssentialProviders: Hydrated in ${duration.toFixed(2)}ms`);
   }, [startTime]);
   
   if (!isHydrated) {

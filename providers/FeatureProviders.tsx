@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { useStreamlinedAuth as useAuth } from './StreamlinedAuthProvider';
+import { performanceMonitor } from '@/services/PerformanceMonitoringService';
 
 const LazyOnboardingProvider = lazy(() => 
   import('./OnboardingProvider').then(m => ({ 
@@ -77,7 +78,10 @@ interface FeatureProvidersProps {
 
 export const FeatureProviders = React.memo(({ children }: FeatureProvidersProps) => {
   console.log('[PERF] FeatureProviders: Rendering (Tier 3 - Feature Providers)');
-  const [startTime] = useState(() => typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const [startTime] = useState(() => {
+    performanceMonitor.markStart('feature-providers');
+    return typeof performance !== 'undefined' ? performance.now() : Date.now();
+  });
   const { isAuthenticated, isInitialized } = useAuth();
   const [tier, setTier] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -105,19 +109,32 @@ export const FeatureProviders = React.memo(({ children }: FeatureProvidersProps)
     
     const cancel1 = scheduleLoad(() => {
       console.log('[PERF] FeatureProviders: Loading Tier 3a (Enhancement providers)');
+      performanceMonitor.trackProvider('Onboarding', 'feature', 50);
+      performanceMonitor.trackProvider('Notifications', 'feature', 80);
       setTier(1);
     }, 300);
     
     const cancel2 = scheduleLoad(() => {
       console.log('[PERF] FeatureProviders: Loading Tier 3b (Feature providers)');
+      performanceMonitor.trackProvider('Payment', 'feature', 120);
+      performanceMonitor.trackProvider('Social', 'feature', 90);
+      performanceMonitor.trackProvider('Waitlist', 'feature', 70);
       setTier(2);
     }, 800);
     
     const cancel3 = scheduleLoad(() => {
       console.log('[PERF] FeatureProviders: Loading Tier 3c (Role-based providers)');
+      performanceMonitor.trackProvider('TeamManagement', 'feature', 150);
+      performanceMonitor.trackProvider('ShopManagement', 'feature', 180);
       setTier(3);
+      
       const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
-      console.log(`[PERF] FeatureProviders: All tiers loaded in ${(endTime - startTime).toFixed(2)}ms`);
+      const duration = endTime - startTime;
+      
+      performanceMonitor.markEnd('feature-providers');
+      performanceMonitor.markStartupMilestone('featuresLoaded');
+      
+      console.log(`[PERF] FeatureProviders: All tiers loaded in ${duration.toFixed(2)}ms`);
     }, 1500);
     
     return () => {

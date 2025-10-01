@@ -8,6 +8,7 @@ import { CriticalErrorBoundary } from "@/components/SpecializedErrorBoundaries";
 import OptimizedProviderTreeV2 from "@/providers/OptimizedProviderTree-v2";
 import { COLORS } from "@/constants/theme";
 import { initializeDeepLinking, cleanupDeepLinking } from "@/utils/deepLinkHandler";
+import { performanceMonitor } from "@/services/PerformanceMonitoringService";
 
 function RootLayoutNav() {
   return (
@@ -26,9 +27,17 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  console.log('RootLayout: Rendering');
+  console.log('[PERF] RootLayout: Rendering');
   
-  // Initialize deep linking after mount - non-blocking
+  useEffect(() => {
+    performanceMonitor.markStart('app-initialization');
+    console.log('[PERF] 🚀 App startup initiated');
+    
+    return () => {
+      performanceMonitor.markEnd('app-initialization');
+    };
+  }, []);
+  
   useEffect(() => {
     let mounted = true;
     

@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { useStreamlinedAuth as useAuth } from './StreamlinedAuthProvider';
+import { performanceMonitor } from '@/services/PerformanceMonitoringService';
 
 const LazyAppointmentProvider = lazy(() => 
   import('./AppointmentProvider').then(m => ({ 
@@ -19,7 +20,10 @@ interface CoreProvidersProps {
 
 export const CoreProviders = React.memo(({ children }: CoreProvidersProps) => {
   console.log('[PERF] CoreProviders: Rendering (Tier 2 - Core Business Logic)');
-  const [startTime] = useState(() => typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const [startTime] = useState(() => {
+    performanceMonitor.markStart('core-providers');
+    return typeof performance !== 'undefined' ? performance.now() : Date.now();
+  });
   const { isAuthenticated, isInitialized } = useAuth();
   const [shouldLoad, setShouldLoad] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -38,13 +42,27 @@ export const CoreProviders = React.memo(({ children }: CoreProvidersProps) => {
         requestAnimationFrame(() => {
           setShouldLoad(true);
           const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
-          console.log(`[PERF] CoreProviders: Triggered load in ${(endTime - startTime).toFixed(2)}ms`);
+          const duration = endTime - startTime;
+          
+          performanceMonitor.markEnd('core-providers');
+          performanceMonitor.markStartupMilestone('coreLoaded');
+          performanceMonitor.trackProvider('Appointments', 'core', duration * 0.6);
+          performanceMonitor.trackProvider('Services', 'core', duration * 0.4);
+          
+          console.log(`[PERF] CoreProviders: Triggered load in ${duration.toFixed(2)}ms`);
         });
       } else {
         setTimeout(() => {
           setShouldLoad(true);
           const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
-          console.log(`[PERF] CoreProviders: Triggered load in ${(endTime - startTime).toFixed(2)}ms`);
+          const duration = endTime - startTime;
+          
+          performanceMonitor.markEnd('core-providers');
+          performanceMonitor.markStartupMilestone('coreLoaded');
+          performanceMonitor.trackProvider('Appointments', 'core', duration * 0.6);
+          performanceMonitor.trackProvider('Services', 'core', duration * 0.4);
+          
+          console.log(`[PERF] CoreProviders: Triggered load in ${duration.toFixed(2)}ms`);
         }, 0);
       }
     } else if (isInitialized && !isAuthenticated) {
