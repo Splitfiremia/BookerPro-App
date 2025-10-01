@@ -20,6 +20,7 @@ export const [StreamlinedAuthProvider, useStreamlinedAuth] = createContextHook((
   console.log('[PERF] StreamlinedAuthProvider: Initializing (optimized)');
   const initStartTime = performance.now();
   
+  const [isHydrated, setIsHydrated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isDeveloperMode, setIsDeveloperMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -27,6 +28,13 @@ export const [StreamlinedAuthProvider, useStreamlinedAuth] = createContextHook((
   const { multiGet, set, remove } = useAsyncStorageBatch();
   
   useEffect(() => {
+    console.log('[PERF] StreamlinedAuthProvider: Hydration complete');
+    setIsHydrated(true);
+  }, []);
+  
+  useEffect(() => {
+    if (!isHydrated) return;
+    
     let isMounted = true;
     
     console.log('[PERF] StreamlinedAuthProvider: Setting initialized immediately (non-blocking)');
@@ -67,7 +75,7 @@ export const [StreamlinedAuthProvider, useStreamlinedAuth] = createContextHook((
     return () => {
       isMounted = false;
     };
-  }, [multiGet, initStartTime]);
+  }, [isHydrated, multiGet, initStartTime]);
 
   const setDeveloperMode = useCallback(async (value: boolean) => {
     try {
@@ -205,14 +213,14 @@ export const [StreamlinedAuthProvider, useStreamlinedAuth] = createContextHook((
     isAuthenticated,
     isDeveloperMode,
     isLoading,
-    isInitialized,
+    isInitialized: isHydrated && isInitialized,
     setDeveloperMode,
     checkDeveloperMode: async () => isDeveloperMode,
     login,
     logout,
     register,
     updateProfile,
-  }), [user, isAuthenticated, isDeveloperMode, isLoading, isInitialized, setDeveloperMode, login, logout, register, updateProfile]);
+  }), [user, isAuthenticated, isDeveloperMode, isLoading, isHydrated, isInitialized, setDeveloperMode, login, logout, register, updateProfile]);
   
   return contextValue;
 });

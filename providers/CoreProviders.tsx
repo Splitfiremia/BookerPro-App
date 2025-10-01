@@ -21,9 +21,17 @@ export const CoreProviders = React.memo(({ children }: CoreProvidersProps) => {
   console.log('[PERF] CoreProviders: Rendering (Tier 2 - Core Business Logic)');
   const startTime = performance.now();
   const { isAuthenticated, isInitialized } = useAuth();
+  const [isHydrated, setIsHydrated] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
   
   useEffect(() => {
+    console.log('[PERF] CoreProviders: Hydration complete');
+    setIsHydrated(true);
+  }, []);
+  
+  useEffect(() => {
+    if (!isHydrated) return;
+    
     if (isInitialized && isAuthenticated) {
       console.log('[PERF] CoreProviders: User authenticated, loading core providers');
       requestAnimationFrame(() => {
@@ -35,7 +43,12 @@ export const CoreProviders = React.memo(({ children }: CoreProvidersProps) => {
       console.log('[PERF] CoreProviders: User not authenticated, skipping core providers');
       setShouldLoad(false);
     }
-  }, [isAuthenticated, isInitialized, startTime]);
+  }, [isAuthenticated, isInitialized, isHydrated, startTime]);
+  
+  if (!isHydrated) {
+    console.log('[PERF] CoreProviders: Waiting for hydration');
+    return null;
+  }
   
   if (!isInitialized) {
     console.log('[PERF] CoreProviders: Auth not initialized, rendering children directly');

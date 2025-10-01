@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WithSafeAreaDeviceProvider } from './DeviceProvider';
 import { StreamlinedAuthProvider } from './StreamlinedAuthProvider';
@@ -28,6 +28,7 @@ interface EssentialProvidersProps {
 export const EssentialProviders = React.memo(({ children }: EssentialProvidersProps) => {
   console.log('[PERF] EssentialProviders: Rendering (Tier 1 - Essential)');
   const startTime = performance.now();
+  const [isHydrated, setIsHydrated] = useState(false);
   
   const content = useMemo(() => (
     <QueryClientProvider client={queryClient}>
@@ -39,8 +40,17 @@ export const EssentialProviders = React.memo(({ children }: EssentialProvidersPr
     </QueryClientProvider>
   ), [children]);
   
-  const endTime = performance.now();
-  console.log(`[PERF] EssentialProviders: Rendered in ${(endTime - startTime).toFixed(2)}ms`);
+  useEffect(() => {
+    console.log('[PERF] EssentialProviders: Hydration complete');
+    setIsHydrated(true);
+    const endTime = performance.now();
+    console.log(`[PERF] EssentialProviders: Hydrated in ${(endTime - startTime).toFixed(2)}ms`);
+  }, [startTime]);
+  
+  if (!isHydrated) {
+    console.log('[PERF] EssentialProviders: Waiting for hydration');
+    return null;
+  }
   
   return content;
 });
