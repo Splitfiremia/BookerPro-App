@@ -1,4 +1,4 @@
-import { router, Stack } from "expo-router";
+import { router, Slot } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
@@ -9,13 +9,11 @@ export default function AppLayout() {
   const [dashboardReady, setDashboardReady] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
-  // Optimized redirect logic with better state management
   useEffect(() => {
     if (isInitialized && !isLoading && !isAuthenticated && !redirecting) {
       console.log('AppLayout: User not authenticated, initiating redirect');
       setRedirecting(true);
       
-      // Use immediate redirect for better performance
       const redirect = async () => {
         try {
           await router.replace("/");
@@ -30,7 +28,6 @@ export default function AppLayout() {
     }
   }, [isInitialized, isLoading, isAuthenticated, redirecting]);
 
-  // Prepare dashboard when user is authenticated
   useEffect(() => {
     if (isAuthenticated && user && !dashboardReady) {
       console.log('AppLayout: Preparing dashboard for user role:', user.role);
@@ -39,7 +36,6 @@ export default function AppLayout() {
     }
   }, [isAuthenticated, user, dashboardReady]);
 
-  // Show optimized loading states
   if (!isInitialized) {
     return (
       <View style={styles.loadingContainer}>
@@ -60,7 +56,6 @@ export default function AppLayout() {
     );
   }
 
-  // Don't render anything if not authenticated (will redirect)
   if (!isAuthenticated || !user) {
     return (
       <View style={styles.loadingContainer}>
@@ -70,7 +65,6 @@ export default function AppLayout() {
     );
   }
 
-  // Progressive dashboard loading
   if (!dashboardReady) {
     return (
       <View style={styles.loadingContainer}>
@@ -83,13 +77,7 @@ export default function AppLayout() {
     );
   }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(client)" options={{ headerShown: false }} />
-      <Stack.Screen name="(provider)" options={{ headerShown: false }} />
-      <Stack.Screen name="(shop-owner)" options={{ headerShown: false }} />
-    </Stack>
-  );
+  return <Slot />;
 }
 
 const styles = StyleSheet.create({
