@@ -1,4 +1,4 @@
-import { router, Slot } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useStreamlinedAuth as useAuth } from "@/providers/StreamlinedAuthProvider";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { useEffect, useState, useRef } from "react";
@@ -57,7 +57,13 @@ export default function AppLayout() {
     );
   }
 
-  return <Slot />;
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: COLORS.background } }}>
+      <Stack.Screen name="(client)" options={{ headerShown: false }} />
+      <Stack.Screen name="(provider)" options={{ headerShown: false }} />
+      <Stack.Screen name="(shop-owner)" options={{ headerShown: false }} />
+    </Stack>
+  );
 }
 
 const styles = StyleSheet.create({

@@ -29,30 +29,21 @@ export default function LandingScreen() {
     console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode, 'isInitialized:', isInitialized);
   }, [isAuthenticated, user, isDeveloperMode, isInitialized]);
 
-  // Auto-redirect authenticated users to their role-specific dashboard
-  // This handles both developer mode test logins and regular user sessions
   useEffect(() => {
     let isMounted = true;
     
-    // Only redirect if user is authenticated and initialized
-    // Skip redirect if user just logged out (to prevent redirect loops)
     if (isInitialized && isAuthenticated && user) {
       console.log('Index: Auto-redirecting authenticated user to role-specific dashboard');
       
       const redirectToRoleDashboard = () => {
-        if (!isMounted) {
-          console.log('Index: Component unmounted, skipping redirect');
-          return;
-        }
+        if (!isMounted) return;
         
         try {
-          // Double-check authentication state before redirecting to prevent logout race conditions
           if (!isAuthenticated || !user) {
             console.log('Index: User no longer authenticated, skipping redirect');
             return;
           }
           
-          // Additional check to ensure user object is still valid
           if (!user.role || !user.email) {
             console.log('Index: Invalid user object, skipping redirect');
             return;
@@ -80,10 +71,7 @@ export default function LandingScreen() {
         }
       };
       
-      // Longer delay to ensure logout operations complete and prevent redirect loops
-      const delay = 800;
-      const timeoutId = setTimeout(redirectToRoleDashboard, delay);
-      
+      const timeoutId = setTimeout(redirectToRoleDashboard, 800);
       return () => {
         isMounted = false;
         clearTimeout(timeoutId);
@@ -93,7 +81,7 @@ export default function LandingScreen() {
     return () => {
       isMounted = false;
     };
-  }, [isInitialized, isAuthenticated, user, router]);
+  }, [isInitialized, isAuthenticated, user]);
 
   // Remove loading state check to prevent hydration timeout
   // Auth will initialize in background without blocking render
@@ -139,49 +127,43 @@ export default function LandingScreen() {
   };
 
   const handleTestLogin = async (userType: 'client' | 'provider' | 'owner') => {
+    if (isLoggingIn) return;
+    
     const testUser = testUsers.find(user => user.role === userType);
     if (!testUser) {
       console.error('Test user not found for type:', userType);
+      alert('Test user configuration error. Please check developer settings.');
       return;
     }
 
     setIsLoggingIn(true);
     try {
-      // Ensure developer mode is enabled for test login
       if (!isDeveloperMode) {
         await setDeveloperMode(true);
       }
       
       console.log('Attempting test login for:', userType, 'with email:', testUser.email);
-      await login(testUser.email, testUser.password);
+      const loginResult = await login(testUser.email, testUser.password);
+      
+      if (!loginResult.success) {
+        throw new Error(loginResult.error || 'Login failed');
+      }
+      
       console.log(`Test login successful for ${userType}`);
       
-      // Navigate directly to role-specific home to avoid redirect loops
-      console.log(`Redirecting ${userType} to role-specific home`);
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      try {
-        switch (userType) {
-          case "client":
-            router.replace("/(app)/(client)/(tabs)/home");
-            break;
-          case "provider":
-            router.replace("/(app)/(provider)/(tabs)/schedule");
-            break;
-          case "owner":
-            router.replace("/(app)/(shop-owner)/(tabs)/dashboard");
-            break;
-          default:
-            router.replace("/(app)/(client)/(tabs)/home");
-            break;
-        }
-      } catch (error) {
-        console.error('Navigation error during test login:', error);
-        // Fallback to auth screen if navigation fails
-        router.replace("/(auth)/login");
-      }
+      const routes = {
+        client: "/(app)/(client)/(tabs)/home",
+        provider: "/(app)/(provider)/(tabs)/schedule", 
+        owner: "/(app)/(shop-owner)/(tabs)/dashboard"
+      };
+      
+      const route = routes[userType] || routes.client;
+      router.replace(route);
+      
     } catch (error) {
       console.error('Test login failed:', error);
-      // Show error to user
       alert(`Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoggingIn(false);
