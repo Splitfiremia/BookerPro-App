@@ -19,26 +19,42 @@ interface CoreProvidersProps {
 
 export const CoreProviders = React.memo(({ children }: CoreProvidersProps) => {
   console.log('[PERF] CoreProviders: Rendering (Tier 2 - Core Business Logic)');
-  const startTime = performance.now();
+  const [startTime] = useState(() => typeof performance !== 'undefined' ? performance.now() : Date.now());
   const { isAuthenticated, isInitialized } = useAuth();
   const [shouldLoad, setShouldLoad] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   
   useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+  
+  useEffect(() => {
+    if (!isHydrated) return;
+    
     if (isInitialized && isAuthenticated) {
       console.log('[PERF] CoreProviders: User authenticated, loading core providers');
-      requestAnimationFrame(() => {
-        setShouldLoad(true);
-        const endTime = performance.now();
-        console.log(`[PERF] CoreProviders: Triggered load in ${(endTime - startTime).toFixed(2)}ms`);
-      });
+      
+      if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
+        requestAnimationFrame(() => {
+          setShouldLoad(true);
+          const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+          console.log(`[PERF] CoreProviders: Triggered load in ${(endTime - startTime).toFixed(2)}ms`);
+        });
+      } else {
+        setTimeout(() => {
+          setShouldLoad(true);
+          const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+          console.log(`[PERF] CoreProviders: Triggered load in ${(endTime - startTime).toFixed(2)}ms`);
+        }, 0);
+      }
     } else if (isInitialized && !isAuthenticated) {
       console.log('[PERF] CoreProviders: User not authenticated, skipping core providers');
       setShouldLoad(false);
     }
-  }, [isAuthenticated, isInitialized, startTime]);
+  }, [isAuthenticated, isInitialized, startTime, isHydrated]);
   
-  if (!isInitialized) {
-    console.log('[PERF] CoreProviders: Auth not initialized, rendering children directly');
+  if (!isHydrated || !isInitialized) {
+    console.log('[PERF] CoreProviders: Not hydrated or auth not initialized, rendering children directly');
     return <>{children}</>;
   }
   

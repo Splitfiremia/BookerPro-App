@@ -77,40 +77,57 @@ interface FeatureProvidersProps {
 
 export const FeatureProviders = React.memo(({ children }: FeatureProvidersProps) => {
   console.log('[PERF] FeatureProviders: Rendering (Tier 3 - Feature Providers)');
-  const startTime = performance.now();
+  const [startTime] = useState(() => typeof performance !== 'undefined' ? performance.now() : Date.now());
   const { isAuthenticated, isInitialized } = useAuth();
   const [tier, setTier] = useState(0);
+  const [isHydrated, setIsHydrated] = useState(false);
   
   useEffect(() => {
-    if (!isInitialized) return;
+    setIsHydrated(true);
+  }, []);
+  
+  useEffect(() => {
+    if (!isHydrated || !isInitialized) return;
     
     console.log('[PERF] FeatureProviders: Starting progressive load');
     
-    const timer1 = setTimeout(() => {
+    const scheduleLoad = (callback: () => void, delay: number) => {
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        const idleCallback = (window as any).requestIdleCallback(() => {
+          setTimeout(callback, delay);
+        });
+        return () => (window as any).cancelIdleCallback(idleCallback);
+      } else {
+        const timer = setTimeout(callback, delay);
+        return () => clearTimeout(timer);
+      }
+    };
+    
+    const cancel1 = scheduleLoad(() => {
       console.log('[PERF] FeatureProviders: Loading Tier 3a (Enhancement providers)');
       setTier(1);
     }, 300);
     
-    const timer2 = setTimeout(() => {
+    const cancel2 = scheduleLoad(() => {
       console.log('[PERF] FeatureProviders: Loading Tier 3b (Feature providers)');
       setTier(2);
     }, 800);
     
-    const timer3 = setTimeout(() => {
+    const cancel3 = scheduleLoad(() => {
       console.log('[PERF] FeatureProviders: Loading Tier 3c (Role-based providers)');
       setTier(3);
-      const endTime = performance.now();
+      const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
       console.log(`[PERF] FeatureProviders: All tiers loaded in ${(endTime - startTime).toFixed(2)}ms`);
     }, 1500);
     
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
+      cancel1();
+      cancel2();
+      cancel3();
     };
-  }, [isInitialized, startTime]);
+  }, [isInitialized, startTime, isHydrated]);
   
-  if (!isInitialized) {
+  if (!isHydrated || !isInitialized) {
     return <>{children}</>;
   }
   
