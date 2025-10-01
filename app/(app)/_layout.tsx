@@ -1,4 +1,4 @@
-import { Stack, router } from "expo-router";
+import { router, Redirect } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
@@ -22,7 +22,7 @@ export default function AppLayout() {
           console.log('AppLayout: Successfully redirected to index');
         } catch (error) {
           console.error('AppLayout: Error redirecting to index:', error);
-          setRedirecting(false); // Reset on error
+          setRedirecting(false);
         }
       };
       
@@ -34,7 +34,6 @@ export default function AppLayout() {
   useEffect(() => {
     if (isAuthenticated && user && !dashboardReady) {
       console.log('AppLayout: Preparing dashboard for user role:', user.role);
-      // Immediate dashboard ready - no delay
       setDashboardReady(true);
       console.log('AppLayout: Dashboard ready for role:', user.role);
     }
@@ -84,13 +83,22 @@ export default function AppLayout() {
     );
   }
 
-  // Use optimized stack navigation with role-based routing
+  // Redirect to the appropriate role-based route
+  // This prevents multiple navigators from being registered simultaneously
+  if (user.role === 'client') {
+    return <Redirect href="/(app)/(client)/(tabs)/home" />;
+  } else if (user.role === 'provider') {
+    return <Redirect href="/(app)/(provider)/(tabs)/home" />;
+  } else if (user.role === 'owner') {
+    return <Redirect href="/(app)/(shop-owner)/(tabs)/dashboard" />;
+  }
+
+  // Fallback - should never reach here
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(client)" />
-      <Stack.Screen name="(provider)" />
-      <Stack.Screen name="(shop-owner)" />
-    </Stack>
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color={COLORS.primary} />
+      <Text style={styles.loadingText}>Loading...</Text>
+    </View>
   );
 }
 
