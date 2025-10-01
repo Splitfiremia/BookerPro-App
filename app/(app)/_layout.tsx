@@ -1,4 +1,4 @@
-import { router, Redirect } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
@@ -83,22 +83,12 @@ export default function AppLayout() {
     );
   }
 
-  // Redirect to the appropriate role-based route
-  // This prevents multiple navigators from being registered simultaneously
-  if (user.role === 'client') {
-    return <Redirect href="/(app)/(client)/(tabs)/home" />;
-  } else if (user.role === 'provider') {
-    return <Redirect href="/(app)/(provider)/(tabs)/home" />;
-  } else if (user.role === 'owner') {
-    return <Redirect href="/(app)/(shop-owner)/(tabs)/dashboard" />;
-  }
-
-  // Fallback - should never reach here
   return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={COLORS.primary} />
-      <Text style={styles.loadingText}>Loading...</Text>
-    </View>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(client)" options={{ headerShown: false }} />
+      <Stack.Screen name="(provider)" options={{ headerShown: false }} />
+      <Stack.Screen name="(shop-owner)" options={{ headerShown: false }} />
+    </Stack>
   );
 }
 
