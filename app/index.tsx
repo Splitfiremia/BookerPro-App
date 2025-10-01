@@ -78,7 +78,7 @@ export default function LandingScreen() {
       const timeoutId = setTimeout(redirectToRoleDashboard, delay);
       return () => clearTimeout(timeoutId);
     }
-  }, [isInitialized, isAuthenticated, user, isDeveloperMode]);
+  }, [isInitialized, isAuthenticated, user, isDeveloperMode, router]);
 
   // Remove loading state check to prevent hydration timeout
   // Auth will initialize in background without blocking render
