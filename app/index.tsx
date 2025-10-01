@@ -32,12 +32,19 @@ export default function LandingScreen() {
   // Auto-redirect authenticated users to their role-specific dashboard
   // This handles both developer mode test logins and regular user sessions
   useEffect(() => {
+    let isMounted = true;
+    
     // Only redirect if user is authenticated and initialized
     // Skip redirect if user just logged out (to prevent redirect loops)
     if (isInitialized && isAuthenticated && user) {
       console.log('Index: Auto-redirecting authenticated user to role-specific dashboard');
       
       const redirectToRoleDashboard = () => {
+        if (!isMounted) {
+          console.log('Index: Component unmounted, skipping redirect');
+          return;
+        }
+        
         try {
           // Double-check authentication state before redirecting to prevent logout race conditions
           if (!isAuthenticated || !user) {
@@ -76,9 +83,17 @@ export default function LandingScreen() {
       // Longer delay to ensure logout operations complete and prevent redirect loops
       const delay = 800;
       const timeoutId = setTimeout(redirectToRoleDashboard, delay);
-      return () => clearTimeout(timeoutId);
+      
+      return () => {
+        isMounted = false;
+        clearTimeout(timeoutId);
+      };
     }
-  }, [isInitialized, isAuthenticated, user, isDeveloperMode, router]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [isInitialized, isAuthenticated, user, router]);
 
   // Remove loading state check to prevent hydration timeout
   // Auth will initialize in background without blocking render
