@@ -392,6 +392,8 @@ export default function LandingScreen() {
                     autoCapitalize="none"
                     autoCorrect={false}
                     testID="email-input"
+                    accessibilityLabel="Email input"
+                    accessibilityHint="Enter your email address to continue to login or signup"
                   />
                 </View>
                 {emailError && (
@@ -430,6 +432,9 @@ export default function LandingScreen() {
                   style={styles.continueButton}
                   onPress={handleContinue}
                   testID="continue-button"
+                  accessibilityRole="button"
+                  accessibilityLabel="Continue to login"
+                  accessibilityHint="Navigates to the login screen with your entered email"
                 >
                   <Text style={styles.continueButtonText}>CONTINUE</Text>
                 </TouchableOpacity>
