@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { useAuth } from './AuthProvider';
+import { useStreamlinedAuth as useAuth } from './StreamlinedAuthProvider';
 
 const LazyAppointmentProvider = lazy(() => 
   import('./AppointmentProvider').then(m => ({ 

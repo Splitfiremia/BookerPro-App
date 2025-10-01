@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WithSafeAreaDeviceProvider } from './DeviceProvider';
-import { AuthProvider } from './AuthProvider';
+import { StreamlinedAuthProvider } from './StreamlinedAuthProvider';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,9 +32,9 @@ export const EssentialProviders = React.memo(({ children }: EssentialProvidersPr
   const content = useMemo(() => (
     <QueryClientProvider client={queryClient}>
       <WithSafeAreaDeviceProvider>
-        <AuthProvider>
+        <StreamlinedAuthProvider>
           {children}
-        </AuthProvider>
+        </StreamlinedAuthProvider>
       </WithSafeAreaDeviceProvider>
     </QueryClientProvider>
   ), [children]);

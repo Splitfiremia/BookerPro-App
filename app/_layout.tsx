@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ModeIndicator } from "@/components/ModeIndicator";
 import { CriticalErrorBoundary } from "@/components/SpecializedErrorBoundaries";
-import OptimizedProviderTree from "@/providers/OptimizedProviderTree";
+import OptimizedProviderTreeV2 from "@/providers/OptimizedProviderTree-v2";
 import { COLORS } from "@/constants/theme";
 import { initializeDeepLinking, cleanupDeepLinking } from "@/utils/deepLinkHandler";
 
@@ -60,10 +60,10 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.gestureHandler}>
       <CriticalErrorBoundary componentName="Root Application">
-        <OptimizedProviderTree>
+        <OptimizedProviderTreeV2>
           <RootLayoutNav />
           <ModeIndicator />
-        </OptimizedProviderTree>
+        </OptimizedProviderTreeV2>
       </CriticalErrorBoundary>
     </GestureHandlerRootView>
   );
