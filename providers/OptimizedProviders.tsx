@@ -240,24 +240,24 @@ interface OptimizedProvidersProps {
 }
 
 export function OptimizedProviders({ children }: OptimizedProvidersProps) {
-  const auth = useAuth();
+  const { user } = useAuthContext();
   
   const features = useMemo(() => {
     const featureList: string[] = [];
     
-    if (auth.user?.role === 'owner') {
+    if (user?.role === 'owner') {
       featureList.push('shop-management', 'team-management');
     }
     
-    if (auth.user?.role === 'client' || auth.user?.role === 'provider') {
+    if (user?.role === 'client' || user?.role === 'provider') {
       featureList.push('social', 'waitlist');
     }
     
     return featureList;
-  }, [auth.user?.role]);
+  }, [user?.role]);
 
   return (
-    <FeatureProviderWrapper userRole={auth.user?.role} features={features}>
+    <FeatureProviderWrapper userRole={user?.role} features={features}>
       {children}
     </FeatureProviderWrapper>
   );

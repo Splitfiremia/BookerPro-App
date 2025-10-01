@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,41 +9,43 @@ import {
   TextInput,
   StatusBar,
   ScrollView,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
 import { testUsers } from "@/mocks/users";
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from "@/constants/theme";
 
-function LandingScreenContent() {
+export default function LandingScreen() {
   const { isDeveloperMode, setDeveloperMode, login, logout, isAuthenticated, user, isInitialized } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   
+  // Add startup logging
   console.log('LandingScreen: Component rendering, isInitialized:', isInitialized);
   
+  // Log auth state for debugging
   useEffect(() => {
     console.log('Index: Auth state - isAuthenticated:', isAuthenticated, 'user:', user?.email, 'isDeveloperMode:', isDeveloperMode, 'isInitialized:', isInitialized);
   }, [isAuthenticated, user, isDeveloperMode, isInitialized]);
 
+  // Auto-redirect authenticated users to their role-specific dashboard
+  // This handles both developer mode test logins and regular user sessions
   useEffect(() => {
-    let isMounted = true;
-    
+    // Only redirect if user is authenticated and initialized
+    // Skip redirect if user just logged out (to prevent redirect loops)
     if (isInitialized && isAuthenticated && user) {
       console.log('Index: Auto-redirecting authenticated user to role-specific dashboard');
       
       const redirectToRoleDashboard = () => {
-        if (!isMounted) return;
-        
         try {
+          // Double-check authentication state before redirecting to prevent logout race conditions
           if (!isAuthenticated || !user) {
             console.log('Index: User no longer authenticated, skipping redirect');
             return;
           }
           
+          // Additional check to ensure user object is still valid
           if (!user.role || !user.email) {
             console.log('Index: Invalid user object, skipping redirect');
             return;
@@ -71,27 +73,37 @@ function LandingScreenContent() {
         }
       };
       
-      const timeoutId = setTimeout(redirectToRoleDashboard, 800);
-      return () => {
-        isMounted = false;
-        clearTimeout(timeoutId);
-      };
+      // Longer delay to ensure logout operations complete and prevent redirect loops
+      const delay = 800;
+      const timeoutId = setTimeout(redirectToRoleDashboard, delay);
+      return () => clearTimeout(timeoutId);
     }
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [isInitialized, isAuthenticated, user]);
+  }, [isInitialized, isAuthenticated, user, isDeveloperMode]);
 
-  const validateEmail = useCallback((email: string): boolean => {
+  // Show loading state while initializing to prevent hydration mismatch
+  if (!isInitialized) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#000000" />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.logoSection}>
+            <Text style={styles.logo}>BookerPro</Text>
+            <Text style={styles.loadingText}>Initializing...</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  const validateEmail = (email: string): boolean => {
     if (!email || typeof email !== 'string') return false;
     const trimmedEmail = email.trim();
     if (trimmedEmail.length === 0 || trimmedEmail.length > 254) return false;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(trimmedEmail);
-  }, []);
+  };
 
-  const handleContinue = useCallback(() => {
+  const handleContinue = () => {
     if (!email.trim()) {
       setEmailError("Email is required");
       return;
@@ -104,6 +116,7 @@ function LandingScreenContent() {
 
     setEmailError(null);
     
+    // Navigate to login/signup with the email
     router.push({
       pathname: "/(auth)/login",
       params: { 
@@ -111,61 +124,68 @@ function LandingScreenContent() {
         role: "client"
       }
     });
-  }, [email, validateEmail]);
+  };
 
-  const handleBrowseProviders = useCallback(() => {
+  const handleBrowseProviders = () => {
+    // For now, redirect to login since browsing requires authentication
     router.push("/(auth)/login");
-  }, []);
+  };
 
-  const toggleDeveloperMode = useCallback(() => {
+  const toggleDeveloperMode = () => {
     setDeveloperMode(!isDeveloperMode);
-  }, [isDeveloperMode, setDeveloperMode]);
+  };
 
-  const handleTestLogin = useCallback(async (userType: 'client' | 'provider' | 'owner') => {
-    if (isLoggingIn) return;
-    
+  const handleTestLogin = async (userType: 'client' | 'provider' | 'owner') => {
     const testUser = testUsers.find(user => user.role === userType);
     if (!testUser) {
       console.error('Test user not found for type:', userType);
-      alert('Test user configuration error. Please check developer settings.');
       return;
     }
 
     setIsLoggingIn(true);
     try {
+      // Ensure developer mode is enabled for test login
       if (!isDeveloperMode) {
         await setDeveloperMode(true);
       }
       
       console.log('Attempting test login for:', userType, 'with email:', testUser.email);
-      const loginResult = await login(testUser.email, testUser.password);
-      
-      if (!loginResult.success) {
-        throw new Error(loginResult.error || 'Login failed');
-      }
-      
+      await login(testUser.email, testUser.password);
       console.log(`Test login successful for ${userType}`);
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Navigate directly to role-specific home to avoid redirect loops
+      console.log(`Redirecting ${userType} to role-specific home`);
       
-      const routes = {
-        client: "/(app)/(client)/(tabs)/home",
-        provider: "/(app)/(provider)/(tabs)/schedule", 
-        owner: "/(app)/(shop-owner)/(tabs)/dashboard"
-      };
-      
-      const route = routes[userType] || routes.client;
-      router.replace(route);
-      
+      try {
+        switch (userType) {
+          case "client":
+            router.replace("/(app)/(client)/(tabs)/home");
+            break;
+          case "provider":
+            router.replace("/(app)/(provider)/(tabs)/schedule");
+            break;
+          case "owner":
+            router.replace("/(app)/(shop-owner)/(tabs)/dashboard");
+            break;
+          default:
+            router.replace("/(app)/(client)/(tabs)/home");
+            break;
+        }
+      } catch (error) {
+        console.error('Navigation error during test login:', error);
+        // Fallback to auth screen if navigation fails
+        router.replace("/(auth)/login");
+      }
     } catch (error) {
       console.error('Test login failed:', error);
+      // Show error to user
       alert(`Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoggingIn(false);
     }
-  }, [isLoggingIn, isDeveloperMode, setDeveloperMode, login]);
+  };
   
-  const handleTestOnboarding = useCallback(async (type: 'client' | 'provider' | 'owner') => {
+  const handleTestOnboarding = async (type: 'client' | 'provider' | 'owner') => {
     if (type === 'provider') {
       router.push('/provider-onboarding');
     } else if (type === 'owner') {
@@ -173,61 +193,13 @@ function LandingScreenContent() {
     } else if (type === 'client') {
       router.push('/client-onboarding/profile-type');
     }
-  }, []);
-
-  const shouldShowContent = useMemo(() => {
-    return !isAuthenticated && !isLoggingIn;
-  }, [isAuthenticated, isLoggingIn]);
-
-  const handleEmailChange = useCallback((text: string) => {
-    setEmail(text);
-    if (emailError) setEmailError(null);
-  }, [emailError]);
-
-  const handleLogout = useCallback(async () => {
-    const result = await logout();
-    if (result.success) {
-      console.log('User logged out');
-    } else {
-      console.error('Logout failed:', result.error);
-    }
-  }, [logout]);
-
-  const handleContinueToApp = useCallback(() => {
-    try {
-      switch (user?.role) {
-        case "client":
-          router.replace("/(app)/(client)/(tabs)/home");
-          break;
-        case "provider":
-          router.replace("/(app)/(provider)/(tabs)/schedule");
-          break;
-        case "owner":
-          router.replace("/(app)/(shop-owner)/(tabs)/dashboard");
-          break;
-        default:
-          router.replace("/(app)/(client)/(tabs)/home");
-          break;
-      }
-    } catch (error) {
-      console.error('Navigation error:', error);
-      router.replace("/(auth)/login");
-    }
-  }, [user]);
-
-  const handleClearData = useCallback(async () => {
-    const result = await logout();
-    if (result.success) {
-      console.log('Cleared stored authentication data');
-    } else {
-      console.error('Failed to clear data:', result.error);
-    }
-  }, [logout]);
+  };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <SafeAreaView style={styles.safeArea}>
+        {/* Developer Mode Toggle */}
         <TouchableOpacity
           style={styles.developerModeToggle}
           onPress={toggleDeveloperMode}
@@ -238,21 +210,21 @@ function LandingScreenContent() {
           </Text>
         </TouchableOpacity>
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardView}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <ScrollView 
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.keyboardView}
           >
+            {/* Logo Section */}
             <View style={styles.logoSection}>
               <Text style={styles.logo}>BookerPro</Text>
             </View>
 
+            {/* Developer Mode Test Login Section */}
             {isDeveloperMode && (
               <View style={styles.testLoginSection}>
                 <Text style={styles.testLoginTitle}>Quick Test Login</Text>
@@ -342,10 +314,18 @@ function LandingScreenContent() {
                   <Text style={styles.statusButtonText}>View Onboarding Status</Text>
                 </TouchableOpacity>
                 
+                {/* Clear stored data button */}
                 {(isAuthenticated || user) && (
                   <TouchableOpacity
                     style={[styles.statusButton, { backgroundColor: 'rgba(255, 68, 68, 0.1)', borderColor: '#FF4444' }]}
-                    onPress={handleClearData}
+                    onPress={async () => {
+                      const result = await logout();
+                      if (result.success) {
+                        console.log('Cleared stored authentication data');
+                      } else {
+                        console.error('Failed to clear data:', result.error);
+                      }
+                    }}
                     testID="clear-data-button"
                   >
                     <Text style={[styles.statusButtonText, { color: '#FF4444' }]}>Clear Stored Data & Logout</Text>
@@ -354,20 +334,50 @@ function LandingScreenContent() {
               </View>
             )}
 
+            {/* Show logout option if user is authenticated but not in developer mode */}
             {isAuthenticated && user && !isDeveloperMode && (
               <View style={styles.loggedInSection}>
                 <Text style={styles.loggedInText}>You are logged in as {user.email}</Text>
                 <Text style={styles.loggedInSubtext}>Role: {user.role}</Text>
                 <TouchableOpacity
                   style={styles.logoutButton}
-                  onPress={handleLogout}
+                  onPress={async () => {
+                    const result = await logout();
+                    if (result.success) {
+                      console.log('User logged out');
+                    } else {
+                      console.error('Logout failed:', result.error);
+                    }
+                  }}
                   testID="logout-button"
                 >
                   <Text style={styles.logoutButtonText}>LOGOUT</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.continueToAppButton}
-                  onPress={handleContinueToApp}
+                  onPress={() => {
+                    // Navigate to role-specific home
+                    try {
+                      switch (user.role) {
+                        case "client":
+                          router.replace("/(app)/(client)/(tabs)/home");
+                          break;
+                        case "provider":
+                          router.replace("/(app)/(provider)/(tabs)/schedule");
+                          break;
+                        case "owner":
+                          router.replace("/(app)/(shop-owner)/(tabs)/dashboard");
+                          break;
+                        default:
+                          router.replace("/(app)/(client)/(tabs)/home");
+                          break;
+                      }
+                    } catch (error) {
+                      console.error('Navigation error:', error);
+                      // Fallback to auth screen if navigation fails
+                      router.replace("/(auth)/login");
+                    }
+                  }}
                   testID="continue-to-app-button"
                 >
                   <Text style={styles.continueToAppButtonText}>CONTINUE TO APP</Text>
@@ -375,7 +385,8 @@ function LandingScreenContent() {
               </View>
             )}
 
-            {shouldShowContent && (
+            {/* Content Section - only show if not authenticated */}
+            {!isAuthenticated && (
               <View style={styles.contentSection}>
                 <View style={styles.formContainer}>
                 <View style={styles.inputContainer}>
@@ -385,19 +396,21 @@ function LandingScreenContent() {
                     placeholder="Enter your email to log in or sign up"
                     placeholderTextColor="#999999"
                     value={email}
-                    onChangeText={handleEmailChange}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      if (emailError) setEmailError(null);
+                    }}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
                     testID="email-input"
-                    accessibilityLabel="Email input"
-                    accessibilityHint="Enter your email address to continue to login or signup"
                   />
                 </View>
                 {emailError && (
                   <Text style={styles.errorText}>{emailError}</Text>
                 )}
 
+                {/* Quick Test Credentials */}
                 <View style={styles.quickTestContainer}>
                   <Text style={styles.quickTestLabel}>Quick test:</Text>
                   <View style={styles.quickTestButtons}>
@@ -429,9 +442,6 @@ function LandingScreenContent() {
                   style={styles.continueButton}
                   onPress={handleContinue}
                   testID="continue-button"
-                  accessibilityRole="button"
-                  accessibilityLabel="Continue to login"
-                  accessibilityHint="Navigates to the login screen with your entered email"
                 >
                   <Text style={styles.continueButtonText}>CONTINUE</Text>
                 </TouchableOpacity>
@@ -439,6 +449,7 @@ function LandingScreenContent() {
               </View>
             )}
 
+            {/* Bottom Section */}
             <View style={styles.bottomSection}>
               <View style={styles.dividerContainer}>
                 <View style={styles.dividerLine} />
@@ -454,32 +465,17 @@ function LandingScreenContent() {
                 <Text style={styles.browseButtonText}>BROWSE PROVIDERS</Text>
               </TouchableOpacity>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
 }
 
-export default function LandingScreen() {
-  const authContext = useAuth();
-  
-  if (!authContext) {
-    console.error('LandingScreen: Auth context is undefined');
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
-  }
-  
-  return <LandingScreenContent />;
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#181611',
   },
   safeArea: {
     flex: 1,
@@ -488,300 +484,299 @@ const styles = StyleSheet.create({
   developerModeToggle: {
     position: "absolute",
     top: 50,
-    right: SPACING.md,
-    backgroundColor: COLORS.warning,
-    paddingHorizontal: SPACING.sm + 4,
-    paddingVertical: SPACING.xs + 2,
-    borderRadius: BORDER_RADIUS.md,
+    right: 16,
+    backgroundColor: "#FFD700",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
     zIndex: 1000,
   },
   developerModeText: {
-    color: COLORS.gray,
-    fontSize: FONT_SIZES.xs,
-    fontWeight: "bold" as const,
+    color: "#000000",
+    fontSize: 12,
+    fontWeight: "bold",
     letterSpacing: 0.5,
-  },
-  keyboardView: {
-    flex: 1,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
+  },
+  keyboardView: {
+    flex: 1,
     justifyContent: "space-between",
-    paddingHorizontal: SPACING.lg,
+    paddingHorizontal: 24,
   },
   logoSection: {
     alignItems: "center",
     paddingTop: 80,
-    paddingBottom: SPACING.md + 4,
+    paddingBottom: 20,
   },
   logo: {
     fontSize: 64,
-    fontWeight: '300' as const,
-    fontStyle: 'italic' as const,
-    color: COLORS.white,
-    textAlign: 'center' as const,
+    fontWeight: '300',
+    fontStyle: 'italic',
+    color: '#FFFFFF',
+    textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   testLoginSection: {
     paddingHorizontal: 0,
-    paddingVertical: SPACING.md + 4,
-    marginHorizontal: 0,
+    paddingBottom: 20,
   },
   testLoginTitle: {
-    fontSize: FONT_SIZES.xl,
-    color: COLORS.white,
-    fontWeight: "bold" as const,
-    textAlign: "center" as const,
-    marginBottom: SPACING.sm,
+    fontSize: 20,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 8,
   },
   testSectionTitle: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.white,
-    fontWeight: "bold" as const,
-    textAlign: "center" as const,
-    marginTop: SPACING.md,
-    marginBottom: SPACING.sm + 4,
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 16,
+    marginBottom: 12,
   },
   testLoginSubtitle: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.lightGray,
-    textAlign: "center" as const,
-    marginBottom: SPACING.sm,
+    fontSize: 14,
+    color: "#CCCCCC",
+    textAlign: "center",
+    marginBottom: 8,
   },
   testLoginCredentials: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.warning,
-    textAlign: "center" as const,
-    marginBottom: SPACING.md,
-    fontWeight: "500" as const,
+    fontSize: 12,
+    color: "#FFD700",
+    textAlign: "center",
+    marginBottom: 16,
+    fontWeight: "500",
   },
   testButtonsContainer: {
-    flexDirection: "row" as const,
-    justifyContent: "space-between" as const,
-    marginBottom: SPACING.lg,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 24,
   },
   testLoginButton: {
     flex: 1,
-    marginHorizontal: SPACING.xs,
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.sm,
-    borderRadius: SPACING.sm + 4,
-    alignItems: "center" as const,
+    marginHorizontal: 4,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    alignItems: "center",
     borderWidth: 2,
-    minHeight: 80,
   },
   clientButton: {
-    backgroundColor: "rgba(59, 130, 246, 0.1)",
-    borderColor: COLORS.info,
+    backgroundColor: "rgba(0, 123, 255, 0.1)",
+    borderColor: "#007BFF",
   },
   providerButton: {
-    backgroundColor: "rgba(16, 185, 129, 0.1)",
-    borderColor: COLORS.success,
+    backgroundColor: "rgba(40, 167, 69, 0.1)",
+    borderColor: "#28A745",
   },
   ownerButton: {
-    backgroundColor: "rgba(239, 68, 68, 0.1)",
-    borderColor: COLORS.error,
+    backgroundColor: "rgba(220, 53, 69, 0.1)",
+    borderColor: "#DC3545",
   },
   testLoginButtonText: {
-    color: COLORS.white,
-    fontSize: FONT_SIZES.sm,
-    fontWeight: "bold" as const,
-    marginBottom: SPACING.xs,
-    textAlign: "center" as const,
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 4,
+    textAlign: "center",
   },
   testLoginButtonSubtext: {
-    color: COLORS.lightGray,
+    color: "#CCCCCC",
     fontSize: 11,
-    textAlign: "center" as const,
+    textAlign: "center",
   },
   statusButton: {
-    alignItems: "center" as const,
-    paddingVertical: SPACING.sm + 4,
-    marginBottom: SPACING.md,
+    alignItems: "center",
+    paddingVertical: 12,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: COLORS.lightGray,
-    borderRadius: BORDER_RADIUS.md,
+    borderColor: "#CCCCCC",
+    borderRadius: 8,
     backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   statusButtonText: {
-    color: COLORS.white,
-    fontSize: FONT_SIZES.sm,
-    fontWeight: "600" as const,
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
   },
   contentSection: {
     flex: 1,
-    justifyContent: "center" as const,
+    justifyContent: "center",
   },
   formContainer: {
     marginBottom: 60,
   },
   inputContainer: {
-    backgroundColor: COLORS.card,
-    borderRadius: BORDER_RADIUS.xl,
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.lg,
-    marginBottom: SPACING.md + 4,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 24,
+    marginBottom: 20,
   },
   inputLabel: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.input.label,
-    fontWeight: "500" as const,
-    marginBottom: SPACING.sm,
+    fontSize: 14,
+    color: 'rgba(209, 213, 219, 1)',
+    fontWeight: "500",
+    marginBottom: 8,
   },
   emailInput: {
     backgroundColor: "transparent",
     borderWidth: 0,
     borderBottomWidth: 2,
-    borderBottomColor: COLORS.input.border,
-    paddingVertical: SPACING.sm + 4,
+    borderBottomColor: 'rgba(107, 114, 128, 1)',
+    paddingVertical: 12,
     paddingHorizontal: 0,
-    fontSize: FONT_SIZES.md,
-    color: COLORS.white,
+    fontSize: 16,
+    color: "#FFFFFF",
   },
   emailInputError: {
     borderWidth: 2,
-    borderColor: COLORS.error,
+    borderColor: "#FF4444",
   },
   errorText: {
-    color: COLORS.error,
-    fontSize: FONT_SIZES.sm,
-    marginBottom: SPACING.md,
-    textAlign: "center" as const,
+    color: "#FF4444",
+    fontSize: 14,
+    marginBottom: 16,
+    textAlign: "center",
   },
   continueButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: BORDER_RADIUS.md,
-    paddingVertical: SPACING.sm + 4,
-    alignItems: "center" as const,
-    marginTop: SPACING.md,
-    shadowColor: COLORS.primary,
+    backgroundColor: "#FBBF24",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 16,
+    shadowColor: '#FBBF24',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
   continueButtonText: {
-    color: COLORS.gray,
-    fontSize: FONT_SIZES.md,
-    fontWeight: "600" as const,
+    color: "#1F2937",
+    fontSize: 16,
+    fontWeight: "600",
     letterSpacing: 1,
   },
   bottomSection: {
     paddingBottom: 40,
   },
   dividerContainer: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    marginBottom: SPACING.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: COLORS.input.border,
+    backgroundColor: 'rgba(107, 114, 128, 1)',
   },
   orText: {
-    color: COLORS.input.placeholder,
-    fontSize: FONT_SIZES.sm,
-    fontWeight: "500" as const,
-    marginHorizontal: SPACING.md,
+    color: 'rgba(156, 163, 175, 1)',
+    fontSize: 14,
+    fontWeight: "500",
+    marginHorizontal: 16,
   },
   browseButton: {
-    alignItems: "center" as const,
+    alignItems: "center",
   },
   browseButtonText: {
-    color: COLORS.primary,
-    fontSize: FONT_SIZES.md,
-    fontWeight: "600" as const,
+    color: "#FBBF24",
+    fontSize: 16,
+    fontWeight: "600",
     letterSpacing: 1,
   },
   quickTestContainer: {
-    marginTop: SPACING.sm + 4,
-    marginBottom: SPACING.sm,
+    marginTop: 12,
+    marginBottom: 8,
   },
   quickTestLabel: {
-    color: COLORS.lightGray,
-    fontSize: FONT_SIZES.xs,
-    marginBottom: SPACING.sm,
-    textAlign: "center" as const,
+    color: "#999999",
+    fontSize: 12,
+    marginBottom: 8,
+    textAlign: "center",
   },
   quickTestButtons: {
-    flexDirection: "row" as const,
-    justifyContent: "space-between" as const,
-    gap: SPACING.sm,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
   },
   quickTestButton: {
     flex: 1,
-    backgroundColor: "rgba(251, 191, 36, 0.1)",
+    backgroundColor: "rgba(255, 215, 0, 0.1)",
     borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: BORDER_RADIUS.md,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.sm + 4,
-    alignItems: "center" as const,
+    borderColor: "#FFD700",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: "center",
   },
   quickTestButtonText: {
-    color: COLORS.primary,
-    fontSize: FONT_SIZES.xs,
-    fontWeight: "600" as const,
+    color: "#FFD700",
+    fontSize: 12,
+    fontWeight: "600",
   },
+
   disabledButton: {
     opacity: 0.5,
   },
   loggedInSection: {
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    borderRadius: SPACING.sm + 4,
-    padding: SPACING.md + 4,
-    marginBottom: SPACING.md + 4,
-    alignItems: 'center' as const,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    alignItems: 'center',
   },
   loggedInText: {
-    color: COLORS.white,
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600' as const,
-    marginBottom: SPACING.sm,
-    textAlign: 'center' as const,
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   loggedInSubtext: {
-    color: COLORS.lightGray,
-    fontSize: FONT_SIZES.sm,
-    marginBottom: SPACING.md + 4,
-    textAlign: 'center' as const,
+    color: '#CCCCCC',
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   logoutButton: {
-    backgroundColor: COLORS.error,
-    borderRadius: BORDER_RADIUS.md,
-    paddingVertical: SPACING.sm + 4,
-    paddingHorizontal: SPACING.lg,
-    marginBottom: SPACING.sm + 4,
+    backgroundColor: '#FF4444',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginBottom: 12,
     minWidth: 120,
   },
   logoutButtonText: {
-    color: COLORS.white,
-    fontSize: FONT_SIZES.sm,
-    fontWeight: 'bold' as const,
-    textAlign: 'center' as const,
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   continueToAppButton: {
-    backgroundColor: COLORS.success,
-    borderRadius: BORDER_RADIUS.md,
-    paddingVertical: SPACING.sm + 4,
-    paddingHorizontal: SPACING.lg,
+    backgroundColor: '#28A745',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     minWidth: 120,
   },
   continueToAppButtonText: {
-    color: COLORS.white,
-    fontSize: FONT_SIZES.sm,
-    fontWeight: 'bold' as const,
-    textAlign: 'center' as const,
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   loadingText: {
-    color: COLORS.lightGray,
-    fontSize: FONT_SIZES.sm,
-    marginTop: SPACING.md,
-    textAlign: 'center' as const,
+    color: '#CCCCCC',
+    fontSize: 14,
+    marginTop: 16,
+    textAlign: 'center',
   },
 });

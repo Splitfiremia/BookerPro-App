@@ -16,16 +16,10 @@ export interface DeviceInfo {
   hasNotchLikeInsets: boolean;
 }
 
-export const [DeviceContext, useDevice] = createContextHook(() => {
+export const [DeviceContext, useDevice] = createContextHook<DeviceInfo>(() => {
   const insets = useSafeAreaInsets();
   const window = Dimensions.get('window');
-  const [isHydrated, setIsHydrated] = useState(false);
   const [dims, setDims] = useState<{ width: number; height: number }>(() => ({ width: window.width, height: window.height }));
-  
-  useEffect(() => {
-    console.log('[PERF] DeviceProvider: Hydration complete');
-    setIsHydrated(true);
-  }, []);
 
   useEffect(() => {
     const sub = Dimensions.addEventListener('change', ({ window: w }) => {
@@ -42,19 +36,6 @@ export const [DeviceContext, useDevice] = createContextHook(() => {
   }, []);
 
   const value: DeviceInfo = useMemo(() => {
-    if (!isHydrated) {
-      return {
-        width: dims.width,
-        height: dims.height,
-        orientation: 'portrait' as Orientation,
-        isSmallPhone: false,
-        isTablet: false,
-        platform: Platform.OS as 'ios' | 'android' | 'web',
-        fontScale: 1,
-        hasNotchLikeInsets: false,
-      };
-    }
-    
     const orientation: Orientation = dims.height >= dims.width ? 'portrait' : 'landscape';
     const minDim = Math.min(dims.width, dims.height);
     const maxDim = Math.max(dims.width, dims.height);
@@ -74,7 +55,7 @@ export const [DeviceContext, useDevice] = createContextHook(() => {
       fontScale,
       hasNotchLikeInsets,
     };
-  }, [isHydrated, dims.width, dims.height, insets.top, insets.bottom]);
+  }, [dims.width, dims.height, insets.top, insets.bottom]);
 
   return value;
 });

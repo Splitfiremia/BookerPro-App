@@ -1,14 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ModeIndicator } from "@/components/ModeIndicator";
 import { CriticalErrorBoundary } from "@/components/SpecializedErrorBoundaries";
-import OptimizedProviderTreeV2 from "@/providers/OptimizedProviderTree-v2";
+import OptimizedProviderTree from "@/providers/OptimizedProviderTree";
 import { COLORS } from "@/constants/theme";
 import { initializeDeepLinking, cleanupDeepLinking } from "@/utils/deepLinkHandler";
-import { performanceMonitor } from "@/services/PerformanceMonitoringService";
 
 function RootLayoutNav() {
   return (
@@ -27,37 +26,16 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  console.log('[PERF] RootLayout: Rendering');
-  const isInitializedRef = useRef(false);
+  console.log('RootLayout: Rendering');
   
-  useEffect(() => {
-    if (isInitializedRef.current) return;
-    isInitializedRef.current = true;
-    
-    try {
-      performanceMonitor.markStart('app-initialization');
-      console.log('[PERF] 🚀 App startup initiated');
-    } catch (error) {
-      console.warn('[PERF] Performance monitoring initialization failed:', error);
-    }
-    
-    return () => {
-      try {
-        performanceMonitor.markEnd('app-initialization');
-      } catch (error) {
-        console.warn('[PERF] Performance monitoring cleanup failed:', error);
-      }
-    };
-  }, []);
-  
+  // Initialize deep linking after mount
   useEffect(() => {
     let mounted = true;
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     
     const initializeApp = async () => {
       try {
         if (mounted) {
-          console.log('RootLayout: Initializing deep linking (non-blocking)');
+          console.log('RootLayout: Initializing deep linking');
           initializeDeepLinking();
         }
       } catch (error) {
@@ -65,12 +43,14 @@ export default function RootLayout() {
       }
     };
     
-    timeoutId = setTimeout(initializeApp, 3000);
+    // Delay initialization to not block rendering
+    const timeoutId = setTimeout(initializeApp, 500);
     
     return () => {
       mounted = false;
-      if (timeoutId) clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
       try {
+        console.log('RootLayout: Cleaning up deep linking');
         cleanupDeepLinking();
       } catch (error) {
         console.error('RootLayout: Deep linking cleanup failed:', error);
@@ -81,10 +61,10 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.gestureHandler}>
       <CriticalErrorBoundary componentName="Root Application">
-        <OptimizedProviderTreeV2>
+        <OptimizedProviderTree>
           <RootLayoutNav />
           <ModeIndicator />
-        </OptimizedProviderTreeV2>
+        </OptimizedProviderTree>
       </CriticalErrorBoundary>
     </GestureHandlerRootView>
   );
