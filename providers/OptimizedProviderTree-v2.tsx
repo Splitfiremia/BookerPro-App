@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, FONTS, FONT_SIZES, SPACING } from '@/constants/theme';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -24,12 +24,18 @@ interface OptimizedProviderTreeV2Props {
 
 export default function OptimizedProviderTreeV2({ children }: OptimizedProviderTreeV2Props) {
   console.log('[PERF] OptimizedProviderTreeV2: Starting provider tree initialization');
+  const [isHydrated, setIsHydrated] = useState(false);
   const [startTime] = React.useState(() => {
     performanceMonitor.markStart('provider-tree-init');
     return typeof performance !== 'undefined' ? performance.now() : Date.now();
   });
   
   useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+  
+  useEffect(() => {
+    if (!isHydrated) return;
     const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
     const totalTime = endTime - startTime;
     
@@ -60,7 +66,11 @@ export default function OptimizedProviderTreeV2({ children }: OptimizedProviderT
         console.log('\n[PERF] 📋 Export metrics:', performanceMonitor.exportMetrics());
       }
     }, 2000);
-  }, [startTime]);
+  }, [startTime, isHydrated]);
+  
+  if (!isHydrated) {
+    return null;
+  }
   
   return (
     <ErrorBoundary 
