@@ -1,94 +1,67 @@
 import { Stack, router } from "expo-router";
 import { useAuth } from "@/providers/AuthProvider";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { COLORS, FONTS, FONT_SIZES, SPACING } from "@/constants/theme";
 
 export default function AppLayout() {
   const { isLoading, isAuthenticated, user, isInitialized } = useAuth();
-  const [dashboardReady, setDashboardReady] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const hasRedirected = useRef(false);
 
-  // Optimized redirect logic with better state management
+  // Immediate initialization to prevent hydration timeout
   useEffect(() => {
-    if (isInitialized && !isLoading && !isAuthenticated && !redirecting) {
-      console.log('AppLayout: User not authenticated, initiating redirect');
-      setRedirecting(true);
-      
-      // Use immediate redirect for better performance
-      const redirect = async () => {
-        try {
-          await router.replace("/");
-          console.log('AppLayout: Successfully redirected to index');
-        } catch (error) {
-          console.error('AppLayout: Error redirecting to index:', error);
-          setRedirecting(false); // Reset on error
-        }
-      };
-      
-      redirect();
-    }
-  }, [isInitialized, isLoading, isAuthenticated, redirecting]);
+    setIsReady(true);
+  }, []);
 
-  // Prepare dashboard when user is authenticated
+  // Handle redirect for unauthenticated users
   useEffect(() => {
-    if (isAuthenticated && user && !dashboardReady) {
-      console.log('AppLayout: Preparing dashboard for user role:', user.role);
-      // Small delay to ensure providers are ready
-      const timer = setTimeout(() => {
-        setDashboardReady(true);
-        console.log('AppLayout: Dashboard ready for role:', user.role);
-      }, 200);
+    if (isReady && isInitialized && !isLoading && !isAuthenticated && !hasRedirected.current) {
+      console.log('AppLayout: User not authenticated, redirecting');
+      hasRedirected.current = true;
       
-      return () => clearTimeout(timer);
+      router.replace("/");
     }
-  }, [isAuthenticated, user, dashboardReady]);
+  }, [isReady, isInitialized, isLoading, isAuthenticated]);
 
-  // Show optimized loading states
-  if (!isInitialized) {
+  // Reset redirect flag when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      hasRedirected.current = false;
+    }
+  }, [isAuthenticated]);
+
+  // Show loading only if not ready or still initializing
+  if (!isReady || !isInitialized) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Initializing app...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
 
-  if (isLoading || redirecting) {
+  // Show loading while checking auth
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>
-          {redirecting ? 'Redirecting...' : 'Authenticating...'}
-        </Text>
+        <Text style={styles.loadingText}>Authenticating...</Text>
       </View>
     );
   }
 
-  // Don't render anything if not authenticated (will redirect)
+  // Don't render stack if not authenticated
   if (!isAuthenticated || !user) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Please wait...</Text>
+        <Text style={styles.loadingText}>Redirecting...</Text>
       </View>
     );
   }
 
-  // Progressive dashboard loading
-  if (!dashboardReady) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Preparing your dashboard...</Text>
-        <Text style={styles.loadingSubtext}>
-          Setting up {user.role} workspace
-        </Text>
-      </View>
-    );
-  }
-
-  // Use optimized stack navigation with role-based routing
+  // Render stack immediately when authenticated
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(client)" />

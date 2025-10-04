@@ -41,28 +41,41 @@ export default class ErrorBoundary extends Component<Props, State> {
     return { 
       hasError: true, 
       error,
-      errorId: `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      errorId: `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      errorInfo: undefined
     };
   }
 
   componentDidUpdate(prevProps: Props, prevState: State) {
-    // Only process reset logic if we're transitioning FROM error state
-    // and resetKeys have actually changed
-    if (!prevState.hasError || this.state.hasError) {
-      // Either we weren't in error state before, or we still are - don't reset
-      return;
-    }
+    // Reset error state if resetKeys change
+    const { resetKeys, resetOnPropsChange } = this.props;
     
-    const { resetKeys } = this.props;
-    
-    // Only check resetKeys if they exist and have changed
-    if (resetKeys && prevProps.resetKeys) {
+    // Only reset if we're in error state and resetKeys have changed
+    if (this.state.hasError && resetKeys && prevProps.resetKeys) {
       const hasResetKeyChanged = resetKeys.length !== prevProps.resetKeys.length ||
         resetKeys.some((key, index) => prevProps.resetKeys![index] !== key);
       
       if (hasResetKeyChanged) {
+        console.log('ErrorBoundary: Reset keys changed, clearing error state');
         this.previousResetKeys = resetKeys;
+        this.setState({ 
+          hasError: false, 
+          error: undefined, 
+          errorInfo: undefined,
+          errorId: this.generateErrorId()
+        });
       }
+    }
+    
+    // Reset on props change if enabled
+    if (this.state.hasError && resetOnPropsChange && prevProps.children !== this.props.children) {
+      console.log('ErrorBoundary: Children changed, clearing error state');
+      this.setState({ 
+        hasError: false, 
+        error: undefined, 
+        errorInfo: undefined,
+        errorId: this.generateErrorId()
+      });
     }
   }
 
@@ -79,17 +92,17 @@ export default class ErrorBoundary extends Component<Props, State> {
     
     console.error('ErrorBoundary details:', errorDetails);
     
-    // Store error info in state for display
-    this.setState({ errorInfo });
-    
     // Call custom error handler if provided
     if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+      try {
+        this.props.onError(error, errorInfo);
+      } catch (handlerError) {
+        console.error('ErrorBoundary: Error in onError handler:', handlerError);
+      }
     }
     
     // In production, you might want to send this to an error reporting service
     if (!__DEV__) {
-      // Example: Sentry.captureException(error, { extra: errorDetails });
       console.log('Production error captured:', errorDetails);
     }
   }
